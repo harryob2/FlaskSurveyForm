@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}View Training Form{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fs-4">Training Form Details</h2>
+        <div>
+            <a href="{{ url_for('list_forms') }}" class="btn btn-outline-secondary me-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to List
+            </a>
+            <a href="{{ url_for('edit_form', form_id=form.id) }}" class="btn btn-outline-primary me-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                </svg>
+                Edit Form
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+                    <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/>
+                </svg>
+                New Submission
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="fs-5 mb-0">Form #{{ form.id }} - 
+                {% if form.trainees_data %}
+                    {% set trainees = form.trainees_data|from_json %}
+                    {% if trainees and trainees|length > 0 and trainees[0].firstName %}
+                        {% if trainees|length > 1 %}
+                            {{ trainees[0].firstName }} {{ trainees[0].lastName }} (+ {{ trainees|length - 1 }} more)
+                        {% else %}
+                            {{ trainees[0].firstName }} {{ trainees[0].lastName }}
+                        {% endif %}
+                    {% else %}
+                        {{ form.trainee_name if form.trainee_name else 'No trainee name' }}
+                    {% endif %}
+                {% else %}
+                    {{ form.trainee_name if form.trainee_name else 'No trainee name' }}
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4 class="fs-6 mb-3">Trainee Information</h4>
+                    <dl class="row">
+                        {% if trainees %}
+                            <dt class="col-sm-4">Trainees</dt>
+                            <dd class="col-sm-8">
+                                <ul class="list-unstyled mb-0">
+                                    {% for trainee in trainees %}
+                                        <li class="mb-2">
+                                            <strong>{{ trainee.name }}</strong><br>
+                                            <small class="text-muted">{{ trainee.email }}</small><br>
+                                            <small class="text-muted fst-italic">{{ trainee.department }}</small>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </dd>
+                        {% else %}
+                            <dt class="col-sm-4">Trainee</dt>
+                            <dd class="col-sm-8">{{ form.trainee_name if form.trainee_name else 'No trainee specified' }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <h4 class="fs-6 mb-3">Training Details</h4>
+                    <dl class="row">
+                        <dt class="col-sm-4">Training Type</dt>
+                        <dd class="col-sm-8">{{ form.training_type }}</dd>
+                        
+                        <dt class="col-sm-4">Location</dt>
+                        <dd class="col-sm-8">{{ form.location_type }}</dd>
+                        {% if form.location_type == 'Offsite' %}
+                            <dt class="col-sm-4">Location Details</dt>
+                            <dd class="col-sm-8">{{ form.location_details }}</dd>
+                        {% endif %}
+                                                
+                        <dt class="col-sm-4">Start Date</dt>
+                        <dd class="col-sm-8">{{ form.start_date }}</dd>
+                        
+                        <dt class="col-sm-4">End Date</dt>
+                        <dd class="col-sm-8">{{ form.end_date }}</dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4 class="fs-6 mb-3">Trainer Details</h4>
+                    <dl class="row">
+                        {% if form.training_type == 'Internal Training' %}
+                            <dt class="col-sm-4">Trainer Name</dt>
+                            <dd class="col-sm-8">{{ form.trainer_name }}</dd>
+                            
+                            <dt class="col-sm-4">Trainer Days</dt>
+                            <dd class="col-sm-8">{{ form.trainer_days }}</dd>
+                        {% else %}
+                            <dt class="col-sm-4">Supplier Name</dt>
+                            <dd class="col-sm-8">{{ form.supplier_name }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="text-muted small">
+                <p>Submitted on: {{ form.submission_date }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,200 @@
+"""
+Form definitions for the training form application.
+
+This module defines the form classes used for data validation and rendering.
+"""
+from datetime import date
+
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileRequired
+from wtforms import (
+    StringField, SelectField, RadioField, DecimalField, 
+    IntegerField, DateField, SubmitField, SearchField, TextAreaField,
+    HiddenField, FloatField
+)
+from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
+
+# Training types
+TRAINING_TYPES = [
+    "Internal Training", "External Training"
+]
+
+# Sort options
+SORT_OPTIONS = [
+    ("submission_date", "Submission Date"),
+    ("start_date", "Start Date"),
+    ("end_date", "End Date"),
+    ("cost", "Cost")
+]
+
+# Allowed file extensions for file upload
+ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png", "csv"}
+
+
+class TrainingForm(FlaskForm):
+    """Form for training submissions"""
+    
+    # Training Type - Initial Selection
+    training_type = RadioField(
+        'Training Type', 
+        choices=[
+            ('Internal Training', 'Internal Training'),
+            ('External Training', 'External Training')
+        ],
+        validators=[DataRequired()]
+    )
+    
+    # Trainer/Supplier Information
+    trainer_name = StringField(
+        'Trainer Name', 
+        validators=[Optional()],
+        description='For internal training, select from employee list'
+    )
+    supplier_name = StringField(
+        'Supplier/Name', 
+        validators=[Optional()],
+        description='For external training, enter supplier name'
+    )
+    
+    # Location
+    location_type = RadioField(
+        'Location',
+        choices=[
+            ('Onsite', 'Onsite'),
+            ('Offsite', 'Offsite')
+        ],
+        validators=[DataRequired()]
+    )
+    location_details = StringField(
+        'Location Details',
+        validators=[Optional()],
+        description='Required for offsite training'
+    )
+    
+    
+    # Date Information
+    start_date = DateField(
+        'Start Date', 
+        validators=[DataRequired()], 
+        format='%Y-%m-%d',
+        default=date.today
+    )
+    end_date = DateField(
+        'End Date', 
+        validators=[DataRequired()], 
+        format='%Y-%m-%d',
+        default=date.today
+    )
+    
+    # Department (hidden, auto-filled)
+    department = HiddenField(
+        'Department',
+        default='Engineering'
+    )
+    
+    # Trainer Days
+    trainer_days = FloatField(
+        'Trainer Days',
+        validators=[Optional(), NumberRange(min=0)]
+    )
+    
+    # Trainees Data
+    trainees_data = HiddenField('Trainees Data')
+    
+    # Submit Button
+    submit = SubmitField('Submit Training Form')
+    
+    def validate_end_date(self, field):
+        """Validate that end date is not before start date"""
+        if field.data < self.start_date.data:
+            raise ValidationError('End date cannot be earlier than start date.')
+            
+    def validate_location_details(self, field):
+        """Validate that location details are provided when location type is Offsite"""
+        if self.location_type.data == 'Offsite' and not field.data:
+            raise ValidationError('Location details are required for offsite training.')
+            
+    def validate_trainer_name(self, field):
+        """Validate that trainer name is provided for Internal Training"""
+        if self.training_type.data == 'Internal Training' and not field.data:
+            raise ValidationError('Trainer name is required for internal training.')
+            
+    def validate_supplier_name(self, field):
+        """Validate that supplier name is provided for External Training"""
+        if self.training_type.data == 'External Training' and not field.data:
+            raise ValidationError('Supplier name is required for external training.')
+
+
+class InvoiceForm(FlaskForm):
+    """Form for adding invoices"""
+    
+    invoice_number = StringField(
+        'Invoice Number', 
+        validators=[Optional()]
+    )
+    cost = DecimalField(
+        'Cost (€)', 
+        validators=[DataRequired(), NumberRange(min=0)],
+        places=2
+    )
+    description = TextAreaField(
+        'Description',
+        validators=[Optional()]
+    )
+    attachment = FileField(
+        'Invoice Attachment', 
+        validators=[
+            Optional(),
+            FileAllowed(
+                list(ALLOWED_EXTENSIONS), 
+                'Only document files are allowed.'
+            )
+        ]
+    )
+    submit = SubmitField('Add Invoice')
+
+
+class SearchForm(FlaskForm):
+    """Form for searching and filtering training submissions"""
+    
+    search = StringField('Search', validators=[Optional()])
+    
+    date_from = DateField(
+        'From Date', 
+        validators=[Optional()], 
+        format='%Y-%m-%d'
+    )
+    
+    date_to = DateField(
+        'To Date', 
+        validators=[Optional()], 
+        format='%Y-%m-%d'
+    )
+    
+    training_type = SelectField(
+        'Training Type',
+        choices=[('', 'All Types')] + [(type, type) for type in TRAINING_TYPES],
+        validators=[Optional()]
+    )
+    
+    sort_by = SelectField(
+        'Sort By',
+        choices=SORT_OPTIONS,
+        default='submission_date'
+    )
+    
+    sort_order = SelectField(
+        'Order',
+        choices=[
+            ('DESC', 'Newest First'),
+            ('ASC', 'Oldest First')
+        ],
+        default='DESC'
+    )
+    
+    submit = SubmitField('Search')
+    
+    def validate_date_to(self, field):
+        """Validate that to_date is not before from_date"""
+        if field.data and self.date_from.data and field.data < self.date_from.data:
+            raise ValidationError('To Date cannot be earlier than From Date.')

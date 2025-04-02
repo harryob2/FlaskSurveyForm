@@ -1,0 +1,101 @@
+/* Trainee search and selection styling */
+
+.trainee-search-container {
+  margin-bottom: 2rem;
+}
+
+.trainee-search-box {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.trainee-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  border: 1px solid #495057;
+  border-radius: 0 0 0.375rem 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.trainee-search-results.hidden {
+  display: none;
+}
+
+.trainee-result-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color);
+  cursor: pointer;
+}
+
+.trainee-result-item:last-child {
+  border-bottom: none;
+}
+
+.trainee-result-item:hover {
+  background-color: #2c3136;
+}
+
+.trainee-result-name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: var(--bs-body-color);
+}
+
+.trainee-result-email {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+}
+
+.trainees-list {
+  margin-top: 1rem;
+  padding: 0;
+}
+
+.trainee-card {
+  margin-bottom: 0.75rem;
+  background-color: #343a40;
+  border: 1px solid #495057;
+  border-radius: 0.375rem;
+}
+
+.trainee-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.trainee-info {
+  flex-grow: 1;
+}
+
+.trainee-name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: white;
+}
+
+.trainee-email {
+  font-size: 0.875rem;
+  color: #ced4da;
+}
+
+.remove-trainee-btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+}
+
+.no-trainees-message {
+  text-align: center;
+  padding: 2rem;
+  color: #ced4da;
+  border: 1px dashed #495057;
+  border-radius: 0.375rem;
+}

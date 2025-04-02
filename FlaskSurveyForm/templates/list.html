@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Training Form Submissions{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .search-panel {
+        margin-bottom: 1.5rem;
+    }
+    .pagination {
+        justify-content: center;
+    }
+    .trainings-table th {
+        cursor: pointer;
+    }
+    .trainings-table th:hover {
+        background-color: var(--bs-gray-800);
+    }
+    .filter-bar {
+        background-color: var(--bs-gray-800);
+        border-radius: 0.25rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fs-4">Training Form Submissions</h2>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+            <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/>
+        </svg>
+        New Submission
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <h3 class="fs-5 mb-0">Search & Filter</h3>
+        <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#searchCollapse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel" viewBox="0 0 16 16">
+                <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+            </svg>
+            Filters
+        </button>
+    </div>
+    <div class="collapse show" id="searchCollapse">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('list_forms') }}" class="row g-3">
+                <div class="col-md-12">
+                    <div class="input-group">
+                        {{ form.search(class="form-control", placeholder="Search by trainee, trainer, supplier, course code or invoice number") }}
+                        <button class="btn btn-primary" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                            Search
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    {{ form.date_from.label(class="form-label") }}
+                    {{ form.date_from(class="form-control date-picker") }}
+                </div>
+                
+                <div class="col-md-3">
+                    {{ form.date_to.label(class="form-label") }}
+                    {{ form.date_to(class="form-control date-picker") }}
+                </div>
+                
+                <div class="col-md-3">
+                    {{ form.training_type.label(class="form-label") }}
+                    {{ form.training_type(class="form-select") }}
+                </div>
+                
+                <div class="col-md-3">
+                    {{ form.sort_by.label(class="form-label") }}
+                    {{ form.sort_by(class="form-select") }}
+                </div>
+                
+                <div class="col-md-3">
+                    {{ form.sort_order.label(class="form-label") }}
+                    {{ form.sort_order(class="form-select") }}
+                </div>
+                
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <button type="reset" class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                            </svg>
+                            Clear Filters
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-filter" viewBox="0 0 16 16">
+                                <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Active Filters Display -->
+{% if has_filters %}
+<div class="filter-bar">
+    <div class="d-flex flex-wrap align-items-center">
+        <span class="me-2 text-light">Active Filters:</span>
+        
+        {% if search_term %}
+        <span class="badge bg-primary me-2">
+            Search: {{ search_term }}
+            <a href="{{ url_for('list_forms', **params|remove_param('search')) }}" class="text-white ms-1 text-decoration-none">×</a>
+        </span>
+        {% endif %}
+        
+        {% if date_from %}
+        <span class="badge bg-primary me-2">
+            From: {{ date_from }}
+            <a href="{{ url_for('list_forms', **params|remove_param('date_from')) }}" class="text-white ms-1 text-decoration-none">×</a>
+        </span>
+        {% endif %}
+        
+        {% if date_to %}
+        <span class="badge bg-primary me-2">
+            To: {{ date_to }}
+            <a href="{{ url_for('list_forms', **params|remove_param('date_to')) }}" class="text-white ms-1 text-decoration-none">×</a>
+        </span>
+        {% endif %}
+        
+        {% if training_type %}
+        <span class="badge bg-primary me-2">
+            Training Type: {{ training_type }}
+            <a href="{{ url_for('list_forms', **params|remove_param('training_type')) }}" class="text-white ms-1 text-decoration-none">×</a>
+        </span>
+        {% endif %}
+        
+        <a href="{{ url_for('list_forms') }}" class="btn btn-sm btn-outline-light ms-auto">
+            Clear All Filters
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% if forms %}
+<div class="table-responsive">
+    <table class="table table-hover trainings-table">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Training Details</th>
+                <th>Trainer Details</th>
+                <th>Dates</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in forms %}
+            <tr>
+                <td>{{ form.id }}</td>
+                <td>
+                    <strong>Type:</strong> {{ form.training_type }}<br>
+                    <strong>Location:</strong> {{ form.location_type }}{% if form.location_details %}<br>{{ form.location_details }}{% endif %}
+                </td>
+                <td>
+                    {% if form.training_type == 'Internal Training' %}
+                        <strong>Trainer:</strong> {{ form.trainer_name }}<br>
+                        <strong>Trainer Days:</strong> {{ form.trainer_days }}
+                    {% else %}
+                        <strong>Supplier:</strong> {{ form.supplier_name }}
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>From:</strong> {{ form.start_date }}<br>
+                    <strong>To:</strong> {{ form.end_date }}<br>
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{{ url_for('view_form', form_id=form.id) }}" class="btn btn-sm btn-outline-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                            </svg>
+                            View
+                        </a>
+                        <a href="{{ url_for('edit_form', form_id=form.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                            </svg>
+                            Edit
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('list_forms', page=page-1, **params|remove_param('page')) }}">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Previous</span>
+        </li>
+        {% endif %}
+        
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('list_forms', page=p, **params|remove_param('page')) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('list_forms', page=page+1, **params|remove_param('page')) }}">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Next</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Results Summary -->
+<div class="text-center text-muted mb-4">
+    Showing {{ forms|length }} of {{ total_forms }} total entries
+    {% if total_pages > 1 %}
+    (Page {{ page }} of {{ total_pages }})
+    {% endif %}
+</div>
+
+{% else %}
+<div class="alert alert-info text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-info-circle mb-2" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+    </svg>
+    <h4 class="alert-heading">No Training Forms Found</h4>
+    <p>No training form submissions match your search criteria.</p>
+    {% if has_filters %}
+    <a href="{{ url_for('list_forms') }}" class="btn btn-outline-primary mt-2">Clear All Filters</a>
+    {% else %}
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-2">Submit a New Form</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    function resetFilters() {
+        window.location.href = "{{ url_for('list_forms') }}";
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date pickers
+        flatpickr(".date-picker", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+    });
+</script>
+{% endblock %}

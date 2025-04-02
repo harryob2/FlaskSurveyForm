@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}{% if edit_mode %}Edit{% else %}Submit{% endif %} Training Form{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trainee_search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header {% if edit_mode %}bg-secondary{% else %}bg-primary{% endif %} text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="fs-4 mb-0">
+                {% if edit_mode %}
+                Edit Training Form #{{ form_id }}
+                {% else %}
+                Training Form
+                {% endif %}
+            </h2>
+            {% if edit_mode %}
+            <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-outline-light btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+                Cancel Editing
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if edit_mode %}
+        <form method="POST" action="{{ url_for('edit_form', form_id=form_id) }}" id="training-form">
+        {% else %}
+        <form method="POST" action="{{ url_for('submit_form') }}" id="training-form">
+        {% endif %}
+            {{ form.csrf_token }}
+            
+            <!-- Hidden fields for JavaScript -->
+            {{ form.department(class="d-none", id="department_hidden") }}
+            <input type="hidden" id="trainees_data" name="trainees_data" value="">
+            
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <h3 class="fs-5 border-bottom pb-2 mb-3">Training Details</h3>
+                </div>
+                
+                <!-- Training Type Selection - first question -->
+                <div class="col-md-12 mb-4">
+                    <div class="form-group">
+                        {{ form.training_type.label(class="form-label fw-bold") }}
+                        <div>
+                            {% for subfield in form.training_type %}
+                            <div class="form-check">
+                                {{ subfield(class="form-check-input training-type-radio") }}
+                                {{ subfield.label(class="form-check-label") }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conditional sections based on training type -->
+                <div id="training-details-section" class="col-12 mb-3 d-none">
+                    <hr>
+                    
+                    <!-- Trainer/Supplier Name Fields (shown conditionally based on training type) -->
+                    <div id="internal-trainer-container" class="col-md-12 mb-3 d-none">
+                        {{ form.trainer_name.label(class="form-label") }}
+                        <div class="trainee-search-box">
+                            <input type="text" class="form-control" id="trainer_name_search" name="trainer_name_search" placeholder="Search by name or email..." autocomplete="off">
+                            <!-- Dropdown for trainer search results -->
+                            <div id="trainer-search-results" class="trainee-search-results hidden"></div>
+                        </div>
+                        {{ form.trainer_name(class="form-control d-none", id="trainer_name_hidden") }}
+                        <div class="form-text trainer-search-hint">Type at least 2 characters to search for an employee</div>
+                    </div>
+                    
+                    <div id="external-supplier-container" class="col-md-12 mb-3 d-none">
+                        {{ form.supplier_name.label(class="form-label") }}
+                        {{ form.supplier_name(class="form-control", placeholder="Enter supplier or external trainer name") }}
+                    </div>
+                    
+                    <!-- Location Fields -->
+                    <div class="col-md-12 mb-3">
+                        <div class="form-group">
+                            {{ form.location_type.label(class="form-label") }}
+                            <div>
+                                {% for subfield in form.location_type %}
+                                <div class="form-check form-check-inline">
+                                    {{ subfield(class="form-check-input location-type-radio") }}
+                                    {{ subfield.label(class="form-check-label") }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="location-details-container" class="col-md-12 mb-3 d-none">
+                        {{ form.location_details.label(class="form-label") }}
+                        {{ form.location_details(class="form-control", placeholder="Enter location details") }}
+                        <div class="form-text">Required for offsite training</div>
+                    </div>
+                                        
+                    <!-- Trainer Days (only shown for Internal Training) -->
+                    <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
+                        {{ form.trainer_days.label(class="form-label") }}
+                        {{ form.trainer_days(class="form-control", type="number", step="0.5", min="0") }}
+                        <div class="form-text">Enter the amount of time the trainer spent preparing and administering this training in days i.e. if you spent 4 hours preparing for the training and 8 hours delivering the training, enter 1.5</div>
+                    </div>
+                    
+                    <!-- Training Dates -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.start_date.label(class="form-label") }}
+                            {{ form.start_date(class="form-control date-picker") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.end_date.label(class="form-label") }}
+                            {{ form.end_date(class="form-control date-picker") }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-12 mb-3">
+                    <h3 class="fs-5 border-bottom pb-2 mb-3">Add Trainees</h3>
+                </div>
+                
+                <div class="col-md-12 mb-4">
+                    <div class="trainee-search-container">
+                        <div class="trainee-search-box">
+                            <div class="input-group mb-3">
+                                <input type="text" id="trainee-search-input" class="form-control" 
+                                       placeholder="Search by name or email..." autocomplete="off">
+                                <button class="btn btn-primary" type="button" id="add-trainee-btn">
+                                    <i class="bi bi-plus-lg"></i> Add Trainee
+                                </button>
+                            </div>
+                            
+                            <!-- Dropdown for search results -->
+                            <div id="trainee-search-results" class="trainee-search-results hidden"></div>
+                        </div>
+                        
+                        <div id="no-trainees-message" class="no-trainees-message">
+                            <i class="bi bi-people fs-4 d-block mb-2"></i>
+                            No trainees have been added yet
+                        </div>
+                        
+                        <div id="trainees-list" class="trainees-list"></div>
+                    </div>
+                    
+                    <!-- Hidden field to store trainees data -->
+                    <input type="hidden" name="trainees_data" id="trainees_data" value="">
+                </div>
+                
+                <div class="col-md-12 mt-4">
+                    <div class="d-flex justify-content-between">
+                        {% if edit_mode %}
+                        <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-primary">Submit Form</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
+<script src="{{ url_for('static', filename='data/employees.js') }}"></script>
+<script src="{{ url_for('static', filename='js/employee_search.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle conditional form display based on training type selection
+        const trainingTypeRadios = document.querySelectorAll('.training-type-radio');
+        const trainingDetailsSection = document.getElementById('training-details-section');
+        const internalTrainerContainer = document.getElementById('internal-trainer-container');
+        const externalSupplierContainer = document.getElementById('external-supplier-container');
+        const trainerDaysContainer = document.getElementById('trainer-days-container');
+        const locationTypeRadios = document.querySelectorAll('.location-type-radio');
+        const locationDetailsContainer = document.getElementById('location-details-container');
+        
+        // Function to handle training type selection
+        function handleTrainingTypeChange() {
+            const selectedTrainingType = document.querySelector('.training-type-radio:checked')?.value;
+            
+            if (selectedTrainingType) {
+                // Show the details section
+                trainingDetailsSection.classList.remove('d-none');
+                
+                // Show the appropriate trainer/supplier field based on training type
+                if (selectedTrainingType === 'Internal Training') {
+                    internalTrainerContainer.classList.remove('d-none');
+                    externalSupplierContainer.classList.add('d-none');
+                    trainerDaysContainer.classList.remove('d-none');
+                    // Make trainer days required for internal training
+                    document.querySelector('input[name="trainer_days"]').required = true;
+                } else if (selectedTrainingType === 'External Training') {
+                    internalTrainerContainer.classList.add('d-none');
+                    externalSupplierContainer.classList.remove('d-none');
+                    trainerDaysContainer.classList.add('d-none');
+                    // Remove required attribute for external training
+                    document.querySelector('input[name="trainer_days"]').required = false;
+                }
+            } else {
+                // Hide the details section if no type is selected
+                trainingDetailsSection.classList.add('d-none');
+                trainerDaysContainer.classList.add('d-none');
+            }
+        }
+        
+        // Function to handle location type selection
+        function handleLocationTypeChange() {
+            const selectedLocationType = document.querySelector('.location-type-radio:checked')?.value;
+            
+            if (selectedLocationType === 'Offsite') {
+                locationDetailsContainer.classList.remove('d-none');
+            } else {
+                locationDetailsContainer.classList.add('d-none');
+            }
+        }
+        
+        // Add event listeners to training type radios
+        trainingTypeRadios.forEach(radio => {
+            radio.addEventListener('change', handleTrainingTypeChange);
+        });
+        
+        // Add event listeners to location type radios
+        locationTypeRadios.forEach(radio => {
+            radio.addEventListener('change', handleLocationTypeChange);
+        });
+        
+        // Initial check for pre-selected values (e.g., when editing a form)
+        handleTrainingTypeChange();
+        handleLocationTypeChange();
+        
+        // Initialize date pickers
+        flatpickr(".date-picker", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+        
+        // Form validation
+        const form = document.getElementById('training-form');
+        form.addEventListener('submit', function(event) {
+            if (!validateDates()) {
+                event.preventDefault();
+            }
+            
+            // Validate supplier name is provided when external trainer is selected
+            const trainerType = document.querySelector('input[name="trainer_type"]:checked');
+            if (trainerType && trainerType.value === 'External Trainer') {
+                const supplierName = document.querySelector('input[name="supplier_name"]');
+                if (!supplierName.value.trim()) {
+                    alert('Supplier Name is required for External Trainers');
+                    event.preventDefault();
+                    supplierName.focus();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

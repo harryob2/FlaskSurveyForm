@@ -1,0 +1,76 @@
+/* Custom styles for the Training Form application */
+
+/* Logo styling */
+.logo-container {
+    background-color: #ffffff;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+
+.logo-container img {
+    max-height: 40px;
+    width: auto;
+}
+
+/* Form section headings */
+.form-section-heading {
+    border-bottom: 1px solid var(--bs-gray-600);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Improve form field spacing */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Custom field validation styling */
+.is-invalid {
+    border-color: var(--bs-danger) !important;
+}
+
+.invalid-feedback {
+    color: var(--bs-danger);
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* Make certain elements stand out */
+.card-header {
+    font-weight: 500;
+}
+
+/* Style required field labels */
+.required-field::after {
+    content: "*";
+    color: var(--bs-danger);
+    margin-left: 0.25rem;
+}
+
+/* Custom styling for radio buttons and checkboxes */
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* File input styling */
+.form-control[type="file"]:not(:disabled):not([readonly]) {
+    cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Custom styling for date picker inputs */
+.flatpickr-input {
+    background-color: var(--bs-body-bg) !important;
+}
