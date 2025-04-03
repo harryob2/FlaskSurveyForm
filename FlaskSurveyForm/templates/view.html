@@ -4,115 +4,195 @@
 
 {% block content %}
 <div class="container py-4">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fs-4">Training Form Details</h2>
-        <div>
-            <a href="{{ url_for('list_forms') }}" class="btn btn-outline-secondary me-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-                </svg>
-                Back to List
-            </a>
-            <a href="{{ url_for('edit_form', form_id=form.id) }}" class="btn btn-outline-primary me-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                </svg>
-                Edit Form
-            </a>
-            <a href="{{ url_for('index') }}" class="btn btn-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                    <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"/>
-                </svg>
-                New Submission
+        <div class="d-flex align-items-center gap-2">
+            <!-- Approval Status -->
+            <span class="badge bg-{% if form.approved %}success{% else %}warning{% endif %}">
+                {{ 'Approved' if form.approved else 'Pending Approval' }}
+            </span>
+            <a href="{{ url_for('approve_training', form_id=form.id) }}"
+                class="btn btn-sm btn-{% if form.approved %}outline-danger{% else %}outline-success{% endif %}">
+                {{ 'Unapprove' if form.approved else 'Approve' }}
             </a>
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <!-- Main Form Card -->
+    <div class="card shadow-sm mb-4">
+        <!-- Form Header -->
         <div class="card-header bg-secondary text-white">
-            <h3 class="fs-5 mb-0">Form #{{ form.id }} - 
-                {% if form.trainees_data %}
-                    {% set trainees = form.trainees_data|from_json %}
-                    {% if trainees and trainees|length > 0 and trainees[0].firstName %}
-                        {% if trainees|length > 1 %}
-                            {{ trainees[0].firstName }} {{ trainees[0].lastName }} (+ {{ trainees|length - 1 }} more)
-                        {% else %}
-                            {{ trainees[0].firstName }} {{ trainees[0].lastName }}
-                        {% endif %}
+            <h3 class="fs-5 mb-0">
+                Form #{{ form.id }} - {{ form.training_type }}
+                <small class="d-block mt-1">
+                    {% if trainees %}
+                    {{ trainees|length }} attendee{{ 's' if trainees|length > 1 }}
                     {% else %}
-                        {{ form.trainee_name if form.trainee_name else 'No trainee name' }}
+                    No attendees
                     {% endif %}
-                {% else %}
-                    {{ form.trainee_name if form.trainee_name else 'No trainee name' }}
-                {% endif %}
+                </small>
             </h3>
         </div>
+
+        <!-- Card Body -->
         <div class="card-body">
+            <!-- Training Details Row -->
             <div class="row mb-4">
+                <!-- Left Column -->
                 <div class="col-md-6">
-                    <h4 class="fs-6 mb-3">Trainee Information</h4>
-                    <dl class="row">
-                        {% if trainees %}
-                            <dt class="col-sm-4">Trainees</dt>
+                    <div class="mb-4">
+                        <h4 class="fs-6 text-primary mb-3">Training Information</h4>
+                        <dl class="row">
+                            <dt class="col-sm-4">Start Date</dt>
+                            <dd class="col-sm-8">{{ form.start_date }}</dd>
+
+                            <dt class="col-sm-4">End Date</dt>
+                            <dd class="col-sm-8">{{ form.end_date }}</dd>
+
+                            <dt class="col-sm-4">Location</dt>
                             <dd class="col-sm-8">
-                                <ul class="list-unstyled mb-0">
-                                    {% for trainee in trainees %}
-                                        <li class="mb-2">
-                                            <strong>{{ trainee.name }}</strong><br>
-                                            <small class="text-muted">{{ trainee.email }}</small><br>
-                                            <small class="text-muted fst-italic">{{ trainee.department }}</small>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
+                                {{ form.location_type }}
+                                {% if form.location_type == 'Offsite' %}
+                                <div class="text-muted small">{{ form.location_details }}</div>
+                                {% endif %}
                             </dd>
-                        {% else %}
-                            <dt class="col-sm-4">Trainee</dt>
-                            <dd class="col-sm-8">{{ form.trainee_name if form.trainee_name else 'No trainee specified' }}</dd>
-                        {% endif %}
-                    </dl>
-                </div>
-                <div class="col-md-6">
-                    <h4 class="fs-6 mb-3">Training Details</h4>
-                    <dl class="row">
-                        <dt class="col-sm-4">Training Type</dt>
-                        <dd class="col-sm-8">{{ form.training_type }}</dd>
-                        
-                        <dt class="col-sm-4">Location</dt>
-                        <dd class="col-sm-8">{{ form.location_type }}</dd>
-                        {% if form.location_type == 'Offsite' %}
-                            <dt class="col-sm-4">Location Details</dt>
-                            <dd class="col-sm-8">{{ form.location_details }}</dd>
-                        {% endif %}
-                                                
-                        <dt class="col-sm-4">Start Date</dt>
-                        <dd class="col-sm-8">{{ form.start_date }}</dd>
-                        
-                        <dt class="col-sm-4">End Date</dt>
-                        <dd class="col-sm-8">{{ form.end_date }}</dd>
-                    </dl>
-                </div>
-            </div>
-            
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h4 class="fs-6 mb-3">Trainer Details</h4>
-                    <dl class="row">
-                        {% if form.training_type == 'Internal Training' %}
-                            <dt class="col-sm-4">Trainer Name</dt>
+                        </dl>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="fs-6 text-primary mb-3">Trainer Details</h4>
+                        <dl class="row">
+                            {% if form.training_type == 'Internal Training' %}
+                            <dt class="col-sm-4">Trainer</dt>
                             <dd class="col-sm-8">{{ form.trainer_name }}</dd>
-                            
-                            <dt class="col-sm-4">Trainer Days</dt>
+
+                            <dt class="col-sm-4">Training Days</dt>
                             <dd class="col-sm-8">{{ form.trainer_days }}</dd>
-                        {% else %}
-                            <dt class="col-sm-4">Supplier Name</dt>
+                            {% else %}
+                            <dt class="col-sm-4">Supplier</dt>
                             <dd class="col-sm-8">{{ form.supplier_name }}</dd>
-                        {% endif %}
-                    </dl>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-md-6">
+                    <h4 class="fs-6 text-primary mb-3">Attendees</h4>   
+                    {% if trainees %}
+                    <div class="list-group">
+                        {% for trainee in trainees %}
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    {% if trainee.name %}
+                                    <strong>{{ trainee.name }}</strong><br>
+                                    {% endif %}
+                                    <code>{{ trainee.email }}</code>
+                                    {% if trainee.department %}
+                                    <div class="text-muted small">{{ trainee.department }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No attendees recorded</div>
+                    {% endif %}
                 </div>
             </div>
-            
-            <div class="text-muted small">
-                <p>Submitted on: {{ form.submission_date }}</p>
+
+            <!-- Expenses Section -->
+            <div class="mb-4">
+                <h4 class="fs-6 text-primary mb-3">Expenses Breakdown</h4>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title text-muted small">Travel</h5>
+                                <div class="fs-5">€{{ "%.2f"|format(form.travel_cost|default(0)) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title text-muted small">Food & Accommodation</h5>
+                                <div class="fs-5">€{{ "%.2f"|format(form.food_cost|default(0)) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title text-muted small">Materials</h5>
+                                <div class="fs-5">€{{ "%.2f"|format(form.materials_cost|default(0)) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title text-muted small">Other</h5>
+                                <div class="fs-5">€{{ "%.2f"|format(form.other_cost|default(0)) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 mt-3">
+                        <p class="mb-0">
+                            <strong>Concur Claim Number:</strong>
+                            {{ form.concur_claim or 'Not provided' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments Section -->
+            <div class="card mb-4 mt-4">
+                <div class="card-header bg-secondary">
+                    <h4 class="fs-5 mb-0">Attachments</h4>
+                </div>
+                <div class="card-body">
+                    {% if attachments %}
+                    <div class="row">
+                        {% for att in attachments %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-paperclip me-2"></i>
+                                        <a href="{{ url_for('uploaded_file', filename=att['filename']) }}"
+                                            class="text-decoration-none" target="_blank">
+                                            {{ att['filename'] }}
+                                        </a>
+                                    </div>
+                                    {% if att['description'] %}
+                                    <p class="text-muted mt-2 mb-0 small">{{ att['description'] }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">No attachments found for this training</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="card-footer text-muted small">
+            Submitted on {{ form.submission_date }}
+            <div class="float-end">
+                <a href="{{ url_for('list_forms') }}" class="btn btn-sm btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+                <a href="{{ url_for('edit_form', form_id=form.id) }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil"></i> Edit Form
+                </a>
             </div>
         </div>
     </div>
