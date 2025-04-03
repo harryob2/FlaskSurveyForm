@@ -12,6 +12,8 @@ def get_db():
     """Get a database connection"""
     conn = sqlite3.connect('training_forms.db')
     conn.row_factory = sqlite3.Row
+    # Enable foreign key constraints
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 def create_tables():
@@ -32,10 +34,25 @@ def create_tables():
             end_date DATE NOT NULL,
             trainer_days REAL,
             trainees_data TEXT,
-            submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approved INTEGER DEFAULT 0,
+            concur_claim TEXT,
+            travel_cost REAL DEFAULT 0,
+            food_cost REAL DEFAULT 0,
+            materials_cost REAL DEFAULT 0,
+            other_cost REAL DEFAULT 0
         )
     ''')
-    
+    # Attachments Table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS attachments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            training_id INTEGER NOT NULL,
+            filename TEXT NOT NULL,
+            description TEXT,
+            FOREIGN KEY(training_id) REFERENCES training_forms(id) ON DELETE CASCADE
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -48,8 +65,9 @@ def insert_training_form(form_data):
         INSERT INTO training_forms (
             training_type, trainer_name, supplier_name, location_type,
             location_details, start_date, end_date,
-            trainer_days, trainees_data
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            trainer_days, trainees_data, approved, concur_claim, travel_cost,
+            food_cost, materials_cost, other_cost
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         form_data['training_type'],
         form_data.get('trainer_name'),
@@ -59,7 +77,13 @@ def insert_training_form(form_data):
         form_data['start_date'],
         form_data['end_date'],
         form_data.get('trainer_days'),
-        form_data.get('trainees_data')
+        form_data.get('trainees_data'),
+        form_data.get('approved', False),
+        form_data.get('concur_claim'),
+        form_data.get('travel_cost', 0),
+        form_data.get('food_cost', 0),
+        form_data.get('materials_cost', 0),
+        form_data.get('other_cost', 0)
     ))
     
     form_id = cursor.lastrowid
@@ -82,7 +106,12 @@ def update_training_form(form_id, form_data):
             start_date = ?,
             end_date = ?,
             trainer_days = ?,
-            trainees_data = ?
+            trainees_data = ?,
+            travel_cost = ?,
+            food_cost = ?,
+            materials_cost = ?,
+            other_cost = ?,
+            concur_claim = ?
         WHERE id = ?
     ''', (
         form_data['training_type'],
@@ -94,6 +123,11 @@ def update_training_form(form_id, form_data):
         form_data['end_date'],
         form_data.get('trainer_days'),
         form_data.get('trainees_data'),
+        form_data.get('travel_cost', 0),
+        form_data.get('food_cost', 0),
+        form_data.get('materials_cost', 0),
+        form_data.get('other_cost', 0),
+        form_data.get('concur_claim'),
         form_id
     ))
     
@@ -114,18 +148,26 @@ def get_training_form(form_id):
     conn.close()
     
     if row:
+        print("Row Form Data: ", "&row[11]: ", row[11], "&row[12]: ", row[12], "&row[13]: ", row[13], "&row[14]: ", row[14], "&row[15]: ", row[15], "&row[16]: ", row[16])
+        row_dict = dict(row)
         return {
-            'id': row[0],
-            'training_type': row[1],
-            'trainer_name': row[2],
-            'supplier_name': row[3],
-            'location_type': row[4],
-            'location_details': row[5],
-            'start_date': row[6],
-            'end_date': row[7],
-            'trainer_days': row[8],
-            'trainees_data': row[9],
-            'submission_date': row[10]
+            'id': row_dict['id'],
+            'training_type': row_dict['training_type'],
+            'trainer_name': row_dict['trainer_name'],
+            'supplier_name': row_dict['supplier_name'],
+            'location_type': row_dict['location_type'],
+            'location_details': row_dict['location_details'],
+            'start_date': row_dict['start_date'],
+            'end_date': row_dict['end_date'],
+            'trainer_days': row_dict['trainer_days'],
+            'trainees_data': row_dict['trainees_data'],
+            'submission_date': row_dict['submission_date'],
+            'travel_cost': float(row_dict.get('travel_cost', 0)),
+            'food_cost': float(row_dict.get('food_cost', 0)),
+            'materials_cost': float(row_dict.get('materials_cost', 0)),
+            'other_cost': float(row_dict.get('other_cost', 0)),
+            'concur_claim': row_dict.get('concur_claim'),
+            'approved': bool(row_dict.get('approved', False))
         }
     return None
 
