@@ -28,7 +28,7 @@ SORT_OPTIONS = [
 ]
 
 # Allowed file extensions for file upload
-ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png", "csv"}
+ALLOWED_EXTENSIONS = {"pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png", "csv", "txt"}
 
 
 class TrainingForm(FlaskForm):
@@ -100,6 +100,29 @@ class TrainingForm(FlaskForm):
     
     # Trainees Data
     trainees_data = HiddenField('Trainees Data')
+    # New expense fields
+    travel_cost = FloatField('Travel Expenses (€)', validators=[Optional(), NumberRange(min=0)])
+    food_cost = FloatField('Food & Accommodation (€)', validators=[Optional(), NumberRange(min=0)])
+    materials_cost = FloatField('Materials (€)', validators=[Optional(), NumberRange(min=0)])
+    other_cost = FloatField('Other Expenses (€)', validators=[Optional(), NumberRange(min=0)])
+    concur_claim = StringField('Concur Claim Number')
+    
+    # Updated attendee field
+    attendee_emails = TextAreaField(
+        'Attendee Emails (comma/space separated)',
+        validators=[DataRequired()]
+    )
+    
+    # Attachment fields
+    attachments = FileField(
+        'Attachments',
+        validators=[
+            FileAllowed(list(ALLOWED_EXTENSIONS), 'Allowed file types: pdf, doc, docx, xls, xlsx, jpg, png, txt')
+        ],
+        render_kw={'multiple': True}
+    )
+    attachment_descriptions = TextAreaField('Attachment Descriptions (one per line)')
+
     
     # Submit Button
     submit = SubmitField('Submit Training Form')
