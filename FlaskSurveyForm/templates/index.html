@@ -21,9 +21,11 @@
             </h2>
             {% if edit_mode %}
             <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-outline-light btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-x-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path
+                        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
                 </svg>
                 Cancel Editing
             </a>
@@ -32,142 +34,254 @@
     </div>
     <div class="card-body">
         {% if edit_mode %}
-        <form method="POST" action="{{ url_for('edit_form', form_id=form_id) }}" id="training-form">
-        {% else %}
-        <form method="POST" action="{{ url_for('submit_form') }}" id="training-form">
-        {% endif %}
-            {{ form.csrf_token }}
-            
-            <!-- Hidden fields for JavaScript -->
-            {{ form.department(class="d-none", id="department_hidden") }}
-            <input type="hidden" id="trainees_data" name="trainees_data" value="">
-            
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <h3 class="fs-5 border-bottom pb-2 mb-3">Training Details</h3>
-                </div>
-                
-                <!-- Training Type Selection - first question -->
-                <div class="col-md-12 mb-4">
-                    <div class="form-group">
-                        {{ form.training_type.label(class="form-label fw-bold") }}
-                        <div>
-                            {% for subfield in form.training_type %}
-                            <div class="form-check">
-                                {{ subfield(class="form-check-input training-type-radio") }}
-                                {{ subfield.label(class="form-check-label") }}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Conditional sections based on training type -->
-                <div id="training-details-section" class="col-12 mb-3 d-none">
-                    <hr>
-                    
-                    <!-- Trainer/Supplier Name Fields (shown conditionally based on training type) -->
-                    <div id="internal-trainer-container" class="col-md-12 mb-3 d-none">
-                        {{ form.trainer_name.label(class="form-label") }}
-                        <div class="trainee-search-box">
-                            <input type="text" class="form-control" id="trainer_name_search" name="trainer_name_search" placeholder="Search by name or email..." autocomplete="off">
-                            <!-- Dropdown for trainer search results -->
-                            <div id="trainer-search-results" class="trainee-search-results hidden"></div>
-                        </div>
-                        {{ form.trainer_name(class="form-control d-none", id="trainer_name_hidden") }}
-                        <div class="form-text trainer-search-hint">Type at least 2 characters to search for an employee</div>
-                    </div>
-                    
-                    <div id="external-supplier-container" class="col-md-12 mb-3 d-none">
-                        {{ form.supplier_name.label(class="form-label") }}
-                        {{ form.supplier_name(class="form-control", placeholder="Enter supplier or external trainer name") }}
-                    </div>
-                    
-                    <!-- Location Fields -->
+        <form method="POST" action="{{ url_for('edit_form', form_id=form_id) }}" id="training-form"
+            enctype="multipart/form-data">
+            {% else %}
+            <form method="POST" action="{{ url_for('submit_form') }}" id="training-form" enctype="multipart/form-data">
+                {% endif %}
+                {{ form.csrf_token }}
+
+                <!-- Hidden fields for JavaScript -->
+                {{ form.department(class="d-none", id="department_hidden") }}
+                <input type="hidden" id="trainees_data" name="trainees_data" value="">
+
+                <div class="row">
                     <div class="col-md-12 mb-3">
+                        <h3 class="fs-5 border-bottom pb-2 mb-3">Training Details</h3>
+                    </div>
+
+                    <!-- Training Type Selection - first question -->
+                    <div class="col-md-12 mb-4">
                         <div class="form-group">
-                            {{ form.location_type.label(class="form-label") }}
+                            {{ form.training_type.label(class="form-label fw-bold") }}
                             <div>
-                                {% for subfield in form.location_type %}
-                                <div class="form-check form-check-inline">
-                                    {{ subfield(class="form-check-input location-type-radio") }}
+                                {% for subfield in form.training_type %}
+                                <div class="form-check">
+                                    {{ subfield(class="form-check-input training-type-radio") }}
                                     {{ subfield.label(class="form-check-label") }}
                                 </div>
                                 {% endfor %}
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="location-details-container" class="col-md-12 mb-3 d-none">
-                        {{ form.location_details.label(class="form-label") }}
-                        {{ form.location_details(class="form-control", placeholder="Enter location details") }}
-                        <div class="form-text">Required for offsite training</div>
-                    </div>
-                                        
-                    <!-- Trainer Days (only shown for Internal Training) -->
-                    <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
-                        {{ form.trainer_days.label(class="form-label") }}
-                        {{ form.trainer_days(class="form-control", type="number", step="0.5", min="0") }}
-                        <div class="form-text">Enter the amount of time the trainer spent preparing and administering this training in days i.e. if you spent 4 hours preparing for the training and 8 hours delivering the training, enter 1.5</div>
-                    </div>
-                    
-                    <!-- Training Dates -->
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.start_date.label(class="form-label") }}
-                            {{ form.start_date(class="form-control date-picker") }}
+
+                    <!-- Conditional sections based on training type -->
+                    <div id="training-details-section" class="col-12 mb-3 d-none">
+                        <hr>
+
+                        <!-- Trainer/Supplier Name Fields (shown conditionally based on training type) -->
+                        <div id="internal-trainer-container" class="col-md-12 mb-3 d-none">
+                            {{ form.trainer_name.label(class="form-label") }}
+                            <div class="trainee-search-box">
+                                <input type="text" class="form-control" id="trainer_name_search"
+                                    name="trainer_name_search" placeholder="Search by name or email..."
+                                    autocomplete="off">
+                                <!-- Dropdown for trainer search results -->
+                                <div id="trainer-search-results" class="trainee-search-results hidden"></div>
+                            </div>
+                            {{ form.trainer_name(class="form-control d-none", id="trainer_name_hidden") }}
+                            <div class="form-text trainer-search-hint">Type at least 2 characters to search for an
+                                employee
+                            </div>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            {{ form.end_date.label(class="form-label") }}
-                            {{ form.end_date(class="form-control date-picker") }}
+
+                        <div id="external-supplier-container" class="col-md-12 mb-3 d-none">
+                            {{ form.supplier_name.label(class="form-label") }}
+                            {{ form.supplier_name(class="form-control", placeholder="Enter supplier or external trainer
+                            name") }}
+                        </div>
+
+                        <!-- Location Fields -->
+                        <div class="col-md-12 mb-3">
+                            <div class="form-group">
+                                {{ form.location_type.label(class="form-label") }}
+                                <div>
+                                    {% for subfield in form.location_type %}
+                                    <div class="form-check form-check-inline">
+                                        {{ subfield(class="form-check-input location-type-radio") }}
+                                        {{ subfield.label(class="form-check-label") }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="location-details-container" class="col-md-12 mb-3 d-none">
+                            {{ form.location_details.label(class="form-label") }}
+                            {{ form.location_details(class="form-control", placeholder="Enter location details") }}
+                            <div class="form-text">Required for offsite training</div>
+                        </div>
+
+                        <!-- Trainer Days (only shown for Internal Training) -->
+                        <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
+                            {{ form.trainer_days.label(class="form-label") }}
+                            {{ form.trainer_days(class="form-control", type="number", step="0.5", min="0") }}
+                            <div class="form-text">Enter the amount of time the trainer spent preparing and
+                                administering
+                                this training in days i.e. if you spent 4 hours preparing for the training and 8 hours
+                                delivering the training, enter 1.5</div>
+                        </div>
+
+                        <!-- Training Dates -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.start_date.label(class="form-label") }}
+                                {{ form.start_date(class="form-control date-picker") }}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.end_date.label(class="form-label") }}
+                                {{ form.end_date(class="form-control date-picker") }}
+                            </div>
+                        </div>
+                        <!-- Expenses Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h3 class="fs-5 border-bottom pb-2 mb-3">Expenses</h3>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        {{ form.travel_cost.label(class="form-label") }}
+                                        {{ form.travel_cost(class="form-control", placeholder="0.00") }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        {{ form.food_cost.label(class="form-label") }}
+                                        {{ form.food_cost(class="form-control", placeholder="0.00") }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        {{ form.materials_cost.label(class="form-label") }}
+                                        {{ form.materials_cost(class="form-control", placeholder="0.00") }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        {{ form.other_cost.label(class="form-label") }}
+                                        {{ form.other_cost(class="form-control", placeholder="0.00") }}
+                                    </div>
+                                    <div class="col-md-12">
+                                        {{ form.concur_claim.label(class="form-label") }}
+                                        {{ form.concur_claim(class="form-control", placeholder="Enter Concur claim number")
+                                        }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if edit_mode and existing_attachments %}
+                        <div class="mb-3">
+                            <h5 class="fs-6">Existing Attachments</h5>
+                            <div class="list-group">
+                                {% for att in existing_attachments %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-paperclip me-2"></i>
+                                            <a href="{{ url_for('uploaded_file', filename=att.filename) }}"
+                                                target="_blank">
+                                                {{ att.filename }}
+                                            </a>
+                                            {% if att.description %}
+                                            <div class="text-muted small">{{ att.description }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <a href="#" class="text-danger delete-attachment" data-id="{{ att.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <!-- Attachments Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h3 class="fs-5 border-bottom pb-2 mb-3">Attachments</h3>
+                                <div class="mb-3">
+                                    {{ form.attachments.label(class="form-label") }}
+                                    {{ form.attachments(class="form-control", multiple="multiple") }}
+                                    <small class="form-text text-muted">
+                                        Hold Ctrl/Cmd to select multiple files (Max 10MB each)
+                                    </small>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.attachment_descriptions.label(class="form-label") }}
+                                    {{ form.attachment_descriptions(class="form-control",
+                                    placeholder="Enter one description per line matching the file order",
+                                    rows=3) }}
+                                    <small class="form-text text-muted">
+                                        Describe each attachment in the order they were selected
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="col-md-12 mb-3">
-                    <h3 class="fs-5 border-bottom pb-2 mb-3">Add Trainees</h3>
-                </div>
-                
-                <div class="col-md-12 mb-4">
-                    <div class="trainee-search-container">
-                        <div class="trainee-search-box">
-                            <div class="input-group mb-3">
-                                <input type="text" id="trainee-search-input" class="form-control" 
-                                       placeholder="Search by name or email..." autocomplete="off">
-                                <button class="btn btn-primary" type="button" id="add-trainee-btn">
-                                    <i class="bi bi-plus-lg"></i> Add Trainee
+
+                    <div class="col-md-12 mb-3">
+                        <h3 class="fs-5 border-bottom pb-2 mb-3">Add Trainees</h3>
+                    </div>
+
+                    <div class="col-md-12 mb-4">
+                        <div class="trainee-search-container">
+                            <div class="trainee-search-box">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="trainee-search-input" class="form-control"
+                                        placeholder="Search by name or email..." autocomplete="off">
+                                    <button class="btn btn-primary" type="button" id="add-trainee-btn">
+                                        <i class="bi bi-plus-lg"></i> Add Trainee
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown for search results -->
+                                <div id="trainee-search-results" class="trainee-search-results hidden"></div>
+                            </div>
+
+                            <div id="no-trainees-message" class="no-trainees-message">
+                                <i class="bi bi-people fs-4 d-block mb-2"></i>
+                                No trainees have been added yet
+                            </div>
+
+                            <div id="trainees-list" class="trainees-list"></div>
+                        </div>
+                        <!-- Updated the trainees section -->
+                        <h3 class="fs-5 border-bottom pb-2 mb-3">Attendees</h3>
+                        <div class="mb-3">
+                            {{ form.attendee_emails.label(class="form-label") }}
+                            {{ form.attendee_emails(class="form-control",
+                            placeholder="Enter emails separated by commas or spaces",
+                            rows=4) }}
+                            <small class="form-text text-muted">
+                                Example: john@example.com, jane@domain.com
+                            </small>
+                        </div>
+                        <!-- Ends here Updated TS -->
+                        <!-- Hidden field to store trainees data -->
+                        <input type="hidden" name="trainees_data" id="trainees_data" value="">
+                    </div>
+                    <!-- Visual trainee list -->
+                    <div id="trainees-list" class="mb-3">
+                        {% if edit_mode and form.trainees_data.data %}
+                        {% set trainees = json.loads(form.trainees_data.data) %}
+                        {% for email in trainees %}
+                        <div class="trainee-item mb-2 p-2 border rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-primary">{{ email }}</div>
+                                <button type="button" class="btn btn-sm btn-danger remove-trainee">
+                                    <i class="bi bi-x"></i>
                                 </button>
                             </div>
-                            
-                            <!-- Dropdown for search results -->
-                            <div id="trainee-search-results" class="trainee-search-results hidden"></div>
                         </div>
-                        
-                        <div id="no-trainees-message" class="no-trainees-message">
-                            <i class="bi bi-people fs-4 d-block mb-2"></i>
-                            No trainees have been added yet
-                        </div>
-                        
-                        <div id="trainees-list" class="trainees-list"></div>
-                    </div>
-                    
-                    <!-- Hidden field to store trainees data -->
-                    <input type="hidden" name="trainees_data" id="trainees_data" value="">
-                </div>
-                
-                <div class="col-md-12 mt-4">
-                    <div class="d-flex justify-content-between">
-                        {% if edit_mode %}
-                        <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success">Save Changes</button>
-                        {% else %}
-                        <button type="submit" class="btn btn-primary">Submit Form</button>
+                        {% endfor %}
                         {% endif %}
                     </div>
+                    <div class="col-md-12 mt-4">
+                        <div class="d-flex justify-content-between">
+                            {% if edit_mode %}
+                            <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">Save Changes</button>
+                            {% else %}
+                            <button type="submit" class="btn btn-primary">Submit Form</button>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
     </div>
 </div>
 {% endblock %}
@@ -177,8 +291,9 @@
 <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
 <script src="{{ url_for('static', filename='data/employees.js') }}"></script>
 <script src="{{ url_for('static', filename='js/employee_search.js') }}"></script>
+<script src="{{ url_for('static', filename='js/attachment.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Handle conditional form display based on training type selection
         const trainingTypeRadios = document.querySelectorAll('.training-type-radio');
         const trainingDetailsSection = document.getElementById('training-details-section');
@@ -187,15 +302,15 @@
         const trainerDaysContainer = document.getElementById('trainer-days-container');
         const locationTypeRadios = document.querySelectorAll('.location-type-radio');
         const locationDetailsContainer = document.getElementById('location-details-container');
-        
+
         // Function to handle training type selection
         function handleTrainingTypeChange() {
             const selectedTrainingType = document.querySelector('.training-type-radio:checked')?.value;
-            
+
             if (selectedTrainingType) {
                 // Show the details section
                 trainingDetailsSection.classList.remove('d-none');
-                
+
                 // Show the appropriate trainer/supplier field based on training type
                 if (selectedTrainingType === 'Internal Training') {
                     internalTrainerContainer.classList.remove('d-none');
@@ -216,45 +331,45 @@
                 trainerDaysContainer.classList.add('d-none');
             }
         }
-        
+
         // Function to handle location type selection
         function handleLocationTypeChange() {
             const selectedLocationType = document.querySelector('.location-type-radio:checked')?.value;
-            
+
             if (selectedLocationType === 'Offsite') {
                 locationDetailsContainer.classList.remove('d-none');
             } else {
                 locationDetailsContainer.classList.add('d-none');
             }
         }
-        
+
         // Add event listeners to training type radios
         trainingTypeRadios.forEach(radio => {
             radio.addEventListener('change', handleTrainingTypeChange);
         });
-        
+
         // Add event listeners to location type radios
         locationTypeRadios.forEach(radio => {
             radio.addEventListener('change', handleLocationTypeChange);
         });
-        
+
         // Initial check for pre-selected values (e.g., when editing a form)
         handleTrainingTypeChange();
         handleLocationTypeChange();
-        
+
         // Initialize date pickers
         flatpickr(".date-picker", {
             dateFormat: "Y-m-d",
             allowInput: true
         });
-        
+
         // Form validation
         const form = document.getElementById('training-form');
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', function (event) {
             if (!validateDates()) {
                 event.preventDefault();
             }
-            
+
             // Validate supplier name is provided when external trainer is selected
             const trainerType = document.querySelector('input[name="trainer_type"]:checked');
             if (trainerType && trainerType.value === 'External Trainer') {
