@@ -11,11 +11,13 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 SECRET_KEY = os.environ.get('SESSION_SECRET', 'dev-secret-key')  # For CSRF protection
 
 # File upload settings
-UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', './uploads')
+# UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', './uploads')
+UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), 'uploads'))
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'txt'}
 
 # SQLite database settings (for development/testing)
-DB_PATH = os.environ.get('DB_PATH', 'training_form.db')
+DB_PATH = os.environ.get('DB_PATH', 'training_forms.db')
 
 # MariaDB/MySQL database settings (for production)
 # These would be used when connecting to the azulimpbi01 server
