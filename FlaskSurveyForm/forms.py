@@ -4,6 +4,8 @@ Form definitions for the training form application.
 This module defines the form classes used for data validation and rendering.
 """
 from datetime import date
+import re
+import json
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
@@ -146,6 +148,32 @@ class TrainingForm(FlaskForm):
         """Validate that supplier name is provided for External Training"""
         if self.training_type.data == 'External Training' and not field.data:
             raise ValidationError('Supplier name is required for external training.')
+
+    def process_emails(self):
+        """Process and clean the attendee emails"""
+        if not self.attendee_emails.data:
+            return []
+        emails = re.split(r'[,\s]+', self.attendee_emails.data)
+        return [email.strip() for email in emails if email.strip()]
+    
+    def prepare_form_data(self):
+        """Prepare form data for database insertion"""
+        return {
+            'training_type': self.training_type.data,
+            'trainer_name': self.trainer_name.data if self.training_type.data == 'Internal Training' else None,
+            'supplier_name': self.supplier_name.data if self.training_type.data == 'External Training' else None,
+            'location_type': self.location_type.data,
+            'location_details': self.location_details.data if self.location_type.data == 'Offsite' else None,
+            'start_date': self.start_date.data.strftime('%Y-%m-%d'),
+            'end_date': self.end_date.data.strftime('%Y-%m-%d'),
+            'trainer_days': float(self.trainer_days.data) if self.trainer_days.data else None,
+            'trainees_data': json.dumps(self.process_emails()),
+            'travel_cost': float(self.travel_cost.data) if self.travel_cost.data else 0.0,
+            'food_cost': float(self.food_cost.data) if self.food_cost.data else 0.0,
+            'materials_cost': float(self.materials_cost.data) if self.materials_cost.data else 0.0,
+            'other_cost': float(self.other_cost.data) if self.other_cost.data else 0.0,
+            'concur_claim': self.concur_claim.data
+        }
 
 
 class InvoiceForm(FlaskForm):

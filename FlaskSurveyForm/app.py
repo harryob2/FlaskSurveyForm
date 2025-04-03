@@ -8,7 +8,6 @@ import csv
 import json
 import logging
 from datetime import datetime
-from datetime import datetime as dt
 import re
 from models import get_db, create_tables
 
@@ -92,29 +91,9 @@ def submit_form():
     # Validate the form data
     if form.validate_on_submit():
         try:
-            # Process emails
-            emails = re.split(r'[,\s]+', form.attendee_emails.data)
-            emails = [email.strip() for email in emails if email.strip()]
-            
-            # Prepare form data for database insertion, passing the request object for trainees data
-            form_data = {
-                'training_type': form.training_type.data,
-                'trainer_name': form.trainer_name.data,
-                'supplier_name': form.supplier_name.data,
-                'location_type': form.location_type.data,
-                'location_details': form.location_details.data,
-                'start_date': form.start_date.data.strftime('%Y-%m-%d'),
-                'end_date': form.end_date.data.strftime('%Y-%m-%d'),
-                'trainer_days': float(form.trainer_days.data) if form.trainer_days.data else None,
-                'trainees_data': json.dumps(emails),
-                'travel_cost': float(form.travel_cost.data) if form.travel_cost.data else 0.0,
-                'food_cost': float(form.food_cost.data) if form.food_cost.data else 0.0,
-                'materials_cost': float(form.materials_cost.data) if form.materials_cost.data else 0.0,
-                'other_cost': float(form.other_cost.data) if form.other_cost.data else 0.0,
-                'concur_claim': form.concur_claim.data
-            }
+            # Prepare form data using the form's method
+            form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
-            logging.debug(f"Trainees data in prepared data: {form_data.get('trainees_data')}")
             
             # Insert the form data into the database
             form_id = insert_training_form(form_data)
@@ -306,27 +285,8 @@ def edit_form(form_id):
     
     if form.validate_on_submit():
         try:
-            # Process emails
-            emails = re.split(r'[,\s]+', form.attendee_emails.data)
-            emails = [email.strip() for email in emails if email.strip()]
-            
-            # Prepare form data
-            form_data = {
-                'training_type': form.training_type.data,
-                'trainer_name': form.trainer_name.data if form.training_type.data == 'Internal Training' else None,
-                'supplier_name': form.supplier_name.data if form.training_type.data == 'External Training' else None,
-                'location_type': form.location_type.data,
-                'location_details': form.location_details.data if form.location_type.data == 'Offsite' else None,
-                'start_date': form.start_date.data.strftime('%Y-%m-%d'),
-                'end_date': form.end_date.data.strftime('%Y-%m-%d'),
-                'trainer_days': float(form.trainer_days.data) if form.trainer_days.data else None,
-                'trainees_data': json.dumps(emails),
-                'travel_cost': float(form.travel_cost.data) if form.travel_cost.data else 0.0,
-                'food_cost': float(form.food_cost.data) if form.food_cost.data else 0.0,
-                'materials_cost': float(form.materials_cost.data) if form.materials_cost.data else 0.0,
-                'other_cost': float(form.other_cost.data) if form.other_cost.data else 0.0,
-                'concur_claim': form.concur_claim.data
-            }
+            # Prepare form data using the form's method
+            form_data = form.prepare_form_data()
             
             # Update in database
             update_training_form(form_id, form_data)
