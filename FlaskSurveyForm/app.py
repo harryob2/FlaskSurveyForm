@@ -8,9 +8,12 @@ import csv
 import json
 import logging
 from datetime import datetime
+from datetime import datetime as dt
+import re
+from models import get_db, create_tables
 
 from flask import (
-    Flask, render_template, request, redirect,
+    Flask, render_template, request, redirect, send_from_directory,
     url_for, flash, jsonify, abort
 )
 from werkzeug.utils import secure_filename
@@ -65,6 +68,11 @@ def remove_param(params, param_name):
         return new_params
     return params
 
+
+@app.context_processor
+def inject_current_year():
+    return {'current_year': datetime.now().year}
+
 @app.route('/')
 def index():
     """Display the training form"""
@@ -84,8 +92,27 @@ def submit_form():
     # Validate the form data
     if form.validate_on_submit():
         try:
+            # Process emails
+            emails = re.split(r'[,\s]+', form.attendee_emails.data)
+            emails = [email.strip() for email in emails if email.strip()]
+            
             # Prepare form data for database insertion, passing the request object for trainees data
-            form_data = prepare_form_data(form, request)
+            form_data = {
+                'training_type': form.training_type.data,
+                'trainer_name': form.trainer_name.data,
+                'supplier_name': form.supplier_name.data,
+                'location_type': form.location_type.data,
+                'location_details': form.location_details.data,
+                'start_date': form.start_date.data.strftime('%Y-%m-%d'),
+                'end_date': form.end_date.data.strftime('%Y-%m-%d'),
+                'trainer_days': float(form.trainer_days.data) if form.trainer_days.data else None,
+                'trainees_data': json.dumps(emails),
+                'travel_cost': float(form.travel_cost.data) if form.travel_cost.data else 0.0,
+                'food_cost': float(form.food_cost.data) if form.food_cost.data else 0.0,
+                'materials_cost': float(form.materials_cost.data) if form.materials_cost.data else 0.0,
+                'other_cost': float(form.other_cost.data) if form.other_cost.data else 0.0,
+                'concur_claim': form.concur_claim.data
+            }
             logging.debug(f"Prepared form data: {form_data}")
             logging.debug(f"Trainees data in prepared data: {form_data.get('trainees_data')}")
             
@@ -93,6 +120,27 @@ def submit_form():
             form_id = insert_training_form(form_data)
             logging.debug(f"Form inserted with ID: {form_id}")
             
+            # Process attachments
+            if form.attachments.data:
+                descriptions = [d.strip() for d in form.attachment_descriptions.data.split('\n')]
+                for i, file in enumerate(request.files.getlist('attachments')):
+                    if file and file.filename:
+                        filename = secure_filename(file.filename)
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        file.save(file_path)
+                        
+                        # Get description or use empty string
+                        description = descriptions[i] if i < len(descriptions) else ''
+                        
+                        # Insert attachment
+                        conn = get_db()
+                        cursor = conn.cursor()
+                        cursor.execute('''
+                            INSERT INTO attachments (training_id, filename, description)
+                            VALUES (?, ?, ?)
+                        ''', (form_id, filename, description))
+                        conn.commit()
+                        conn.close()
             return redirect(url_for('success'))
         except Exception as e:
             logging.error(f"Error processing form submission: {e}")
@@ -104,6 +152,20 @@ def submit_form():
         return redirect(url_for('index'))
     
     return render_template('index.html', form=form, now=datetime.now())
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+@app.route('/approve/<int:form_id>')
+def approve_training(form_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE training_forms SET approved = NOT approved WHERE id = ?', (form_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('view_form', form_id=form_id))
 
 @app.route('/success')
 def success():
@@ -158,60 +220,158 @@ def list_forms():
 def view_form(form_id):
     """Display a single training form submission"""
     form_data = get_training_form(form_id)
-    
+    print("DEBUG - Form Data Received:", form_data)
     if not form_data:
         flash('Training form not found', 'danger')
         return redirect(url_for('list_forms'))
     
-    # Parse trainees data from JSON if it exists
-    trainees_data = []
-    if form_data.get('trainees_data'):
-        try:
-            trainees_data = json.loads(form_data['trainees_data'])
-        except json.JSONDecodeError as e:
-            logging.error(f"Error parsing trainees data: {e}")
-            trainees_data = []
+    # Get attachments
+    conn = get_db()
+    cursor = conn.cursor()
     
-    return render_template('view.html', form=form_data, trainees=trainees_data, now=datetime.now())
+    # Get attachments records
+    cursor.execute('SELECT * FROM attachments WHERE training_id = ?', (form_id,))
+    attachments = [dict(row) for row in cursor.fetchall()]
+    
+    # Close connection
+    conn.close()
+    # Parse trainees data from JSON if it exists
+    trainees = []
+    if form_data.get('trainees_data'):
+            try:
+                trainees = json.loads(form_data['trainees_data'])
+                if isinstance(trainees, list) and len(trainees) > 0 and not isinstance(trainees[0], dict):
+                    trainees = [{'email': email} for email in trainees]
+            except:
+                trainees = []
+    # Parse comma-separated attendee emails
+    attendee_emails = []
+    if form_data.get('attendee_emails'):
+        attendee_emails = [e.strip() for e in form_data['trainees_data'].split(',') if e.strip()]
+
+    print("Attachments from DB:", attachments)
+    return render_template('view.html', form=form_data, trainees=trainees, attachments=attachments, attendee_emails=attendee_emails, now=datetime.now()
+    )
 
 @app.route('/edit/<int:form_id>', methods=['GET', 'POST'])
 def edit_form(form_id):
     """Edit an existing training form submission"""
+    logging.debug(f"Edit form request - Method: {request.method}, Form ID: {form_id}")
     form = TrainingForm()
     
     if request.method == 'GET':
         # Load existing form data
         form_data = get_training_form(form_id)
         if form_data:
+            # Basic fields
             form.training_type.data = form_data['training_type']
             form.trainer_name.data = form_data['trainer_name']
             form.supplier_name.data = form_data['supplier_name']
             form.location_type.data = form_data['location_type']
             form.location_details.data = form_data['location_details']
-            form.start_date.data = form_data['start_date']
-            form.end_date.data = form_data['end_date']
+            
+            # Date fields
+            try:
+                form.start_date.data = datetime.strptime(form_data['start_date'], '%Y-%m-%d')
+                form.end_date.data = datetime.strptime(form_data['end_date'], '%Y-%m-%d')
+            except (ValueError, KeyError) as e:
+                logging.error(f"Error parsing dates: {str(e)}")
+                flash('Error loading date information')
+                return redirect(url_for('list_forms'))
+            
+            # Numeric fields
             form.trainer_days.data = form_data['trainer_days']
-            form.trainees_data.data = form_data['trainees_data']
+            
+            # Expense fields
+            form.travel_cost.data = form_data.get('travel_cost', 0)
+            form.food_cost.data = form_data.get('food_cost', 0)
+            form.materials_cost.data = form_data.get('materials_cost', 0)
+            form.other_cost.data = form_data.get('other_cost', 0)
+            form.concur_claim.data = form_data.get('concur_claim', '')
+            
+            # Attendees
+            if form_data.get('trainees_data'):
+                try:
+                    attendees = json.loads(form_data['trainees_data'])
+                    if isinstance(attendees, list):
+                        if attendees and isinstance(attendees[0], dict):
+                            # Old format with objects
+                            emails = [t['email'] for t in attendees if 'email' in t]
+                        else:
+                            # New format with just emails
+                            emails = attendees
+                        form.attendee_emails.data = ', '.join(emails)
+                except json.JSONDecodeError as e:
+                    logging.error(f"Error parsing trainees data: {e}")
     
     if form.validate_on_submit():
-        # Convert form data to dictionary
-        form_data = {
-            'training_type': form.training_type.data,
-            'trainer_name': form.trainer_name.data if form.training_type.data == 'Internal Training' else None,
-            'supplier_name': form.supplier_name.data if form.training_type.data == 'External Training' else None,
-            'location_type': form.location_type.data,
-            'location_details': form.location_details.data if form.location_type.data == 'Offsite' else None,
-            'start_date': form.start_date.data,
-            'end_date': form.end_date.data,
-            'trainer_days': form.trainer_days.data if form.training_type.data == 'Internal Training' else None,
-            'trainees_data': form.trainees_data.data
-        }
-        
-        # Update in database
-        update_training_form(form_id, form_data)
-        return redirect(url_for('view_form', form_id=form_id))
+        try:
+            # Process emails
+            emails = re.split(r'[,\s]+', form.attendee_emails.data)
+            emails = [email.strip() for email in emails if email.strip()]
+            
+            # Prepare form data
+            form_data = {
+                'training_type': form.training_type.data,
+                'trainer_name': form.trainer_name.data if form.training_type.data == 'Internal Training' else None,
+                'supplier_name': form.supplier_name.data if form.training_type.data == 'External Training' else None,
+                'location_type': form.location_type.data,
+                'location_details': form.location_details.data if form.location_type.data == 'Offsite' else None,
+                'start_date': form.start_date.data.strftime('%Y-%m-%d'),
+                'end_date': form.end_date.data.strftime('%Y-%m-%d'),
+                'trainer_days': float(form.trainer_days.data) if form.trainer_days.data else None,
+                'trainees_data': json.dumps(emails),
+                'travel_cost': float(form.travel_cost.data) if form.travel_cost.data else 0.0,
+                'food_cost': float(form.food_cost.data) if form.food_cost.data else 0.0,
+                'materials_cost': float(form.materials_cost.data) if form.materials_cost.data else 0.0,
+                'other_cost': float(form.other_cost.data) if form.other_cost.data else 0.0,
+                'concur_claim': form.concur_claim.data
+            }
+            
+            # Update in database
+            update_training_form(form_id, form_data)
+            
+            # Handle attachments
+            if form.attachments.data:
+                descriptions = [d.strip() for d in form.attachment_descriptions.data.split('\n')]
+                
+                for i, file in enumerate(request.files.getlist('attachments')):
+                    if file and file.filename:
+                        filename = secure_filename(file.filename)
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        file.save(file_path)
+                        
+                        description = descriptions[i] if i < len(descriptions) else ''
+                        
+                        conn = get_db()
+                        cursor = conn.cursor()
+                        cursor.execute('''
+                            INSERT INTO attachments (training_id, filename, description)
+                            VALUES (?, ?, ?)
+                        ''', (form_id, filename, description))
+                        conn.commit()
+                        conn.close()
+            
+            flash('Form updated successfully!', 'success')
+            return redirect(url_for('view_form', form_id=form_id))
+            
+        except Exception as e:
+            logging.error(f"Error updating form: {str(e)}")
+            flash('An error occurred while updating the form. Please try again.', 'danger')
     
-    return render_template('index.html', form=form, edit_mode=True, form_id=form_id)
+    # Load existing attachments to display in form
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM attachments WHERE training_id = ?', (form_id,))
+    existing_attachments = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return render_template('index.html', 
+        form=form, 
+        edit_mode=True, 
+        form_id=form_id,
+        existing_attachments=existing_attachments
+    )
 
 @app.route('/api/employees')
 def get_employees():
