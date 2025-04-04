@@ -112,7 +112,7 @@ class TrainingForm(FlaskForm):
     # Updated attendee field
     attendee_emails = TextAreaField(
         'Attendee Emails (comma/space separated)',
-        validators=[DataRequired()]
+        validators=[Optional()]
     )
     
     # Attachment fields
