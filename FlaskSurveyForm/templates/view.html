@@ -57,6 +57,9 @@
                                 <div class="text-muted small">{{ form.location_details }}</div>
                                 {% endif %}
                             </dd>
+
+                            <dt class="col-sm-4">Description</dt>
+                            <dd class="col-sm-8">{{ form.training_description }}</dd>
                         </dl>
                     </div>
 
@@ -156,8 +159,7 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h5 class="card-title text-muted small">End Date</h5>
-                    <div class="fs-5">{{ form.end_date.strftime('%d-%m-%Y') if form.end_date else 'Not specified' }}
-                    </div>
+                    <div class="fs-5">{{ form.end_date if form.end_date else 'Not specified' }}</div>
                 </div>
             </div>
 

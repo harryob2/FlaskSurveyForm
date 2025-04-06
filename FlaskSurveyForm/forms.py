@@ -102,7 +102,12 @@ class TrainingForm(FlaskForm):
 
     # Trainer Days
     trainer_days = FloatField(
-        "Trainer Days", validators=[Optional(), NumberRange(min=0)]
+        "Trainer Days", validators=[DataRequired(), NumberRange(min=0)]
+    )
+
+    # Training Description
+    training_description = TextAreaField(
+        "Training Description", validators=[DataRequired()]
     )
 
     # Trainees Data
@@ -126,7 +131,7 @@ class TrainingForm(FlaskForm):
         description="Required when other expenses are entered",
     )
     concur_claim = StringField("Concur Claim Number", validators=[Optional()])
-    trainee_days = FloatField("Trainee Days", validators=[Optional()])
+    trainee_days = FloatField("Trainee Days", validators=[DataRequired()], default=0.0)
 
     # Updated attendee field
     attendee_emails = TextAreaField(
@@ -213,6 +218,8 @@ class TrainingForm(FlaskForm):
             "trainer_days": (
                 float(self.trainer_days.data) if self.trainer_days.data else None
             ),
+            "training_description": self.training_description.data or "",
+            "trainees_data": self.trainees_data.data or "",
             "travel_cost": (
                 float(self.travel_cost.data) if self.travel_cost.data else 0.0
             ),
@@ -228,7 +235,7 @@ class TrainingForm(FlaskForm):
             ),
             "concur_claim": self.concur_claim.data,
             "trainee_days": (
-                float(self.trainee_days.data) if self.trainee_days.data else None
+                float(self.trainee_days.data) if self.trainee_days.data else 0.0
             ),
         }
 

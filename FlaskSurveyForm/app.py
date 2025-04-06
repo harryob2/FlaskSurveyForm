@@ -120,6 +120,11 @@ def submit_form():
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
 
+            # Validate required fields
+            if not form_data.get("training_description"):
+                flash("Training Description is required", "error")
+                return render_template("index.html", form=form)
+
             # Insert the form data into the database
             form_id = insert_training_form(form_data)
             logging.debug(f"Form inserted with ID: {form_id}")
@@ -313,6 +318,7 @@ def edit_form(form_id):
 
             # Numeric fields
             form.trainer_days.data = form_data["trainer_days"]
+            form.training_description.data = form_data.get("training_description", "")
 
             # Expense fields
             form.travel_cost.data = form_data.get("travel_cost", 0)
@@ -354,10 +360,18 @@ def edit_form(form_id):
             if trainees_data:
                 form.trainees_data.data = trainees_data
 
-            # Prepare form data using the form's method
+            # Get form data
             form_data = form.prepare_form_data()
+            logging.debug(f"Prepared form data: {form_data}")
 
-            # Update in database
+            # Validate required fields
+            if not form_data.get("training_description"):
+                flash("Training Description is required", "error")
+                return render_template(
+                    "index.html", form=form, edit_mode=True, form_id=form_id
+                )
+
+            # Update form data in database
             update_training_form(form_id, form_data)
 
             # Handle attachments
