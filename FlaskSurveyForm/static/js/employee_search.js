@@ -314,6 +314,64 @@ function updateTraineesData() {
   }
 }
 
+// Function to validate email format
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
+// Function to parse emails from text
+function parseEmails(text) {
+  // Split by commas or newlines and clean up
+  const emails = text
+    .split(/[,\n]/)
+    .map((email) => email.trim())
+    .filter((email) => email.length > 0);
+
+  return emails;
+}
+
+// Function to add multiple trainees from emails
+function addTraineesFromEmails(emails) {
+  console.log("Adding trainees from emails:", emails);
+
+  let addedCount = 0;
+  let invalidEmails = [];
+
+  emails.forEach((email) => {
+    if (isValidEmail(email)) {
+      // Check if trainee already exists
+      if (!trainees.some((t) => t.email === email)) {
+        // Add to trainees array with minimal info
+        trainees.push({
+          email: email,
+          name: email.split("@")[0], // Use username part as name
+          department: "Engineering" // Default department
+        });
+        addedCount++;
+      }
+    } else {
+      invalidEmails.push(email);
+    }
+  });
+
+  // Update UI
+  updateTraineesUI();
+  updateTraineesData();
+
+  // Show results
+  if (addedCount > 0) {
+    alert(`Added ${addedCount} new trainee(s).`);
+  }
+
+  if (invalidEmails.length > 0) {
+    alert(`Invalid email(s): ${invalidEmails.join(", ")}`);
+  }
+
+  // Clear the input
+  document.getElementById("attendee_emails").value = "";
+}
+
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize trainer search
@@ -384,6 +442,35 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(
             "Employee not found. Please search and select from the dropdown."
           );
+        }
+      }
+    });
+  }
+
+  // Handle attendee emails field
+  const attendeeEmailsField = document.getElementById("attendee_emails");
+  if (attendeeEmailsField) {
+    // Add a button next to the attendee emails field
+    const attendeeEmailsContainer = attendeeEmailsField.parentElement;
+    const addEmailsBtn = document.createElement("button");
+    addEmailsBtn.type = "button";
+    addEmailsBtn.className = "btn btn-success mt-2";
+    addEmailsBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Add Emails';
+    addEmailsBtn.id = "add-emails-btn";
+
+    // Add the button after the textarea
+    attendeeEmailsContainer.appendChild(addEmailsBtn);
+
+    // Add event listener to the button
+    addEmailsBtn.addEventListener("click", function () {
+      const emailsText = attendeeEmailsField.value.trim();
+
+      if (emailsText) {
+        const emails = parseEmails(emailsText);
+        if (emails.length > 0) {
+          addTraineesFromEmails(emails);
+          // Clear the field after adding
+          attendeeEmailsField.value = "";
         }
       }
     });

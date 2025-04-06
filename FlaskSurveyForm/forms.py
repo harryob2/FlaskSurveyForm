@@ -194,7 +194,6 @@ class TrainingForm(FlaskForm):
             "trainer_days": (
                 float(self.trainer_days.data) if self.trainer_days.data else None
             ),
-            # "trainees_data": json.dumps(self.process_emails()),
             "travel_cost": (
                 float(self.travel_cost.data) if self.travel_cost.data else 0.0
             ),
@@ -205,19 +204,52 @@ class TrainingForm(FlaskForm):
             "other_cost": float(self.other_cost.data) if self.other_cost.data else 0.0,
             "concur_claim": self.concur_claim.data,
         }
+
         # Handle trainees data
         if self.trainees_data.data:
             try:
                 # If trainees_data is already JSON, use it directly
                 trainees = json.loads(self.trainees_data.data)
                 if isinstance(trainees, list):
-                    data["trainees_data"] = self.trainees_data.data
+                    # Ensure all trainees have the required fields
+                    processed_trainees = []
+                    for trainee in trainees:
+                        if isinstance(trainee, dict):
+                            # Ensure required fields exist
+                            processed_trainee = {
+                                "email": trainee.get("email", ""),
+                                "name": trainee.get(
+                                    "name", trainee.get("email", "").split("@")[0]
+                                ),
+                                "department": trainee.get("department", "Engineering"),
+                            }
+                            processed_trainees.append(processed_trainee)
+                        elif isinstance(trainee, str):
+                            # Convert string email to trainee object
+                            processed_trainees.append(
+                                {
+                                    "email": trainee,
+                                    "name": trainee.split("@")[0],
+                                    "department": "Engineering",
+                                }
+                            )
+
+                    data["trainees_data"] = json.dumps(processed_trainees)
                 else:
                     data["trainees_data"] = "[]"
             except json.JSONDecodeError:
                 # If not valid JSON, try to process as emails
                 emails = self.process_emails()
-                data["trainees_data"] = json.dumps(emails)
+                # Convert emails to trainee objects
+                trainees = [
+                    {
+                        "email": email,
+                        "name": email.split("@")[0],
+                        "department": "Engineering",
+                    }
+                    for email in emails
+                ]
+                data["trainees_data"] = json.dumps(trainees)
         else:
             # If no trainees data, use empty array
             data["trainees_data"] = "[]"

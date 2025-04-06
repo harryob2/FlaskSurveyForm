@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Stryker Training Form{% endblock %}</title>
-    
+
     <!-- Bootstrap CSS (Replit-themed) -->
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
-    
+
     {% block extra_head %}{% endblock %}
 </head>
+
 <body>
     <header class="bg-dark py-3 mb-4">
         <div class="container">
@@ -21,22 +23,29 @@
                     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Stryker Logo">
                 </a>
                 <h1 class="ms-md-4 my-3 my-md-0 text-white fs-4">Training Form System</h1>
-                
+
                 <nav class="ms-md-auto">
                     <ul class="nav nav-pills">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" href="{{ url_for('index') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
-                                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
-                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                            <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}"
+                                href="{{ url_for('index') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-file-earmark-plus" viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z" />
+                                    <path
+                                        d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z" />
                                 </svg>
                                 New Form
                             </a>
                         </li>
                         <li class="nav-item ms-2">
-                            <a class="nav-link {% if request.path == url_for('list_forms') %}active{% endif %}" href="{{ url_for('list_forms') }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list-ul" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                            <a class="nav-link {% if request.path == url_for('list_forms') %}active{% endif %}"
+                                href="{{ url_for('list_forms') }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-list-ul" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                        d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
                                 </svg>
                                 View Submissions
                             </a>
@@ -46,22 +55,22 @@
             </div>
         </div>
     </header>
-    
+
     <main class="container py-3">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
-        
+
         {% block content %}{% endblock %}
     </main>
-    
+
     <footer class="container mt-4 py-3 border-top text-center text-muted">
         <div class="row">
             <div class="col">
@@ -69,9 +78,10 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- File Viewer Modal -->
-    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
+    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -88,41 +98,41 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Common scripts -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // File viewer modal functionality
             const viewerLinks = document.querySelectorAll('.file-view-link');
             const fileViewerModal = document.getElementById('fileViewerModal');
             const fileViewerContent = document.getElementById('fileViewerContent');
             const fileViewerTitle = document.getElementById('fileViewerModalLabel');
             const fileDownloadLink = document.getElementById('fileDownloadLink');
-            
+
             if (viewerLinks.length > 0 && fileViewerModal) {
                 viewerLinks.forEach(link => {
-                    link.addEventListener('click', function(e) {
+                    link.addEventListener('click', function (e) {
                         e.preventDefault();
-                        
+
                         const fileUrl = this.getAttribute('href');
                         const fileName = this.getAttribute('data-filename');
                         const fileType = this.getAttribute('data-filetype');
                         const downloadUrl = this.getAttribute('data-download-url');
-                        
+
                         // Set modal title
                         fileViewerTitle.textContent = fileName || 'File Viewer';
-                        
+
                         // Set download link
                         if (fileDownloadLink) {
                             fileDownloadLink.href = downloadUrl || fileUrl;
                         }
-                        
+
                         // Clear previous content
                         fileViewerContent.innerHTML = '';
-                        
+
                         // Check file type and display accordingly
                         if (fileType === '.pdf') {
                             // PDF viewer
@@ -144,7 +154,7 @@
                             // Unsupported file type
                             fileViewerContent.innerHTML = '<div class="alert alert-warning">This file type cannot be previewed. Please download the file to view it.</div>';
                         }
-                        
+
                         // Show the modal
                         const modal = new bootstrap.Modal(fileViewerModal);
                         modal.show();
@@ -153,7 +163,8 @@
             }
         });
     </script>
-    
+
     {% block scripts %}{% endblock %}
 </body>
+
 </html>
