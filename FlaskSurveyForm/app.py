@@ -319,6 +319,9 @@ def edit_form(form_id):
             form.food_cost.data = form_data.get("food_cost", 0)
             form.materials_cost.data = form_data.get("materials_cost", 0)
             form.other_cost.data = form_data.get("other_cost", 0)
+            form.other_expense_description.data = form_data.get(
+                "other_expense_description", ""
+            )
             form.concur_claim.data = form_data.get("concur_claim", "")
 
             # Load trainees data

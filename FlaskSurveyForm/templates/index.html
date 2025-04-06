@@ -156,6 +156,14 @@
                                         {{ form.other_cost.label(class="form-label") }}
                                         {{ form.other_cost(class="form-control", placeholder="0.00") }}
                                     </div>
+                                    <div id="other-expense-description-container" class="col-md-12 mb-3 d-none">
+                                        {{ form.other_expense_description.label(class="form-label") }}
+                                        {{ form.other_expense_description(class="form-control", rows=3,
+                                        placeholder="Please describe the other expenses") }}
+                                        <div class="form-text text-danger other-expense-required-text">Required when
+                                            other expenses are entered
+                                        </div>
+                                    </div>
                                     <div class="col-md-12">
                                         {{ form.concur_claim.label(class="form-label") }}
                                         {{ form.concur_claim(class="form-control", placeholder="Enter Concur claim
@@ -277,6 +285,7 @@
 <script src="{{ url_for('static', filename='js/employee_search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/attachment.js') }}"></script>
 <script src="{{ url_for('static', filename='js/expense_validation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/other_expense.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Handle conditional form display based on training type selection

@@ -79,7 +79,7 @@
 
                 <!-- Right Column -->
                 <div class="col-md-6">
-                    <h4 class="fs-6 text-primary mb-3">Attendees</h4>   
+                    <h4 class="fs-6 text-primary mb-3">Attendees</h4>
                     {% if trainees %}
                     <div class="list-group">
                         {% for trainee in trainees %}
@@ -137,6 +137,9 @@
                             <div class="card-body">
                                 <h5 class="card-title text-muted small">Other</h5>
                                 <div class="fs-5">€{{ "%.2f"|format(form.other_cost|default(0)) }}</div>
+                                {% if form.other_expense_description %}
+                                <div class="mt-2 small text-muted">{{ form.other_expense_description }}</div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -44,7 +44,8 @@ def create_tables():
             travel_cost REAL DEFAULT 0,
             food_cost REAL DEFAULT 0,
             materials_cost REAL DEFAULT 0,
-            other_cost REAL DEFAULT 0
+            other_cost REAL DEFAULT 0,
+            other_expense_description TEXT
         )
     """
     )
@@ -75,8 +76,8 @@ def insert_training_form(form_data):
             training_type, trainer_name, supplier_name, location_type,
             location_details, start_date, end_date,
             trainer_days, trainees_data, approved, concur_claim, travel_cost,
-            food_cost, materials_cost, other_cost
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            food_cost, materials_cost, other_cost, other_expense_description
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             form_data["training_type"],
@@ -94,6 +95,7 @@ def insert_training_form(form_data):
             form_data.get("food_cost", 0),
             form_data.get("materials_cost", 0),
             form_data.get("other_cost", 0),
+            form_data.get("other_expense_description"),
         ),
     )
 
@@ -124,7 +126,8 @@ def update_training_form(form_id, form_data):
             food_cost = ?,
             materials_cost = ?,
             other_cost = ?,
-            concur_claim = ?
+            concur_claim = ?,
+            other_expense_description = ?
         WHERE id = ?
     """,
         (
@@ -142,6 +145,7 @@ def update_training_form(form_id, form_data):
             form_data.get("materials_cost", 0),
             form_data.get("other_cost", 0),
             form_data.get("concur_claim"),
+            form_data.get("other_expense_description"),
             form_id,
         ),
     )
@@ -200,6 +204,7 @@ def get_training_form(form_id):
             "materials_cost": float(row_dict.get("materials_cost", 0)),
             "other_cost": float(row_dict.get("other_cost", 0)),
             "concur_claim": row_dict.get("concur_claim"),
+            "other_expense_description": row_dict.get("other_expense_description"),
             "approved": bool(row_dict.get("approved", False)),
         }
     return None

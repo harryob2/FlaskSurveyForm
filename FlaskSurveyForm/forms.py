@@ -119,6 +119,11 @@ class TrainingForm(FlaskForm):
     other_cost = FloatField(
         "Other Expenses (€)", validators=[Optional(), NumberRange(min=0)]
     )
+    other_expense_description = TextAreaField(
+        "Other Expense Description",
+        validators=[Optional()],
+        description="Required when other expenses are entered",
+    )
     concur_claim = StringField("Concur Claim Number")
 
     # Updated attendee field
@@ -176,6 +181,13 @@ class TrainingForm(FlaskForm):
                 "Concur Claim Number is required when expenses are entered."
             )
 
+    def validate_other_expense_description(self, field):
+        """Validate that other expense description is provided when other expenses are entered"""
+        if self.other_cost.data and self.other_cost.data > 0 and not field.data:
+            raise ValidationError(
+                "Description is required when other expenses are entered."
+            )
+
     def process_emails(self):
         """Process and clean the attendee emails"""
         if not self.attendee_emails.data:
@@ -216,6 +228,11 @@ class TrainingForm(FlaskForm):
                 float(self.materials_cost.data) if self.materials_cost.data else 0.0
             ),
             "other_cost": float(self.other_cost.data) if self.other_cost.data else 0.0,
+            "other_expense_description": (
+                self.other_expense_description.data
+                if self.other_cost.data and self.other_cost.data > 0
+                else None
+            ),
             "concur_claim": self.concur_claim.data,
         }
 
