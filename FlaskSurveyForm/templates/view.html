@@ -152,6 +152,23 @@
                 </div>
             </div>
 
+            <!-- Training Hours and Trainee Days -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="card-title text-muted small">End Date</h5>
+                    <div class="fs-5">{{ form.end_date.strftime('%d-%m-%Y') if form.end_date else 'Not specified' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trainee Days -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="card-title text-muted small">Trainee Days</h5>
+                    <div class="fs-5">{{ form.trainee_days|default(0) }} days</div>
+                </div>
+            </div>
+
             <!-- Attachments Section -->
             <div class="card mb-4 mt-4">
                 <div class="card-header bg-secondary">

@@ -22,6 +22,7 @@ from wtforms import (
     TextAreaField,
     HiddenField,
     FloatField,
+    MultipleFileField,
 )
 from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 
@@ -124,7 +125,8 @@ class TrainingForm(FlaskForm):
         validators=[Optional()],
         description="Required when other expenses are entered",
     )
-    concur_claim = StringField("Concur Claim Number")
+    concur_claim = StringField("Concur Claim Number", validators=[Optional()])
+    trainee_days = FloatField("Trainee Days", validators=[Optional()])
 
     # Updated attendee field
     attendee_emails = TextAreaField(
@@ -132,16 +134,7 @@ class TrainingForm(FlaskForm):
     )
 
     # Attachment fields
-    attachments = FileField(
-        "Attachments",
-        validators=[
-            FileAllowed(
-                list(ALLOWED_EXTENSIONS),
-                "Allowed file types: pdf, doc, docx, xls, xlsx, jpg, png, txt",
-            )
-        ],
-        render_kw={"multiple": True},
-    )
+    attachments = MultipleFileField("Attachments")
     attachment_descriptions = TextAreaField("Attachment Descriptions (one per line)")
 
     # Submit Button
@@ -234,6 +227,9 @@ class TrainingForm(FlaskForm):
                 else None
             ),
             "concur_claim": self.concur_claim.data,
+            "trainee_days": (
+                float(self.trainee_days.data) if self.trainee_days.data else None
+            ),
         }
 
         # Handle trainees data

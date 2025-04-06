@@ -8,6 +8,7 @@ import sqlite3
 import json
 import logging
 from datetime import datetime
+from sqlalchemy import Column, Float, String, DateTime
 
 
 def get_db():
@@ -45,7 +46,9 @@ def create_tables():
             food_cost REAL DEFAULT 0,
             materials_cost REAL DEFAULT 0,
             other_cost REAL DEFAULT 0,
-            other_expense_description TEXT
+            other_expense_description TEXT,
+            trainee_days REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """
     )
@@ -76,8 +79,9 @@ def insert_training_form(form_data):
             training_type, trainer_name, supplier_name, location_type,
             location_details, start_date, end_date,
             trainer_days, trainees_data, approved, concur_claim, travel_cost,
-            food_cost, materials_cost, other_cost, other_expense_description
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            food_cost, materials_cost, other_cost, other_expense_description,
+            trainee_days
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             form_data["training_type"],
@@ -96,6 +100,7 @@ def insert_training_form(form_data):
             form_data.get("materials_cost", 0),
             form_data.get("other_cost", 0),
             form_data.get("other_expense_description"),
+            form_data.get("trainee_days"),
         ),
     )
 
@@ -127,7 +132,8 @@ def update_training_form(form_id, form_data):
             materials_cost = ?,
             other_cost = ?,
             concur_claim = ?,
-            other_expense_description = ?
+            other_expense_description = ?,
+            trainee_days = ?
         WHERE id = ?
     """,
         (
@@ -146,6 +152,7 @@ def update_training_form(form_id, form_data):
             form_data.get("other_cost", 0),
             form_data.get("concur_claim"),
             form_data.get("other_expense_description"),
+            form_data.get("trainee_days"),
             form_id,
         ),
     )
@@ -206,6 +213,7 @@ def get_training_form(form_id):
             "concur_claim": row_dict.get("concur_claim"),
             "other_expense_description": row_dict.get("other_expense_description"),
             "approved": bool(row_dict.get("approved", False)),
+            "trainee_days": float(row_dict.get("trainee_days", 0)),
         }
     return None
 

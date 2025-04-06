@@ -323,6 +323,7 @@ def edit_form(form_id):
                 "other_expense_description", ""
             )
             form.concur_claim.data = form_data.get("concur_claim", "")
+            form.trainee_days.data = form_data.get("trainee_days", 0)
 
             # Load trainees data
             if form_data.get("trainees_data"):
