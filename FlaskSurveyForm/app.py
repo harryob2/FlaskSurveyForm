@@ -48,6 +48,8 @@ app.config.from_pyfile("config.py")
 # Set the secret key for CSRF protection
 app.secret_key = app.config["SECRET_KEY"]
 
+# Make json module available in templates
+app.jinja_env.globals["json"] = json
 
 # Set up the database (create tables only if they do not exist)
 setup_database(force_recreate=False)
@@ -109,6 +111,11 @@ def submit_form():
     # Validate the form data
     if form.validate_on_submit():
         try:
+
+            # Get trainees data from form
+            trainees_data = request.form.get("trainees_data")
+            if trainees_data:
+                form.trainees_data.data = trainees_data
             # Prepare form data using the form's method
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
@@ -314,23 +321,35 @@ def edit_form(form_id):
             form.other_cost.data = form_data.get("other_cost", 0)
             form.concur_claim.data = form_data.get("concur_claim", "")
 
-            # Attendees
+            # Load trainees data
             if form_data.get("trainees_data"):
                 try:
-                    attendees = json.loads(form_data["trainees_data"])
-                    if isinstance(attendees, list):
-                        if attendees and isinstance(attendees[0], dict):
-                            # Old format with objects
-                            emails = [t["email"] for t in attendees if "email" in t]
+                    trainees = json.loads(form_data["trainees_data"])
+                    if isinstance(trainees, list):
+                        # Set the trainees data directly in the hidden field
+                        form.trainees_data.data = form_data["trainees_data"]
+
+                        # Also populate the attendee emails field for backward compatibility
+                        if trainees and isinstance(trainees[0], dict):
+                            # If trainees are objects with email property
+                            emails = [t["email"] for t in trainees if "email" in t]
                         else:
-                            # New format with just emails
-                            emails = attendees
+                            # If trainees are just email strings
+                            emails = trainees
                         form.attendee_emails.data = ", ".join(emails)
                 except json.JSONDecodeError as e:
                     logging.error(f"Error parsing trainees data: {e}")
+                    form.trainees_data.data = "[]"
+            else:
+                form.trainees_data.data = "[]"
 
     if form.validate_on_submit():
         try:
+            # Get trainees data from form
+            trainees_data = request.form.get("trainees_data")
+            if trainees_data:
+                form.trainees_data.data = trainees_data
+
             # Prepare form data using the form's method
             form_data = form.prepare_form_data()
 

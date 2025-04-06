@@ -171,7 +171,7 @@ class TrainingForm(FlaskForm):
 
     def prepare_form_data(self):
         """Prepare form data for database insertion"""
-        return {
+        data = {
             "training_type": self.training_type.data,
             "trainer_name": (
                 self.trainer_name.data
@@ -194,7 +194,7 @@ class TrainingForm(FlaskForm):
             "trainer_days": (
                 float(self.trainer_days.data) if self.trainer_days.data else None
             ),
-            "trainees_data": json.dumps(self.process_emails()),
+            # "trainees_data": json.dumps(self.process_emails()),
             "travel_cost": (
                 float(self.travel_cost.data) if self.travel_cost.data else 0.0
             ),
@@ -205,6 +205,24 @@ class TrainingForm(FlaskForm):
             "other_cost": float(self.other_cost.data) if self.other_cost.data else 0.0,
             "concur_claim": self.concur_claim.data,
         }
+        # Handle trainees data
+        if self.trainees_data.data:
+            try:
+                # If trainees_data is already JSON, use it directly
+                trainees = json.loads(self.trainees_data.data)
+                if isinstance(trainees, list):
+                    data["trainees_data"] = self.trainees_data.data
+                else:
+                    data["trainees_data"] = "[]"
+            except json.JSONDecodeError:
+                # If not valid JSON, try to process as emails
+                emails = self.process_emails()
+                data["trainees_data"] = json.dumps(emails)
+        else:
+            # If no trainees data, use empty array
+            data["trainees_data"] = "[]"
+
+        return data
 
 
 class InvoiceForm(FlaskForm):

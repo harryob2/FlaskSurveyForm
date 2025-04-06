@@ -43,7 +43,8 @@
 
                 <!-- Hidden fields for JavaScript -->
                 {{ form.department(class="d-none", id="department_hidden") }}
-                <input type="hidden" id="trainees_data" name="trainees_data" value="">
+                <input type="hidden" id="trainees_data" name="trainees_data"
+                    value="{{ form.trainees_data.data if form.trainees_data.data else '[]' }}">
 
                 <div class="row">
                     <div class="col-md-12 mb-3">
@@ -252,17 +253,23 @@
                             </small>
                         </div>
                         <!-- Ends here Updated TS -->
-                        <!-- Hidden field to store trainees data -->
-                        <input type="hidden" name="trainees_data" id="trainees_data" value="">
                     </div>
                     <!-- Visual trainee list -->
                     <div id="trainees-list" class="mb-3">
                         {% if edit_mode and form.trainees_data.data %}
                         {% set trainees = json.loads(form.trainees_data.data) %}
-                        {% for email in trainees %}
+                        {% for trainee in trainees %}
                         <div class="trainee-item mb-2 p-2 border rounded">
                             <div class="d-flex justify-content-between align-items-center">
-                                <div class="text-primary">{{ email }}</div>
+                                <div>
+                                    {% if trainee.name %}
+                                    <strong>{{ trainee.name }}</strong><br>
+                                    {% endif %}
+                                    <div class="text-primary">{{ trainee.email }}</div>
+                                    {% if trainee.department %}
+                                    <div class="text-muted small">{{ trainee.department }}</div>
+                                    {% endif %}
+                                </div>
                                 <button type="button" class="btn btn-sm btn-danger remove-trainee">
                                     <i class="bi bi-x"></i>
                                 </button>
