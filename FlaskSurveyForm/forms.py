@@ -162,6 +162,20 @@ class TrainingForm(FlaskForm):
         if self.training_type.data == "External Training" and not field.data:
             raise ValidationError("Supplier name is required for external training.")
 
+    def validate_concur_claim(self, field):
+        """Validate that Concur Claim Number is provided when expenses are entered"""
+        has_expenses = (
+            (self.travel_cost.data and self.travel_cost.data > 0)
+            or (self.food_cost.data and self.food_cost.data > 0)
+            or (self.materials_cost.data and self.materials_cost.data > 0)
+            or (self.other_cost.data and self.other_cost.data > 0)
+        )
+
+        if has_expenses and not field.data:
+            raise ValidationError(
+                "Concur Claim Number is required when expenses are entered."
+            )
+
     def process_emails(self):
         """Process and clean the attendee emails"""
         if not self.attendee_emails.data:
