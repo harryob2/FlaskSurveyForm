@@ -48,8 +48,9 @@ app.config.from_pyfile("config.py")
 # Set the secret key for CSRF protection
 app.secret_key = app.config["SECRET_KEY"]
 
-# Set up the database (force recreate for schema changes)
-setup_database(force_recreate=True)
+
+# Set up the database (create tables only if they do not exist)
+setup_database(force_recreate=False)
 
 
 # Function to get a training form by ID - make available to templates
