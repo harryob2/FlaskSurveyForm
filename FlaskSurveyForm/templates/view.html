@@ -185,7 +185,7 @@
                                 <div class="card-body">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-paperclip me-2"></i>
-                                        <a href="{{ url_for('uploaded_file', filename=att['filename']) }}"
+                                        <a href="{{ url_for('uploaded_file', filename=att['folder_path'] + '/' + att['filename']) }}"
                                             class="text-decoration-none" target="_blank">
                                             {{ att['filename'] }}
                                         </a>

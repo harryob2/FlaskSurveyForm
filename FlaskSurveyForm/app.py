@@ -129,27 +129,31 @@ def submit_form():
             form_id = insert_training_form(form_data)
             logging.debug(f"Form inserted with ID: {form_id}")
 
+            # Create a unique folder for attachments
+            unique_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"form_{form_id}")
+            os.makedirs(unique_folder, exist_ok=True)
+
             # Process attachments
             if form.attachments.data:
                 descriptions = request.form.getlist("attachment_descriptions[]")
                 for i, file in enumerate(request.files.getlist("attachments")):
                     if file and file.filename:
                         filename = secure_filename(file.filename)
-                        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                        file_path = os.path.join(unique_folder, filename)
                         file.save(file_path)
 
                         # Get description or use empty string
                         description = descriptions[i] if i < len(descriptions) else ""
 
-                        # Insert attachment
+                        # Insert attachment with folder path
                         conn = get_db()
                         cursor = conn.cursor()
                         cursor.execute(
                             """
-                            INSERT INTO attachments (training_id, filename, description)
-                            VALUES (?, ?, ?)
+                            INSERT INTO attachments (training_id, folder_path, filename, description)
+                            VALUES (?, ?, ?, ?)
                         """,
-                            (form_id, filename, description),
+                            (form_id, unique_folder, filename, description),
                         )
                         conn.commit()
                         conn.close()
