@@ -48,6 +48,8 @@ app.config.from_pyfile("config.py")
 # Set the secret key for CSRF protection
 app.secret_key = app.config["SECRET_KEY"]
 
+# Make json module available in templates
+app.jinja_env.globals["json"] = json
 
 # Set up the database (create tables only if they do not exist)
 setup_database(force_recreate=False)
@@ -109,37 +111,49 @@ def submit_form():
     # Validate the form data
     if form.validate_on_submit():
         try:
+
+            # Get trainees data from form
+            trainees_data = request.form.get("trainees_data")
+            if trainees_data:
+                form.trainees_data.data = trainees_data
             # Prepare form data using the form's method
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
+
+            # Validate required fields
+            if not form_data.get("training_description"):
+                flash("Training Description is required", "error")
+                return render_template("index.html", form=form)
 
             # Insert the form data into the database
             form_id = insert_training_form(form_data)
             logging.debug(f"Form inserted with ID: {form_id}")
 
+            # Create a unique folder for attachments
+            unique_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"form_{form_id}")
+            os.makedirs(unique_folder, exist_ok=True)
+
             # Process attachments
             if form.attachments.data:
-                descriptions = [
-                    d.strip() for d in form.attachment_descriptions.data.split("\n")
-                ]
+                descriptions = request.form.getlist("attachment_descriptions[]")
                 for i, file in enumerate(request.files.getlist("attachments")):
                     if file and file.filename:
                         filename = secure_filename(file.filename)
-                        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                        file_path = os.path.join(unique_folder, filename)
                         file.save(file_path)
 
                         # Get description or use empty string
                         description = descriptions[i] if i < len(descriptions) else ""
 
-                        # Insert attachment
+                        # Insert attachment with folder path
                         conn = get_db()
                         cursor = conn.cursor()
                         cursor.execute(
                             """
-                            INSERT INTO attachments (training_id, filename, description)
-                            VALUES (?, ?, ?)
+                            INSERT INTO attachments (training_id, folder_path, filename, description)
+                            VALUES (?, ?, ?, ?)
                         """,
-                            (form_id, filename, description),
+                            (form_id, unique_folder, filename, description),
                         )
                         conn.commit()
                         conn.close()
@@ -306,35 +320,60 @@ def edit_form(form_id):
 
             # Numeric fields
             form.trainer_days.data = form_data["trainer_days"]
+            form.training_description.data = form_data.get("training_description", "")
 
             # Expense fields
             form.travel_cost.data = form_data.get("travel_cost", 0)
             form.food_cost.data = form_data.get("food_cost", 0)
             form.materials_cost.data = form_data.get("materials_cost", 0)
             form.other_cost.data = form_data.get("other_cost", 0)
+            form.other_expense_description.data = form_data.get(
+                "other_expense_description", ""
+            )
             form.concur_claim.data = form_data.get("concur_claim", "")
+            form.trainee_days.data = form_data.get("trainee_days", 0)
 
-            # Attendees
+            # Load trainees data
             if form_data.get("trainees_data"):
                 try:
-                    attendees = json.loads(form_data["trainees_data"])
-                    if isinstance(attendees, list):
-                        if attendees and isinstance(attendees[0], dict):
-                            # Old format with objects
-                            emails = [t["email"] for t in attendees if "email" in t]
+                    trainees = json.loads(form_data["trainees_data"])
+                    if isinstance(trainees, list):
+                        # Set the trainees data directly in the hidden field
+                        form.trainees_data.data = form_data["trainees_data"]
+
+                        # Also populate the attendee emails field for backward compatibility
+                        if trainees and isinstance(trainees[0], dict):
+                            # If trainees are objects with email property
+                            emails = [t["email"] for t in trainees if "email" in t]
                         else:
-                            # New format with just emails
-                            emails = attendees
+                            # If trainees are just email strings
+                            emails = trainees
                         form.attendee_emails.data = ", ".join(emails)
                 except json.JSONDecodeError as e:
                     logging.error(f"Error parsing trainees data: {e}")
+                    form.trainees_data.data = "[]"
+            else:
+                form.trainees_data.data = "[]"
 
     if form.validate_on_submit():
         try:
-            # Prepare form data using the form's method
-            form_data = form.prepare_form_data()
+            # Get trainees data from form
+            trainees_data = request.form.get("trainees_data")
+            if trainees_data:
+                form.trainees_data.data = trainees_data
 
-            # Update in database
+            # Get form data
+            form_data = form.prepare_form_data()
+            logging.debug(f"Prepared form data: {form_data}")
+
+            # Validate required fields
+            if not form_data.get("training_description"):
+                flash("Training Description is required", "error")
+                return render_template(
+                    "index.html", form=form, edit_mode=True, form_id=form_id
+                )
+
+            # Update form data in database
             update_training_form(form_id, form_data)
 
             # Handle attachments

@@ -22,6 +22,7 @@ from wtforms import (
     TextAreaField,
     HiddenField,
     FloatField,
+    MultipleFileField,
 )
 from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
 
@@ -101,7 +102,12 @@ class TrainingForm(FlaskForm):
 
     # Trainer Days
     trainer_days = FloatField(
-        "Trainer Days", validators=[Optional(), NumberRange(min=0)]
+        "Trainer Days", validators=[DataRequired(), NumberRange(min=0)]
+    )
+
+    # Training Description
+    training_description = TextAreaField(
+        "Training Description", validators=[DataRequired()]
     )
 
     # Trainees Data
@@ -119,7 +125,13 @@ class TrainingForm(FlaskForm):
     other_cost = FloatField(
         "Other Expenses (€)", validators=[Optional(), NumberRange(min=0)]
     )
-    concur_claim = StringField("Concur Claim Number")
+    other_expense_description = TextAreaField(
+        "Other Expense Description",
+        validators=[Optional()],
+        description="Required when other expenses are entered",
+    )
+    concur_claim = StringField("Concur Claim Number", validators=[Optional()])
+    trainee_days = FloatField("Trainee Days", validators=[DataRequired()])
 
     # Updated attendee field
     attendee_emails = TextAreaField(
@@ -127,16 +139,7 @@ class TrainingForm(FlaskForm):
     )
 
     # Attachment fields
-    attachments = FileField(
-        "Attachments",
-        validators=[
-            FileAllowed(
-                list(ALLOWED_EXTENSIONS),
-                "Allowed file types: pdf, doc, docx, xls, xlsx, jpg, png, txt",
-            )
-        ],
-        render_kw={"multiple": True},
-    )
+    attachments = MultipleFileField("Attachments")
     attachment_descriptions = TextAreaField("Attachment Descriptions (one per line)")
 
     # Submit Button
@@ -162,6 +165,27 @@ class TrainingForm(FlaskForm):
         if self.training_type.data == "External Training" and not field.data:
             raise ValidationError("Supplier name is required for external training.")
 
+    def validate_concur_claim(self, field):
+        """Validate that Concur Claim Number is provided when expenses are entered"""
+        has_expenses = (
+            (self.travel_cost.data and self.travel_cost.data > 0)
+            or (self.food_cost.data and self.food_cost.data > 0)
+            or (self.materials_cost.data and self.materials_cost.data > 0)
+            or (self.other_cost.data and self.other_cost.data > 0)
+        )
+
+        if has_expenses and not field.data:
+            raise ValidationError(
+                "Concur Claim Number is required when expenses are entered."
+            )
+
+    def validate_other_expense_description(self, field):
+        """Validate that other expense description is provided when other expenses are entered"""
+        if self.other_cost.data and self.other_cost.data > 0 and not field.data:
+            raise ValidationError(
+                "Description is required when other expenses are entered."
+            )
+
     def process_emails(self):
         """Process and clean the attendee emails"""
         if not self.attendee_emails.data:
@@ -171,7 +195,7 @@ class TrainingForm(FlaskForm):
 
     def prepare_form_data(self):
         """Prepare form data for database insertion"""
-        return {
+        data = {
             "training_type": self.training_type.data,
             "trainer_name": (
                 self.trainer_name.data
@@ -194,7 +218,8 @@ class TrainingForm(FlaskForm):
             "trainer_days": (
                 float(self.trainer_days.data) if self.trainer_days.data else None
             ),
-            "trainees_data": json.dumps(self.process_emails()),
+            "training_description": self.training_description.data or "",
+            "trainees_data": self.trainees_data.data or "",
             "travel_cost": (
                 float(self.travel_cost.data) if self.travel_cost.data else 0.0
             ),
@@ -203,8 +228,67 @@ class TrainingForm(FlaskForm):
                 float(self.materials_cost.data) if self.materials_cost.data else 0.0
             ),
             "other_cost": float(self.other_cost.data) if self.other_cost.data else 0.0,
+            "other_expense_description": (
+                self.other_expense_description.data
+                if self.other_cost.data and self.other_cost.data > 0
+                else None
+            ),
             "concur_claim": self.concur_claim.data,
+            "trainee_days": (
+                float(self.trainee_days.data) if self.trainee_days.data else 0.0
+            ),
         }
+
+        # Handle trainees data
+        if self.trainees_data.data:
+            try:
+                # If trainees_data is already JSON, use it directly
+                trainees = json.loads(self.trainees_data.data)
+                if isinstance(trainees, list):
+                    # Ensure all trainees have the required fields
+                    processed_trainees = []
+                    for trainee in trainees:
+                        if isinstance(trainee, dict):
+                            # Ensure required fields exist
+                            processed_trainee = {
+                                "email": trainee.get("email", ""),
+                                "name": trainee.get(
+                                    "name", trainee.get("email", "").split("@")[0]
+                                ),
+                                "department": trainee.get("department", "Engineering"),
+                            }
+                            processed_trainees.append(processed_trainee)
+                        elif isinstance(trainee, str):
+                            # Convert string email to trainee object
+                            processed_trainees.append(
+                                {
+                                    "email": trainee,
+                                    "name": trainee.split("@")[0],
+                                    "department": "Engineering",
+                                }
+                            )
+
+                    data["trainees_data"] = json.dumps(processed_trainees)
+                else:
+                    data["trainees_data"] = "[]"
+            except json.JSONDecodeError:
+                # If not valid JSON, try to process as emails
+                emails = self.process_emails()
+                # Convert emails to trainee objects
+                trainees = [
+                    {
+                        "email": email,
+                        "name": email.split("@")[0],
+                        "department": "Engineering",
+                    }
+                    for email in emails
+                ]
+                data["trainees_data"] = json.dumps(trainees)
+        else:
+            # If no trainees data, use empty array
+            data["trainees_data"] = "[]"
+
+        return data
 
 
 class InvoiceForm(FlaskForm):

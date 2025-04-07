@@ -8,6 +8,7 @@ import sqlite3
 import json
 import logging
 from datetime import datetime
+from sqlalchemy import Column, Float, String, DateTime, Date
 
 
 def get_db():
@@ -44,7 +45,11 @@ def create_tables():
             travel_cost REAL DEFAULT 0,
             food_cost REAL DEFAULT 0,
             materials_cost REAL DEFAULT 0,
-            other_cost REAL DEFAULT 0
+            other_cost REAL DEFAULT 0,
+            other_expense_description TEXT,
+            trainee_days REAL,
+            training_description TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """
     )
@@ -75,8 +80,9 @@ def insert_training_form(form_data):
             training_type, trainer_name, supplier_name, location_type,
             location_details, start_date, end_date,
             trainer_days, trainees_data, approved, concur_claim, travel_cost,
-            food_cost, materials_cost, other_cost
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            food_cost, materials_cost, other_cost, other_expense_description,
+            trainee_days, training_description
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             form_data["training_type"],
@@ -94,6 +100,9 @@ def insert_training_form(form_data):
             form_data.get("food_cost", 0),
             form_data.get("materials_cost", 0),
             form_data.get("other_cost", 0),
+            form_data.get("other_expense_description"),
+            form_data.get("trainee_days"),
+            form_data["training_description"],
         ),
     )
 
@@ -124,7 +133,10 @@ def update_training_form(form_id, form_data):
             food_cost = ?,
             materials_cost = ?,
             other_cost = ?,
-            concur_claim = ?
+            concur_claim = ?,
+            other_expense_description = ?,
+            trainee_days = ?,
+            training_description = ?
         WHERE id = ?
     """,
         (
@@ -142,6 +154,9 @@ def update_training_form(form_id, form_data):
             form_data.get("materials_cost", 0),
             form_data.get("other_cost", 0),
             form_data.get("concur_claim"),
+            form_data.get("other_expense_description"),
+            form_data.get("trainee_days"),
+            form_data["training_description"],
             form_id,
         ),
     )
@@ -200,7 +215,10 @@ def get_training_form(form_id):
             "materials_cost": float(row_dict.get("materials_cost", 0)),
             "other_cost": float(row_dict.get("other_cost", 0)),
             "concur_claim": row_dict.get("concur_claim"),
+            "other_expense_description": row_dict.get("other_expense_description"),
             "approved": bool(row_dict.get("approved", False)),
+            "trainee_days": float(row_dict.get("trainee_days", 0.0) or 0.0),
+            "training_description": row_dict["training_description"],
         }
     return None
 
@@ -248,7 +266,7 @@ def get_all_training_forms(
 
     # Get total count
     count_query = "SELECT COUNT(*) FROM training_forms WHERE 1=1"
-    count_params = params[:-2]  # Exclude LIMIT and OFFSET
+    count_params = []  # Start with an empty list for count_params
 
     if search_term:
         count_query += " AND (trainer_name LIKE ? OR supplier_name LIKE ? OR location_details LIKE ?)"
@@ -267,10 +285,11 @@ def get_all_training_forms(
         count_query += " AND training_type = ?"
         count_params.append(training_type)
 
+    # Execute count query
     cursor.execute(count_query, count_params)
     total_count = cursor.fetchone()[0]
 
-    # Get paginated results
+    # Execute main query
     cursor.execute(query, params)
     rows = cursor.fetchall()
 
