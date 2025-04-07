@@ -266,7 +266,7 @@ def get_all_training_forms(
 
     # Get total count
     count_query = "SELECT COUNT(*) FROM training_forms WHERE 1=1"
-    count_params = params[:-2]  # Exclude LIMIT and OFFSET
+    count_params = []  # Start with an empty list for count_params
 
     if search_term:
         count_query += " AND (trainer_name LIKE ? OR supplier_name LIKE ? OR location_details LIKE ?)"
@@ -285,10 +285,11 @@ def get_all_training_forms(
         count_query += " AND training_type = ?"
         count_params.append(training_type)
 
+    # Execute count query
     cursor.execute(count_query, count_params)
     total_count = cursor.fetchone()[0]
 
-    # Get paginated results
+    # Execute main query
     cursor.execute(query, params)
     rows = cursor.fetchall()
 
