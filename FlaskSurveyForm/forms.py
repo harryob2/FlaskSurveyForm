@@ -131,7 +131,7 @@ class TrainingForm(FlaskForm):
         description="Required when other expenses are entered",
     )
     concur_claim = StringField("Concur Claim Number", validators=[Optional()])
-    trainee_days = FloatField("Trainee Days", validators=[DataRequired()], default=0.0)
+    trainee_days = FloatField("Trainee Days", validators=[DataRequired()])
 
     # Updated attendee field
     attendee_emails = TextAreaField(

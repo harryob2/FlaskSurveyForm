@@ -131,9 +131,7 @@ def submit_form():
 
             # Process attachments
             if form.attachments.data:
-                descriptions = [
-                    d.strip() for d in form.attachment_descriptions.data.split("\n")
-                ]
+                descriptions = request.form.getlist("attachment_descriptions[]")
                 for i, file in enumerate(request.files.getlist("attachments")):
                     if file and file.filename:
                         filename = secure_filename(file.filename)
