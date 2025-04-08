@@ -29,7 +29,7 @@
                     {% if trainees %}
                     {{ trainees|length }} attendee{{ 's' if trainees|length > 1 }}
                     {% else %}
-                    No attendees
+                    No trainees
                     {% endif %}
                 </small>
             </h3>
@@ -82,7 +82,7 @@
 
                 <!-- Right Column -->
                 <div class="col-md-6">
-                    <h4 class="fs-6 text-primary mb-3">Attendees</h4>
+                    <h4 class="fs-6 text-primary mb-3">Trainees</h4>
                     {% if trainees %}
                     <div class="list-group">
                         {% for trainee in trainees %}
@@ -102,7 +102,7 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <div class="alert alert-info mb-0">No attendees recorded</div>
+                    <div class="alert alert-info mb-0">No trainees recorded</div>
                     {% endif %}
                 </div>
             </div>
@@ -185,7 +185,7 @@
                                 <div class="card-body">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-paperclip me-2"></i>
-                                        <a href="{{ url_for('uploaded_file', filename=att['folder_path'] + '/' + att['filename']) }}"
+                                        <a href="{{ url_for('uploaded_file', filename='form_' + form.id|string + '/' + att['filename']) }}"
                                             class="text-decoration-none" target="_blank">
                                             {{ att['filename'] }}
                                         </a>

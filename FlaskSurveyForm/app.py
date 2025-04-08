@@ -150,10 +150,10 @@ def submit_form():
                         cursor = conn.cursor()
                         cursor.execute(
                             """
-                            INSERT INTO attachments (training_id, folder_path, filename, description)
-                            VALUES (?, ?, ?, ?)
+                            INSERT INTO attachments (training_id, filename, description)
+                            VALUES (?, ?, ?)
                         """,
-                            (form_id, unique_folder, filename, description),
+                            (form_id, filename, description),
                         )
                         conn.commit()
                         conn.close()
@@ -221,6 +221,16 @@ def list_forms():
     # Calculate pagination
     total_pages = (total_count + 9) // 10  # Round up division
 
+    # Create params dictionary for maintaining filters in pagination
+    params = {
+        'search': search_term,
+        'date_from': date_from,
+        'date_to': date_to,
+        'training_type': training_type,
+        'sort_by': sort_by,
+        'sort_order': sort_order
+    }
+
     return render_template(
         "list.html",
         form=form,
@@ -235,6 +245,9 @@ def list_forms():
         sort_by=sort_by,
         sort_order=sort_order,
         now=datetime.now(),
+        params=params,
+        has_filters=bool(search_term or date_from or date_to or training_type),
+        total_forms=total_count
     )
 
 

@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const attachmentTable = document
     .getElementById("attachment-table")
     .querySelector("tbody");
+  const form = document.getElementById("training-form");
 
   let attachments = [];
 
@@ -83,5 +84,40 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       attachmentTable.parentElement.classList.add("d-none");
     }
+  }
+
+  // Handle form submission
+  if (form) {
+    form.addEventListener("submit", function(e) {
+      // Create hidden file input fields for each attachment
+      attachments.forEach((attachment, index) => {
+        // Create a hidden input for the file
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.style.display = 'none';
+        fileInput.name = 'attachments';
+        
+        // Create a DataTransfer object to create a FileList
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(attachment.file);
+        fileInput.files = dataTransfer.files;
+        
+        // Create a hidden input for the description
+        const descInput = document.createElement('input');
+        descInput.type = 'hidden';
+        descInput.name = 'attachment_descriptions[]';
+        descInput.value = attachment.description || '';
+        
+        // Append both to the form
+        form.appendChild(fileInput);
+        form.appendChild(descInput);
+      });
+
+      // Log what we're submitting
+      console.log('Submitting form with', attachments.length, 'attachments');
+      attachments.forEach((att, i) => {
+        console.log(`Attachment ${i + 1}:`, att.file.name, 'Description:', att.description);
+      });
+    });
   }
 });

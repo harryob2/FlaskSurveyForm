@@ -208,31 +208,34 @@ function initEmployeeSearch(
   });
 }
 
-// Function to add a trainee to the list
+// Function to find an employee by email in the employee list
+function findEmployeeByEmail(email) {
+    return window.employeeList.find(e => e.email.toLowerCase() === email.toLowerCase());
+}
+
+// Core function to add a trainee
 function addTrainee(name, email, department) {
-  console.log("Adding trainee:", { name, email, department });
+    console.log("Adding trainee:", { name, email, department });
 
-  // Check if trainee already exists
-  if (trainees.some((t) => t.email === email)) {
-    console.log("Trainee already exists:", email);
-    alert("This trainee is already added.");
-    return;
-  }
+    // Check if trainee already exists
+    if (trainees.some((t) => t.email === email)) {
+        console.log("Trainee already exists:", email);
+        return false;
+    }
 
-  // Add to trainees array
-  trainees.push({
-    name: name,
-    email: email,
-    department: department || "Engineering"
-  });
+    // Add to trainees array
+    trainees.push({
+        name: name,
+        email: email,
+        department: department || "Engineering"
+    });
 
-  console.log("Updated trainees array:", trainees);
+    console.log("Updated trainees array:", trainees);
 
-  // Update UI
-  updateTraineesUI();
-
-  // Update hidden fields for form submission
-  updateTraineesData();
+    // Update UI and hidden fields
+    updateTraineesUI();
+    updateTraineesData();
+    return true;
 }
 
 // Function to remove a trainee from the list
@@ -333,43 +336,64 @@ function parseEmails(text) {
 
 // Function to add multiple trainees from emails
 function addTraineesFromEmails(emails) {
-  console.log("Adding trainees from emails:", emails);
+    console.log("Adding trainees from emails:", emails);
 
-  let addedCount = 0;
-  let invalidEmails = [];
+    let results = {
+        added: 0,
+        invalid: [],
+        duplicate: [],
+        notFound: []
+    };
 
-  emails.forEach((email) => {
-    if (isValidEmail(email)) {
-      // Check if trainee already exists
-      if (!trainees.some((t) => t.email === email)) {
-        // Add to trainees array with minimal info
-        trainees.push({
-          email: email,
-          name: email.split("@")[0], // Use username part as name
-          department: "Engineering" // Default department
-        });
-        addedCount++;
-      }
-    } else {
-      invalidEmails.push(email);
+    emails.forEach((email) => {
+        if (!isValidEmail(email)) {
+            results.invalid.push(email);
+            return;
+        }
+
+        // Try to find employee in the employee list
+        const employee = findEmployeeByEmail(email);
+        
+        if (employee) {
+            // Use existing addTrainee function with full employee data
+            const added = addTrainee(
+                employee.displayName, 
+                employee.email, 
+                employee.department
+            );
+            
+            if (added) {
+                results.added++;
+            } else {
+                results.duplicate.push(email);
+            }
+        } else {
+            // Employee not found in list
+            results.notFound.push(email);
+        }
+    });
+
+    // Show results
+    let messages = [];
+    if (results.added > 0) {
+        messages.push(`Added ${results.added} new trainee(s).`);
     }
-  });
+    if (results.invalid.length > 0) {
+        messages.push(`Invalid email format: ${results.invalid.join(", ")}`);
+    }
+    if (results.duplicate.length > 0) {
+        messages.push(`Already added: ${results.duplicate.join(", ")}`);
+    }
+    if (results.notFound.length > 0) {
+        messages.push(`Not found in employee list: ${results.notFound.join(", ")}`);
+    }
 
-  // Update UI
-  updateTraineesUI();
-  updateTraineesData();
+    if (messages.length > 0) {
+        alert(messages.join("\n"));
+    }
 
-  // Show results
-  if (addedCount > 0) {
-    alert(`Added ${addedCount} new trainee(s).`);
-  }
-
-  if (invalidEmails.length > 0) {
-    alert(`Invalid email(s): ${invalidEmails.join(", ")}`);
-  }
-
-  // Clear the input
-  document.getElementById("attendee_emails").value = "";
+    // Clear the input
+    document.getElementById("attendee_emails").value = "";
 }
 
 // Initialize when DOM is loaded
@@ -464,13 +488,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Add event listener to the button
     addEmailsBtn.addEventListener("click", function () {
       const emailsText = attendeeEmailsField.value.trim();
-
       if (emailsText) {
         const emails = parseEmails(emailsText);
         if (emails.length > 0) {
           addTraineesFromEmails(emails);
-          // Clear the field after adding
-          attendeeEmailsField.value = "";
         }
       }
     });
