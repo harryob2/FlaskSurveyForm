@@ -268,20 +268,9 @@ def edit_form(form_id):
             form.other_cost.data = form_data.get('other_cost', 0)
             form.concur_claim.data = form_data.get('concur_claim', '')
             
-            # Attendees
+            # Trainees
             if form_data.get('trainees_data'):
-                try:
-                    attendees = json.loads(form_data['trainees_data'])
-                    if isinstance(attendees, list):
-                        if attendees and isinstance(attendees[0], dict):
-                            # Old format with objects
-                            emails = [t['email'] for t in attendees if 'email' in t]
-                        else:
-                            # New format with just emails
-                            emails = attendees
-                        form.attendee_emails.data = ', '.join(emails)
-                except json.JSONDecodeError as e:
-                    logging.error(f"Error parsing trainees data: {e}")
+                form.trainees_data.data = form_data.get('trainees_data')
     
     if form.validate_on_submit():
         try:
