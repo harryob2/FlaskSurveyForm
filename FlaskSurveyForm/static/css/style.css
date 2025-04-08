@@ -1,0 +1,126 @@
+.dropzone {
+  border: 2px dashed #0087f7; /* Kept original blue for consistency */
+  border-radius: 8px; /* Slightly larger radius for a softer look */
+  background: #ffffff; /* Explicit white for clarity */
+  min-height: 150px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease; /* Smooth transition retained */
+}
+
+/* Hover state with subtle feedback */
+.dropzone:hover {
+  border-color: #0056b3; /* Darker blue for contrast */
+  background-color: #e9f1fb; /* Lighter blue-tinted hover for better visibility */
+}
+
+/* Center message content */
+.dropzone .dz-message {
+  text-align: center;
+  margin: 2em 0;
+  color: #333; /* Added darker text for readability */
+  font-size: 1.1rem; /* Slightly larger for emphasis */
+}
+
+/* Icon styling */
+.dropzone .dz-message i {
+  color: #0087f7;
+  margin-bottom: 1rem;
+  font-size: 2rem; /* Larger icon for prominence */
+}
+
+/* Preview container */
+.dropzone .dz-preview {
+  margin: 1rem;
+  position: relative; /* Added for potential overlay elements */
+}
+
+/* Preview image */
+.dropzone .dz-preview .dz-image {
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* Hide success/error marks (unchanged) */
+.dropzone .dz-preview .dz-success-mark,
+.dropzone .dz-preview .dz-error-mark {
+  display: none;
+}
+
+/* Progress bar container */
+.dropzone .dz-preview .dz-progress {
+  height: 15px;
+  background-color: #e9ecef; /* Softer gray for contrast */
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.5rem; /* Added spacing */
+}
+
+/* Progress bar fill */
+.dropzone .dz-preview .dz-progress .dz-upload {
+  background: #0087f7;
+  height: 100%;
+  transition: width 0.3s ease; /* Smooth progress animation */
+}
+
+/* File description spacing */
+.file-description {
+  margin-top: 0.75rem; /* Slightly more spacing for breathing room */
+  font-size: 0.9rem; /* Smaller text for subtlety */
+  color: #666; /* Softer color for secondary info */
+}
+
+/* Upload list container */
+#upload-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 1rem; /* Added spacing above list */
+  border: 1px solid #dee2e6; /* Subtle border for definition */
+  border-radius: 4px; /* Consistent rounding */
+  padding: 0.5rem; /* Inner padding for content */
+}
+
+/* Custom scrollbar styling */
+#upload-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+#upload-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+#upload-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+/* Scrollbar hover effect */
+#upload-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+#dropzone {
+  border: 2px dashed #007bff;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#dropzone.dragging {
+  background-color: #f0f8ff; /* Light blue background for visual feedback */
+  border-color: #0056b3; /* Darker blue border */
+}
+
+#dropzone i {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+#attachment-table {
+  margin-top: 1rem;
+}
