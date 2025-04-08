@@ -31,7 +31,8 @@ env/
 *.log
 
 # Uploaded files
-uploads/
+uploads/*
+!uploads/.gitkeep
 attached_assets/
 
 # OS specific files
