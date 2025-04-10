@@ -195,30 +195,14 @@
                             </div>
                         </div>
                         {% if edit_mode and existing_attachments %}
-                        <div class="mb-3">
-                            <h5 class="fs-6">Existing Attachments</h5>
-                            <div class="list-group">
-                                {% for att in existing_attachments %}
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="bi bi-paperclip me-2"></i>
-                                            <a href="{{ url_for('uploaded_file', filename=att.filename) }}"
-                                                target="_blank">
-                                                {{ att.filename }}
-                                            </a>
-                                            {% if att.description %}
-                                            <div class="text-muted small">{{ att.description }}</div>
-                                            {% endif %}
-                                        </div>
-                                        <a href="#" class="text-danger delete-attachment" data-id="{{ att.id }}">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
+                        <!-- Hidden container for existing attachments data -->
+                        {% for att in existing_attachments %}
+                        <div class="existing-attachment d-none" 
+                             data-id="{{ att['id'] }}" 
+                             data-filename="{{ att['filename'] }}" 
+                             data-description="{{ att['description'] or '' }}">
                         </div>
+                        {% endfor %}
                         {% endif %}
                         <!-- Attachments Section -->
                         <div class="row mb-4">
@@ -229,7 +213,7 @@
                                     <p>Drag and drop files here or click to browse</p>
                                     <input type="file" id="file-input" class="d-none" multiple>
                                 </div>
-                                <table class="table table-bordered d-none" id="attachment-table">
+                                <table class="table table-bordered" id="attachment-table">
                                     <thead>
                                         <tr>
                                             <th>File Name</th>

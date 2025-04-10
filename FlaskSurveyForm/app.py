@@ -348,25 +348,7 @@ def edit_form(form_id):
 
             # Load trainees data
             if form_data.get("trainees_data"):
-                try:
-                    trainees = json.loads(form_data["trainees_data"])
-                    if isinstance(trainees, list):
-                        # Set the trainees data directly in the hidden field
-                        form.trainees_data.data = form_data["trainees_data"]
-
-                        # Also populate the attendee emails field for backward compatibility
-                        if trainees and isinstance(trainees[0], dict):
-                            # If trainees are objects with email property
-                            emails = [t["email"] for t in trainees if "email" in t]
-                        else:
-                            # If trainees are just email strings
-                            emails = trainees
-                        form.attendee_emails.data = ", ".join(emails)
-                except json.JSONDecodeError as e:
-                    logging.error(f"Error parsing trainees data: {e}")
-                    form.trainees_data.data = "[]"
-            else:
-                form.trainees_data.data = "[]"
+                form.trainees_data.data = form_data.get('trainees_data')
 
     if form.validate_on_submit():
         try:
@@ -391,10 +373,7 @@ def edit_form(form_id):
 
             # Handle attachments
             if form.attachments.data:
-                descriptions = [
-                    d.strip() for d in form.attachment_descriptions.data.split("\n")
-                ]
-
+                descriptions = request.form.getlist("attachment_descriptions[]")
                 for i, file in enumerate(request.files.getlist("attachments")):
                     if file and file.filename:
                         filename = secure_filename(file.filename)
@@ -414,6 +393,36 @@ def edit_form(form_id):
                         )
                         conn.commit()
                         conn.close()
+
+            # Handle attachment updates and deletions
+            delete_attachments = request.form.getlist("delete_attachments[]")
+            if delete_attachments:
+                conn = get_db()
+                cursor = conn.cursor()
+                for att_id in delete_attachments:
+                    cursor.execute("DELETE FROM attachments WHERE id = ?", (att_id,))
+                conn.commit()
+                conn.close()
+
+            update_descriptions = request.form.getlist("update_attachment_descriptions[]")
+            if update_descriptions:
+                conn = get_db()
+                cursor = conn.cursor()
+                for desc_json in update_descriptions:
+                    try:
+                        desc_data = json.loads(desc_json)
+                        cursor.execute(
+                            """
+                            UPDATE attachments 
+                            SET description = ? 
+                            WHERE id = ?
+                            """,
+                            (desc_data["description"], desc_data["id"])
+                        )
+                    except json.JSONDecodeError:
+                        logging.error(f"Invalid JSON in attachment description update: {desc_json}")
+                conn.commit()
+                conn.close()
 
             flash("Form updated successfully!", "success")
             return redirect(url_for("view_form", form_id=form_id))
