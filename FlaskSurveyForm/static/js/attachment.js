@@ -127,50 +127,72 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Handle form submission
-  if (form) {
-    form.addEventListener("submit", function(e) {
-      // Create hidden file input fields for each new attachment
-      attachments.forEach((attachment, index) => {
-        if (!attachment.isExisting) {
-          // Create a hidden input for the file
-          const fileInput = document.createElement('input');
-          fileInput.type = 'file';
-          fileInput.style.display = 'none';
-          fileInput.name = 'attachments';
-          
-          // Create a DataTransfer object to create a FileList
-          const dataTransfer = new DataTransfer();
-          dataTransfer.items.add(attachment.file);
-          fileInput.files = dataTransfer.files;
-          
-          // Create a hidden input for the description
-          const descInput = document.createElement('input');
-          descInput.type = 'hidden';
-          descInput.name = 'attachment_descriptions[]';
-          descInput.value = attachment.description || '';
-          
-          // Append both to the form
-          form.appendChild(fileInput);
-          form.appendChild(descInput);
-        } else {
-          // For existing attachments, just update the description if changed
-          const descInput = document.createElement('input');
-          descInput.type = 'hidden';
-          descInput.name = 'update_attachment_descriptions[]';
-          descInput.value = JSON.stringify({
-            id: attachment.id,
-            description: attachment.description
-          });
-          form.appendChild(descInput);
+  // Prepare attachments for form submission (to be called manually)
+  window.prepareAttachmentsForSubmit = function() {
+    // Clear any previously added temp inputs to avoid duplicates if validation fails and user retries
+    form.querySelectorAll('input[name="attachments"], input[name="attachment_descriptions[]"], input[name="update_attachment_descriptions[]"], input[name="delete_attachments[]"]').forEach(input => {
+        // Only remove inputs added by this script (maybe check for a specific class or attribute if needed)
+        // For now, assuming these names are unique to this process
+        if (!input.dataset.persist) { // Avoid removing inputs added manually or by server-side rendering if any
+            // Let's rethink this - removing delete_attachments[] here is wrong.
+            // We only want to remove the dynamically added file/description inputs for *new* files
+            // and the update_description inputs for *existing* files.
+            // delete_attachments[] are added when the user clicks remove and should persist.
         }
-      });
-
-      // Log what we're submitting
-      console.log('Submitting form with', attachments.length, 'attachments');
-      attachments.forEach((att, i) => {
-        console.log(`Attachment ${i + 1}:`, att.isExisting ? att.filename : att.file.name, 'Description:', att.description);
-      });
     });
-  }
+    // Let's refine the removal logic.
+    // Remove only the inputs we are about to add.
+    form.querySelectorAll('input[name="attachments"], input[name="attachment_descriptions[]"], input[name="update_attachment_descriptions[]"]').forEach(input => {
+        // Check if it's one of ours - maybe add a data attribute when creating?
+        // For simplicity now, just remove all with these names. User shouldn't define these manually.
+        input.remove();
+    });
+
+    // Create hidden fields for each attachment
+    attachments.forEach((attachment, index) => {
+        if (!attachment.isExisting) {
+            // Create a hidden input for the file
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.style.display = 'none';
+            fileInput.name = 'attachments';
+            fileInput.setAttribute('data-attachment-temp', 'true'); // Mark as temp
+            
+            // Create a DataTransfer object to create a FileList
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(attachment.file);
+            fileInput.files = dataTransfer.files;
+            
+            // Create a hidden input for the description
+            const descInput = document.createElement('input');
+            descInput.type = 'hidden';
+            descInput.name = 'attachment_descriptions[]';
+            descInput.value = attachment.description || '';
+            descInput.setAttribute('data-attachment-temp', 'true'); // Mark as temp
+            
+            // Append both to the form
+            form.appendChild(fileInput);
+            form.appendChild(descInput);
+        } else {
+            // For existing attachments, just add the description update info
+            const descInput = document.createElement('input');
+            descInput.type = 'hidden';
+            descInput.name = 'update_attachment_descriptions[]';
+            descInput.setAttribute('data-attachment-temp', 'true'); // Mark as temp
+            descInput.value = JSON.stringify({
+                id: attachment.id,
+                description: attachment.description
+            });
+            form.appendChild(descInput);
+        }
+    });
+
+    // Log what we're adding
+    console.log('Prepared form for submission with', attachments.length, 'attachments logic.');
+    // Debug: Log current form data right before potential submission
+    // const formData = new FormData(form);
+    // for (let [key, value] of formData.entries()) {
+    //     console.log(`${key}: ${value}`);
+    // }
+  };
 });

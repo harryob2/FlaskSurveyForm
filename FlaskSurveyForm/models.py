@@ -217,7 +217,7 @@ def get_training_form(form_id):
             "concur_claim": row_dict.get("concur_claim"),
             "other_expense_description": row_dict.get("other_expense_description"),
             "approved": bool(row_dict.get("approved", False)),
-            "trainee_days": float(row_dict.get("trainee_days", 0.0) or 0.0),
+            "trainee_days": row_dict.get("trainee_days", 0.0) or 0.0,
             "training_description": row_dict["training_description"],
         }
     return None
@@ -295,19 +295,23 @@ def get_all_training_forms(
 
     forms = []
     for row in rows:
+        # Convert row to dictionary for easier access by key
+        row_dict = dict(row)
         forms.append(
             {
-                "id": row[0],
-                "training_type": row[1],
-                "trainer_name": row[2],
-                "supplier_name": row[3],
-                "location_type": row[4],
-                "location_details": row[5],
-                "start_date": row[6],
-                "end_date": row[7],
-                "trainer_days": row[8],
-                "trainees_data": row[9],
-                "submission_date": row[10],
+                "id": row_dict["id"],
+                "training_type": row_dict["training_type"],
+                "trainer_name": row_dict["trainer_name"],
+                "supplier_name": row_dict["supplier_name"],
+                "location_type": row_dict["location_type"],
+                "location_details": row_dict["location_details"],
+                "start_date": row_dict["start_date"],
+                "end_date": row_dict["end_date"],
+                "trainer_days": row_dict["trainer_days"],
+                "trainees_data": row_dict["trainees_data"],
+                "submission_date": row_dict["submission_date"],
+                # Add the approved field, converting to boolean
+                "approved": bool(row_dict.get("approved", False))
             }
         )
 

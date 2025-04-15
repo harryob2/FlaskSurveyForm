@@ -1,29 +1,33 @@
 /**
- * Validates that the end date is not before the start date
- * @returns {boolean} - True if dates are valid, false otherwise
+ * Validates that the end date is not before the start date.
+ * @param {HTMLInputElement} startDateInput - The start date input element.
+ * @param {HTMLInputElement} endDateInput - The end date input element.
+ * @returns {HTMLElement | null} - Returns the invalid element (endDateInput) or null if valid.
  */
-function validateDates() {
-  const startDateInput = document.getElementById("start_date");
-  const endDateInput = document.getElementById("end_date");
-
-  if (!startDateInput || !endDateInput) {
-    return true; // If the elements don't exist, don't block submission
+function validateDates(startDateInput, endDateInput) {
+  if (!startDateInput || !endDateInput || !startDateInput.value || !endDateInput.value) {
+    return null; // Not enough info to validate or fields empty (let 'required' handle empty)
   }
 
   const startDate = new Date(startDateInput.value);
   const endDate = new Date(endDateInput.value);
 
+  // Basic check if dates are valid objects
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return true; // If dates are not properly formatted, let server validation handle it
+      // Let browser's type="date" validation handle format issues primarily
+      // Or rely on server-side WTForms validation for format
+    return null;
   }
 
   if (endDate < startDate) {
-    alert("End date cannot be earlier than start date.");
-    endDateInput.focus();
-    return false;
+    // Set a custom message for reportValidity to use
+    endDateInput.setCustomValidity("End date cannot be earlier than start date.");
+    return endDateInput; // Return the element that failed validation
+  } else {
+     endDateInput.setCustomValidity(""); // Clear custom validity if it was previously set
   }
 
-  return true;
+  return null; // Dates are valid
 }
 
 /**

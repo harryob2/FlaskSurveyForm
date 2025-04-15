@@ -116,6 +116,7 @@ def submit_form():
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
                 form.trainees_data.data = trainees_data
+                
             # Prepare form data using the form's method
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
@@ -134,45 +135,96 @@ def submit_form():
             os.makedirs(unique_folder, exist_ok=True)
 
             # Process attachments
-            if form.attachments.data:
+            # Use request.files directly as WTForms field might not populate from dynamic inputs
+            if "attachments" in request.files:
+                new_files = request.files.getlist("attachments")
                 descriptions = request.form.getlist("attachment_descriptions[]")
-                for i, file in enumerate(request.files.getlist("attachments")):
+                logging.debug(f"Processing {len(new_files)} new attachments.")
+                
+                # Ensure descriptions list matches file list length if necessary
+                # Pad descriptions if some files didn't get a description input (shouldn't happen with current JS)
+                if len(descriptions) < len(new_files):
+                    descriptions.extend([''] * (len(new_files) - len(descriptions)))
+
+                for i, file in enumerate(new_files):
+                    # Check if the file object exists and has a filename
                     if file and file.filename:
                         filename = secure_filename(file.filename)
+                        # Save to the unique folder
                         file_path = os.path.join(unique_folder, filename)
+                        logging.debug(f"Saving file {filename} to {file_path}")
                         file.save(file_path)
 
                         # Get description or use empty string
                         description = descriptions[i] if i < len(descriptions) else ""
+                        logging.debug(f"Attachment description: {description}")
 
-                        # Insert attachment with folder path
-                        conn = get_db()
-                        cursor = conn.cursor()
-                        cursor.execute(
-                            """
-                            INSERT INTO attachments (training_id, filename, description)
-                            VALUES (?, ?, ?)
-                        """,
-                            (form_id, filename, description),
-                        )
-                        conn.commit()
-                        conn.close()
+                        # Insert attachment record
+                        try:
+                            conn = get_db()
+                            cursor = conn.cursor()
+                            cursor.execute(
+                                """
+                                INSERT INTO attachments (training_id, filename, description)
+                                VALUES (?, ?, ?)
+                            """,
+                                (form_id, filename, description),
+                            )
+                            conn.commit()
+                        except Exception as db_err:
+                            logging.error(f"Database error inserting attachment {filename}: {db_err}")
+                        finally:
+                            if conn:
+                                conn.close()
+                    else:
+                        logging.debug(f"Skipping empty file input at index {i}.")
+                
+            # If no files were submitted via request.files['attachments'], log that.
+            elif not request.files.getlist("attachments"):
+                 logging.debug("No new files found in request.files for key 'attachments'.")
+            
+            flash("Form submitted successfully!", "success")
             return redirect(url_for("success"))
         except Exception as e:
-            logging.error(f"Error processing form submission: {e}")
-            flash("An error occurred while submitting the form. Please try again.")
-            return redirect(url_for("index"))
+            logging.error(f"Error processing form submission: {e}", exc_info=True)
+            flash(
+                "An error occurred while submitting the form. Please try again.", "danger"
+            )
+            return render_template("index.html", form=form, now=datetime.now())
     else:
         logging.error(f"Form validation errors: {form.errors}")
-        flash("Please correct the errors in the form.")
-        return redirect(url_for("index"))
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error in {getattr(form, field).label.text}: {error}", "danger")
+        return render_template("index.html", form=form, now=datetime.now())
 
-    return render_template("index.html", form=form, now=datetime.now())
 
-
-@app.route("/uploads/<filename>")
+@app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    """Serve uploaded files with proper content type handling"""
+    # Get the directory and filename from the path
+    directory = os.path.dirname(filename)
+    filename = os.path.basename(filename)
+    
+    # Get the file extension
+    file_ext = os.path.splitext(filename)[1].lower()
+    
+    # Define viewable file types
+    viewable_types = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.txt', '.pdf'}
+    
+    # Determine if file should be viewed or downloaded
+    if file_ext in viewable_types:
+        return send_from_directory(
+            os.path.join(app.config["UPLOAD_FOLDER"], directory),
+            filename,
+            as_attachment=False
+        )
+    else:
+        return send_from_directory(
+            os.path.join(app.config["UPLOAD_FOLDER"], directory),
+            filename,
+            as_attachment=True
+        )
 
 
 @app.route("/approve/<int:form_id>")
@@ -184,7 +236,13 @@ def approve_training(form_id):
     )
     conn.commit()
     conn.close()
-    return redirect(url_for("view_form", form_id=form_id))
+
+    # Determine redirect target based on referrer
+    referrer = request.referrer
+    if referrer and url_for('list_forms') in referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for("view_form", form_id=form_id))
 
 
 @app.route("/success")
@@ -356,7 +414,7 @@ def edit_form(form_id):
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
                 form.trainees_data.data = trainees_data
-
+                
             # Get form data
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
@@ -370,59 +428,110 @@ def edit_form(form_id):
 
             # Update form data in database
             update_training_form(form_id, form_data)
+            logging.debug(f"Form {form_id} core data updated.")
 
-            # Handle attachments
-            if form.attachments.data:
-                descriptions = request.form.getlist("attachment_descriptions[]")
-                for i, file in enumerate(request.files.getlist("attachments")):
+            # --- Handle Attachments --- 
+            unique_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"form_{form_id}")
+            os.makedirs(unique_folder, exist_ok=True)
+            logging.debug(f"Ensured attachment directory exists: {unique_folder}")
+
+            # Process NEW attachments
+            # Use request.files directly as WTForms field might not populate from dynamic inputs
+            if "attachments" in request.files:
+                new_files = request.files.getlist("attachments")
+                descriptions = request.form.getlist("attachment_descriptions[]") # Descriptions for NEW files
+                logging.debug(f"Processing {len(new_files)} new attachments for form {form_id}.")
+
+                # Pad descriptions if necessary (belt-and-suspenders)
+                if len(descriptions) < len(new_files):
+                    descriptions.extend([''] * (len(new_files) - len(descriptions)))
+
+                for i, file in enumerate(new_files):
                     if file and file.filename:
                         filename = secure_filename(file.filename)
-                        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                        # SAVE TO FORM-SPECIFIC FOLDER
+                        file_path = os.path.join(unique_folder, filename)
+                        logging.debug(f"Saving new file {filename} to {file_path}")
                         file.save(file_path)
 
                         description = descriptions[i] if i < len(descriptions) else ""
+                        logging.debug(f"New attachment description: {description}")
 
-                        conn = get_db()
-                        cursor = conn.cursor()
-                        cursor.execute(
-                            """
-                            INSERT INTO attachments (training_id, filename, description)
-                            VALUES (?, ?, ?)
-                        """,
-                            (form_id, filename, description),
-                        )
-                        conn.commit()
-                        conn.close()
+                        # Insert new attachment record
+                        try:
+                            conn = get_db()
+                            cursor = conn.cursor()
+                            cursor.execute(
+                                """
+                                INSERT INTO attachments (training_id, filename, description)
+                                VALUES (?, ?, ?)
+                            """,
+                                (form_id, filename, description),
+                            )
+                            conn.commit()
+                        except Exception as db_err:
+                            logging.error(f"Database error inserting new attachment {filename}: {db_err}")
+                        finally:
+                            if conn:
+                                conn.close()
+                    else:
+                        logging.debug(f"Skipping empty new file input at index {i}.")
+            else:
+                 logging.debug("No new files found in request.files for key 'attachments'.")
 
-            # Handle attachment updates and deletions
+            # Handle attachment DELETIONS
             delete_attachments = request.form.getlist("delete_attachments[]")
             if delete_attachments:
-                conn = get_db()
-                cursor = conn.cursor()
-                for att_id in delete_attachments:
-                    cursor.execute("DELETE FROM attachments WHERE id = ?", (att_id,))
-                conn.commit()
-                conn.close()
+                logging.debug(f"Processing deletions for attachment IDs: {delete_attachments}")
+                # TODO: Optionally delete the actual files from the filesystem
+                try:
+                    conn = get_db()
+                    cursor = conn.cursor()
+                    # Placeholders for safe query
+                    placeholders = ', '.join('?' * len(delete_attachments))
+                    query = f"DELETE FROM attachments WHERE id IN ({placeholders}) AND training_id = ?"
+                    params = delete_attachments + [form_id] # Add form_id for security
+                    cursor.execute(query, params)
+                    conn.commit()
+                    logging.info(f"Deleted {cursor.rowcount} attachment records for form {form_id}.")
+                except Exception as db_err:
+                    logging.error(f"Database error deleting attachments: {db_err}")
+                finally:
+                    if conn:
+                        conn.close()
 
+            # Handle attachment description UPDATES for existing files
             update_descriptions = request.form.getlist("update_attachment_descriptions[]")
             if update_descriptions:
-                conn = get_db()
-                cursor = conn.cursor()
-                for desc_json in update_descriptions:
-                    try:
-                        desc_data = json.loads(desc_json)
-                        cursor.execute(
-                            """
-                            UPDATE attachments 
-                            SET description = ? 
-                            WHERE id = ?
-                            """,
-                            (desc_data["description"], desc_data["id"])
-                        )
-                    except json.JSONDecodeError:
-                        logging.error(f"Invalid JSON in attachment description update: {desc_json}")
-                conn.commit()
-                conn.close()
+                logging.debug(f"Processing description updates: {update_descriptions}")
+                try:
+                    conn = get_db()
+                    cursor = conn.cursor()
+                    for desc_json in update_descriptions:
+                        try:
+                            desc_data = json.loads(desc_json)
+                            att_id = desc_data.get('id')
+                            new_desc = desc_data.get('description', '')
+                            if att_id:
+                                cursor.execute(
+                                    """
+                                    UPDATE attachments SET description = ? 
+                                    WHERE id = ? AND training_id = ?
+                                    """,
+                                    (new_desc, att_id, form_id) # Add form_id check
+                                )
+                            else:
+                                logging.warning(f"Skipping description update due to missing ID in JSON: {desc_json}")
+                        except json.JSONDecodeError:
+                            logging.error(f"Invalid JSON in attachment description update: {desc_json}")
+                        except KeyError:
+                             logging.error(f"Missing 'id' or 'description' key in JSON: {desc_json}")
+                    conn.commit()
+                except Exception as db_err:
+                    logging.error(f"Database error updating attachment descriptions: {db_err}")
+                finally:
+                    if conn:
+                        conn.close()
 
             flash("Form updated successfully!", "success")
             return redirect(url_for("view_form", form_id=form_id))

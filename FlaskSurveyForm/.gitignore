@@ -38,3 +38,12 @@ attached_assets/
 # OS specific files
 .DS_Store
 Thumbs.db 
+
+# Node modules
+node_modules/
+
+# Temporary files
+*.tmp
+*.tmp.*
+*.tmp.*.*
+

@@ -51,11 +51,35 @@ ALLOWED_EXTENSIONS = {
     "txt",
 }
 
+def RequiredIf(condition_field, condition_value):
+    """Custom validator that makes a field required if another field has a specific value"""
+    message = f'This field is required when {condition_field} is {condition_value}'
+
+    def _validate(form, field):
+        try:
+            other_field = getattr(form, condition_field)
+        except AttributeError:
+            raise ValidationError(f"No field named '{condition_field}' in form for RequiredIf validator.")
+
+        # Check if the condition field has the specified value
+        if other_field.data == condition_value:
+            # If condition met, behave like DataRequired
+            if not field.data:
+                raise ValidationError(message)
+            # Handle string data that might just be whitespace
+            if isinstance(field.data, str) and not field.data.strip():
+                 raise ValidationError(message)
+            # Handle numeric data that might be zero if zero isn't allowed implicitly
+            # (Adjust if 0 is valid for Decimal/Float) - NumberRange usually handles this
+            # if isinstance(field.data, (int, float, Decimal)) and field.data == 0:
+            #     raise ValidationError(message) # Uncomment if 0 is not allowed
+
+    return _validate
 
 class TrainingForm(FlaskForm):
     """Form for training submissions"""
 
-    # Training Type - Initial Selection
+    # Always Required
     training_type = RadioField(
         "Training Type",
         choices=[
@@ -64,55 +88,52 @@ class TrainingForm(FlaskForm):
         ],
         validators=[DataRequired()],
     )
-
-    # Trainer/Supplier Information
-    trainer_name = StringField(
-        "Trainer Name",
-        validators=[Optional()],
-        description="For internal training, select from employee list",
-    )
-    supplier_name = StringField(
-        "Supplier/Name",
-        validators=[Optional()],
-        description="For external training, enter supplier name",
-    )
-
-    # Location
     location_type = RadioField(
         "Location",
         choices=[("Onsite", "Onsite"), ("Offsite", "Offsite")],
-        validators=[DataRequired()],
+        validators=[DataRequired("Please select a location type.")], # Custom message example
     )
-    location_details = StringField(
-        "Location Details",
-        validators=[Optional()],
-        description="Required for offsite training",
-    )
-
-    # Date Information
     start_date = DateField(
         "Start Date", validators=[DataRequired()], format="%Y-%m-%d", default=date.today
     )
     end_date = DateField(
         "End Date", validators=[DataRequired()], format="%Y-%m-%d", default=date.today
     )
-
-    # Department (hidden, auto-filled)
-    department = HiddenField("Department", default="Engineering")
-
-    # Trainer Days
-    trainer_days = FloatField(
-        "Trainer Days", validators=[DataRequired(), NumberRange(min=0)]
-    )
-
-    # Training Description
     training_description = TextAreaField(
         "Training Description", validators=[DataRequired()]
     )
+    trainee_days = DecimalField(
+        "Trainee Days", validators=[DataRequired(), NumberRange(min=0.01, message="Trainee days must be positive.")], places=2
+    ) # Changed min to 0.01 example
 
-    # Trainees Data
-    trainees_data = HiddenField("Trainees Data")
-    # New expense fields
+    # Conditionally Required
+    trainer_name = StringField(
+        "Trainer Name",
+        validators=[RequiredIf('training_type', 'Internal Training')],
+        description="For internal training, select from employee list",
+    )
+    supplier_name = StringField(
+        "Supplier Name",
+        validators=[RequiredIf('training_type', 'External Training')],
+        description="For external training, enter supplier name",
+    )
+    location_details = StringField(
+        "Location Details",
+        validators=[RequiredIf('location_type', 'Offsite')],
+        description="Required for offsite training",
+    )
+    trainer_days = DecimalField(
+        "Trainer Days",
+        # Combine RequiredIf with NumberRange
+        validators=[
+            RequiredIf('training_type', 'Internal Training'),
+            NumberRange(min=0.01, message="Trainer days must be positive if entered.") # Allow 0 only if optional
+        ],
+        places=2,
+        default=0.0 # Default to 0, validation ensures >0 if required
+    )
+
+    # Optional or complex validation
     travel_cost = FloatField(
         "Travel Expenses (€)", validators=[Optional(), NumberRange(min=0)]
     )
@@ -125,66 +146,64 @@ class TrainingForm(FlaskForm):
     other_cost = FloatField(
         "Other Expenses (€)", validators=[Optional(), NumberRange(min=0)]
     )
+    # Use custom validators for these complex conditions
     other_expense_description = TextAreaField(
         "Other Expense Description",
         validators=[Optional()],
         description="Required when other expenses are entered",
     )
     concur_claim = StringField("Concur Claim Number", validators=[Optional()])
-    trainee_days = FloatField("Trainee Days", validators=[DataRequired()])
+
+    # Hidden fields
+    department = HiddenField("Department", default="Engineering")
+    trainees_data = HiddenField("Trainees Data") # Add validation if needed
+
+    # Attachment fields
+    attachments = MultipleFileField("Attachments", validators=[Optional()]) # Example: Make optional
+    attachment_descriptions = TextAreaField("Attachment Descriptions (one per line)", validators=[Optional()])
 
     # Updated attendee field
     attendee_emails = TextAreaField(
         "Attendee Emails (comma/space separated)", validators=[Optional()]
     )
 
-    # Attachment fields
-    attachments = MultipleFileField("Attachments")
-    attachment_descriptions = TextAreaField("Attachment Descriptions (one per line)")
-
     # Submit Button
     submit = SubmitField("Submit Training Form")
 
+    # --- Custom Validation Methods ---
+    # Keep these for logic more complex than RequiredIf handles directly
+
     def validate_end_date(self, field):
         """Validate that end date is not before start date"""
-        if field.data < self.start_date.data:
+        if self.start_date.data and field.data and field.data < self.start_date.data:
             raise ValidationError("End date cannot be earlier than start date.")
 
-    def validate_location_details(self, field):
-        """Validate that location details are provided when location type is Offsite"""
-        if self.location_type.data == "Offsite" and not field.data:
-            raise ValidationError("Location details are required for offsite training.")
-
-    def validate_trainer_name(self, field):
-        """Validate that trainer name is provided for Internal Training"""
-        if self.training_type.data == "Internal Training" and not field.data:
-            raise ValidationError("Trainer name is required for internal training.")
-
-    def validate_supplier_name(self, field):
-        """Validate that supplier name is provided for External Training"""
-        if self.training_type.data == "External Training" and not field.data:
-            raise ValidationError("Supplier name is required for external training.")
-
+    # Keep concur and other expense validation here as they depend on multiple fields/values > 0
     def validate_concur_claim(self, field):
-        """Validate that Concur Claim Number is provided when expenses are entered"""
+        """Validate that Concur Claim Number is provided when expenses > 0 are entered"""
         has_expenses = (
             (self.travel_cost.data and self.travel_cost.data > 0)
             or (self.food_cost.data and self.food_cost.data > 0)
             or (self.materials_cost.data and self.materials_cost.data > 0)
             or (self.other_cost.data and self.other_cost.data > 0)
         )
-
-        if has_expenses and not field.data:
+        if has_expenses and (not field.data or not field.data.strip()):
             raise ValidationError(
                 "Concur Claim Number is required when expenses are entered."
             )
 
     def validate_other_expense_description(self, field):
-        """Validate that other expense description is provided when other expenses are entered"""
-        if self.other_cost.data and self.other_cost.data > 0 and not field.data:
+        """Validate that other expense description is provided when other expenses > 0"""
+        if self.other_cost.data and self.other_cost.data > 0 and (not field.data or not field.data.strip()):
             raise ValidationError(
                 "Description is required when other expenses are entered."
             )
+
+    # Remove simple conditional validators now handled by RequiredIf
+    # e.g., remove validate_location_details, validate_trainer_name, validate_supplier_name
+    # unless they do more than just check for presence.
+
+    # Keep process_emails and prepare_form_data as they are data processing, not validation
 
     def process_emails(self):
         """Process and clean the attendee emails"""
@@ -216,7 +235,7 @@ class TrainingForm(FlaskForm):
             "start_date": self.start_date.data.strftime("%Y-%m-%d"),
             "end_date": self.end_date.data.strftime("%Y-%m-%d"),
             "trainer_days": (
-                float(self.trainer_days.data) if self.trainer_days.data else None
+                float(str(self.trainer_days.data)) if self.trainer_days.data else None
             ),
             "training_description": self.training_description.data or "",
             "trainees_data": self.trainees_data.data or "",
@@ -234,9 +253,7 @@ class TrainingForm(FlaskForm):
                 else None
             ),
             "concur_claim": self.concur_claim.data,
-            "trainee_days": (
-                float(self.trainee_days.data) if self.trainee_days.data else 0.0
-            ),
+            "trainee_days": float(str(self.trainee_days.data)) if self.trainee_days.data else 0.0,
         }
 
         # Handle trainees data
