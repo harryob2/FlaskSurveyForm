@@ -202,4 +202,30 @@ test.describe('Form Validation Errors', () => {
     console.log("--- Finished test: Offsite without Details ---");
   });
 
+  test('should allow submitting External Training without entering Trainer Days', async ({ page }) => {
+    console.log("--- Starting test: External Training No Trainer Days Error ---");
+    await page.goto(baseURL + '/');
+
+    // Setup: Fill mandatory fields for External Training, skip trainer_days
+    await page.locator('label').filter({ hasText: 'External Training' }).click();
+    await expect(page.locator('#external-supplier-container')).toBeVisible();
+    await page.locator('input[name="supplier_name"]').fill('External Test Supplier');
+    await page.locator('label').filter({ hasText: 'Onsite' }).click();
+    await page.locator('input[name="start_date"]').fill('2024-07-01');
+    await page.locator('input[name="end_date"]').fill('2024-07-01');
+    await page.locator('input[name="trainee_days"]').fill('1');
+    await page.locator('textarea[name="training_description"]').fill('External test description');
+
+    // Ensure trainer_days input is not filled (it shouldn't even be visible, but we don't interact)
+
+    // Action: Click submit
+    await page.locator('#submit-training-form-btn').click();
+
+    // Assertion: Should successfully redirect to success page (no validation error)
+    await page.waitForURL('**/success', { timeout: 10000 }); // Wait reasonable time for success
+    await expect(page).toHaveURL(baseURL + '/success');
+
+    console.log("--- Finished test: External Training No Trainer Days Error ---");
+  });
+
 }); 

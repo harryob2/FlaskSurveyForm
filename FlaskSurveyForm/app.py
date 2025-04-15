@@ -341,10 +341,10 @@ def view_form(form_id):
                 trainees = [{"email": email} for email in trainees]
         except:
             trainees = []
-    # Parse comma-separated attendee emails
-    attendee_emails = []
-    if form_data.get("attendee_emails"):
-        attendee_emails = [
+    # Parse comma-separated trainee emails
+    trainee_emails = []
+    if form_data.get("trainee_emails"):
+        trainee_emails = [
             e.strip() for e in form_data["trainees_data"].split(",") if e.strip()
         ]
 
@@ -354,7 +354,7 @@ def view_form(form_id):
         form=form_data,
         trainees=trainees,
         attachments=attachments,
-        attendee_emails=attendee_emails,
+        trainee_emails=trainee_emails,
         now=datetime.now(),
     )
 

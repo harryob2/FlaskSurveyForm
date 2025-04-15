@@ -124,13 +124,13 @@ class TrainingForm(FlaskForm):
     )
     trainer_days = DecimalField(
         "Trainer Days",
-        # Combine RequiredIf with NumberRange
         validators=[
             RequiredIf('training_type', 'Internal Training'),
-            NumberRange(min=0.01, message="Trainer days must be positive if entered.") # Allow 0 only if optional
+            Optional(),
+            NumberRange(min=0.01, message="Trainer days must be positive if entered.")
         ],
         places=2,
-        default=0.0 # Default to 0, validation ensures >0 if required
+        default=None
     )
 
     # Optional or complex validation
@@ -162,9 +162,9 @@ class TrainingForm(FlaskForm):
     attachments = MultipleFileField("Attachments", validators=[Optional()]) # Example: Make optional
     attachment_descriptions = TextAreaField("Attachment Descriptions (one per line)", validators=[Optional()])
 
-    # Updated attendee field
-    attendee_emails = TextAreaField(
-        "Attendee Emails (comma/space separated)", validators=[Optional()]
+    # Updated trainee field
+    trainee_emails = TextAreaField(
+        "Trainee Emails (comma/space separated)", validators=[Optional()]
     )
 
     # Submit Button
@@ -206,25 +206,22 @@ class TrainingForm(FlaskForm):
     # Keep process_emails and prepare_form_data as they are data processing, not validation
 
     def process_emails(self):
-        """Process and clean the attendee emails"""
-        if not self.attendee_emails.data:
+        """Process and clean the trainee emails"""
+        if not self.trainee_emails.data:
             return []
-        emails = re.split(r"[,\s]+", self.attendee_emails.data)
+        emails = re.split(r"[,\s]+", self.trainee_emails.data)
         return [email.strip() for email in emails if email.strip()]
 
     def prepare_form_data(self):
         """Prepare form data for database insertion"""
+        is_internal = self.training_type.data == "Internal Training"
         data = {
             "training_type": self.training_type.data,
             "trainer_name": (
-                self.trainer_name.data
-                if self.training_type.data == "Internal Training"
-                else None
+                self.trainer_name.data if is_internal else None
             ),
             "supplier_name": (
-                self.supplier_name.data
-                if self.training_type.data == "External Training"
-                else None
+                self.supplier_name.data if not is_internal else None
             ),
             "location_type": self.location_type.data,
             "location_details": (
@@ -235,10 +232,10 @@ class TrainingForm(FlaskForm):
             "start_date": self.start_date.data.strftime("%Y-%m-%d"),
             "end_date": self.end_date.data.strftime("%Y-%m-%d"),
             "trainer_days": (
-                float(str(self.trainer_days.data)) if self.trainer_days.data else None
+                float(str(self.trainer_days.data)) if is_internal and self.trainer_days.data else None
             ),
             "training_description": self.training_description.data or "",
-            "trainees_data": self.trainees_data.data or "",
+            "trainees_data": self.trainees_data.data or "[]",
             "travel_cost": (
                 float(self.travel_cost.data) if self.travel_cost.data else 0.0
             ),

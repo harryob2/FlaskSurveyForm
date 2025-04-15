@@ -393,7 +393,7 @@ function addTraineesFromEmails(emails) {
     }
 
     // Clear the input
-    document.getElementById("attendee_emails").value = "";
+    document.getElementById("trainee_emails").value = "";
 }
 
 // Initialize when DOM is loaded
@@ -471,11 +471,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Handle attendee emails field
-  const attendeeEmailsField = document.getElementById("attendee_emails");
-  if (attendeeEmailsField) {
-    // Add a button next to the attendee emails field
-    const attendeeEmailsContainer = attendeeEmailsField.parentElement;
+  // Handle trainee emails field
+  const traineeEmailsField = document.getElementById("trainee_emails");
+  if (traineeEmailsField) {
+    // Add a button next to the trainee emails field
+    const traineeEmailsContainer = traineeEmailsField.parentElement;
     const addEmailsBtn = document.createElement("button");
     addEmailsBtn.type = "button";
     addEmailsBtn.className = "btn btn-success mt-2";
@@ -483,11 +483,11 @@ document.addEventListener("DOMContentLoaded", function () {
     addEmailsBtn.id = "add-emails-btn";
 
     // Add the button after the textarea
-    attendeeEmailsContainer.appendChild(addEmailsBtn);
+    traineeEmailsContainer.appendChild(addEmailsBtn);
 
     // Add event listener to the button
     addEmailsBtn.addEventListener("click", function () {
-      const emailsText = attendeeEmailsField.value.trim();
+      const emailsText = traineeEmailsField.value.trim();
       if (emailsText) {
         const emails = parseEmails(emailsText);
         if (emails.length > 0) {
