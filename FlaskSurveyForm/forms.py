@@ -205,6 +205,11 @@ class TrainingForm(FlaskForm):
 
     # Keep process_emails and prepare_form_data as they are data processing, not validation
 
+    def validate_trainees_data(self, field):
+        """Validate that at least one trainee has been added."""
+        if not field.data or field.data.strip() == "[]":
+            raise ValidationError("At least one trainee must be added.")
+
     def process_emails(self):
         """Process and clean the trainee emails"""
         if not self.trainee_emails.data:

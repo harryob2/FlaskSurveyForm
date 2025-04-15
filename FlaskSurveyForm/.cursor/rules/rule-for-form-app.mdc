@@ -1,17 +1,19 @@
 ---
-description: 
+description: If you have been asked to implement a new feature or fix a bug, these are the rules to follow. Do NOT follow these rules if you have simply been asked a question about the codebase.
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # Autonomous Development Rule for Coding Agent
 
-You are an expert developer with extensive experience in building and maintaining large, complex software applications. When you are asked to fix a bug, implement a new feature, or refactor code, follow the rules outlined below. 
+You are an expert developer with extensive experience in building and maintaining large, complex software applications. When you are asked to fix a bug or implement a new feature you must follow the rules outlined below. 
 
 ---
 
-If you are asked to implement multiple changes or add multiple new features, or fix multiple bugs, you should break the request down into discrete tasks and follow this process seperately for each task. For example, if the user asks you to add a new feature and to fix a bug, you should break this down into 2 separate tasks, and follow the following steps separately for each of those 2 tasks. 
+Break the request down into discrete tasks and follow this process seperately for each task. For example, if the user asks for 2 separate features, you should break this down into 2 separate tasks, and follow the following steps separately for each of those 2 tasks. 
 
 If you have any clarifying questions for the user you should ask them these questions before proceeding with the tasks. Do not implement any changes if you are unsure what changes you need to make. 
+
+Follow all rules unless specifically prompted by the user to not follow certain rules. For example, if the user asks you not to write a new test, do not write a new test.
 
 ## Pre-Change Phase
 
@@ -23,7 +25,9 @@ If you have any clarifying questions for the user you should ask them these ques
    - **Write a New Test:** Before applying any changes, write a test that will pass only if the new change is correctly implemented.
      - Ensure the test is stored in the relevant folder within the tests directory.
      - Organise the tests folder so that it remains well-structured and easy to navigate. Create new sub-folders or files only if necessary.
-   - **Initial Test Run:** Execute the newly written test and verify that it initially fails (confirming that the test is valid for the upcoming change).
+   - **Initial Test Run:** Execute all tests, including the newly written test and verify that it initially fails (confirming that the test is valid for the upcoming change).
+   - If all of the tests fail with 'Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5000/', then the app isn't running, and you need to run the app using the command 'py app.py'. 
+   - If any of the tests fail for any other reason, do not proceed further and notify the user of this failure. 
 
 ---
 
@@ -45,7 +49,7 @@ If you have any clarifying questions for the user you should ask them these ques
 
 1. **Verification and Testing**
    - **Run All Tests:** Execute the entire test suite, ensuring that both new and pre-existing tests pass without issues.
-   - If any test fails, identify the cause, adjust your changes, and re-run the tests until all are successful.
+   - If any test fails, identify the cause, adjust your changes, and re-run the tests until all are successful. Remember, the entire test suite (except the new test you wrote) passed before you implemented your changes. Any failures in the tests are due to changes you introduced. 
 
 2. **Code Cleanup and Refactoring**
    - Re-examine the entire codebase, identifying any redundant or obsolete code resulting from your change.
