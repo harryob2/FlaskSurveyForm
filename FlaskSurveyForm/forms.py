@@ -23,8 +23,9 @@ from wtforms import (
     HiddenField,
     FloatField,
     MultipleFileField,
+    PasswordField,
 )
-from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError
+from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError, Length, Regexp, Email, InputRequired
 
 # Training types
 TRAINING_TYPES = ["Internal Training", "External Training"]
@@ -357,3 +358,10 @@ class SearchForm(FlaskForm):
         """Validate that to_date is not before from_date"""
         if field.data and self.date_from.data and field.data < self.date_from.data:
             raise ValidationError("To Date cannot be earlier than From Date.")
+
+
+class LoginForm(FlaskForm):
+    """Form for user login"""
+    username = StringField('Username (Email)', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')

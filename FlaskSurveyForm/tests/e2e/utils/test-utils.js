@@ -3,17 +3,58 @@ const { expect } = require('@playwright/test');
 // Base URL for the application - define once and export
 const BASE_URL = 'http://127.0.0.1:5000';
 
+// Admin user credentials - used for all tests
+const ADMIN_EMAIL = 'harry@test.com';
+const ADMIN_PASSWORD = 'cork4liam';
+
 /**
  * Common utilities for e2e tests to reduce code duplication and 
  * standardize test patterns
  */
 
 /**
- * Go to the application's home page
+ * Login as the admin user
+ * @param {import('@playwright/test').Page} page - Playwright page
+ */
+async function loginAsAdmin(page) {
+  console.log("--- Logging in as admin user ---");
+  
+  // Navigate to home (will redirect to login)
+  await page.goto(BASE_URL + '/');
+  
+  // Check if already logged in
+  const currentUrl = page.url();
+  if (!currentUrl.includes('/login')) {
+    console.log("--- Already logged in, skipping login ---");
+    return;
+  }
+  
+  // Fill login form
+  await page.locator('input[name="username"]').fill(ADMIN_EMAIL);
+  await page.locator('input[name="password"]').fill(ADMIN_PASSWORD);
+  
+  // Submit login form
+  await page.locator('input[type="submit"]').click();
+  
+  // Wait for redirect after login
+  await page.waitForURL('**/');
+  
+  // Verify we are logged in (check for admin badge)
+  await expect(page.locator('.badge:has-text("Admin")')).toBeVisible();
+  console.log("--- Successfully logged in as admin ---");
+}
+
+/**
+ * Go to the application's home page and ensure we're logged in
  * @param {import('@playwright/test').Page} page - Playwright page
  */
 async function gotoHome(page) {
   await page.goto(BASE_URL + '/');
+  
+  // Check if we need to login
+  if (page.url().includes('/login')) {
+    await loginAsAdmin(page);
+  }
 }
 
 /**
@@ -276,6 +317,7 @@ async function expectValidationError(page, selector, expectedMessage) {
 
 module.exports = {
   BASE_URL,
+  loginAsAdmin,
   gotoHome,
   addTrainee,
   setTrainerName,

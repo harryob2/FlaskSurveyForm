@@ -4,6 +4,7 @@ const path = require('path'); // Needed for file path resolution
 const {
   BASE_URL,
   gotoHome,
+  loginAsAdmin,
   addTrainee,
   setTrainerName,
   fillBasicInternalTrainingForm,
@@ -15,6 +16,11 @@ console.log("--- Loading attachment.spec.js ---");
 
 test.describe('File Attachment Handling', () => {
   console.log("--- Defining attachment test suite ---");
+  
+  // Login once before all tests in this file
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
 
   test('1. should allow uploading a file and verify it on the view page', async ({ page }) => {
     console.log("--- Starting test: File Upload and Verification ---");

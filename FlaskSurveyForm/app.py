@@ -11,6 +11,8 @@ import logging
 from datetime import datetime
 import re
 from models import get_db, create_tables
+import pandas as pd
+from io import BytesIO
 
 from flask import (
     Flask,
@@ -22,19 +24,23 @@ from flask import (
     flash,
     jsonify,
     abort,
+    send_file,
 )
 from werkzeug.utils import secure_filename
+from flask_login import login_user, logout_user, current_user, login_required
 
-from forms import TrainingForm, SearchForm
+from forms import TrainingForm, SearchForm, LoginForm
 from models import (
     insert_training_form,
     update_training_form,
     create_tables,
     get_all_training_forms,
     get_training_form,
+    get_approved_forms_for_export,
 )
 from utils import prepare_form_data
 from setup_db import setup_database
+from auth import init_auth, authenticate_user
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -47,6 +53,9 @@ app.config.from_pyfile("config.py")
 
 # Set the secret key for CSRF protection
 app.secret_key = app.config["SECRET_KEY"]
+
+# Initialize authentication
+init_auth(app)
 
 # Make json module available in templates
 app.jinja_env.globals["json"] = json
@@ -93,12 +102,61 @@ def inject_current_year():
 
 @app.route("/")
 def index():
-    """Display the training form"""
+    """Display the training form or redirect to login if not authenticated"""
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
     form = TrainingForm()
     return render_template("index.html", form=form, now=datetime.now())
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Handle user login via LDAP"""
+    # Redirect to home if already logged in
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        
+        # If username doesn't include domain, add it
+        if '@' not in username and app.config.get('LDAP_DOMAIN'):
+            username = f"{username}@{app.config['LDAP_DOMAIN']}"
+        
+        # Authenticate user against LDAP
+        user = authenticate_user(username, password)
+        
+        if user:
+            # Log the user in
+            login_user(user)
+            logging.info(f"User {username} logged in successfully")
+            
+            # Redirect to the requested page or the index
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('index'))
+        
+        # If we get here, authentication failed (flash messages set in authenticate_user)
+        logging.warning(f"Failed login attempt for {username}")
+    
+    return render_template('login.html', form=form)
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    """Log the user out and redirect to login page"""
+    logout_user()
+    flash("You have been logged out.", "info")
+    return redirect(url_for('login'))
+
+
 @app.route("/submit", methods=["GET", "POST"])
+@login_required
 def submit_form():
     """Process the form submission"""
     form = TrainingForm()
@@ -120,6 +178,9 @@ def submit_form():
             # Prepare form data using the form's method
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
+
+            # Add submitter information
+            form_data["submitter"] = current_user.email
 
             # Validate required fields
             if not form_data.get("training_description"):
@@ -200,6 +261,7 @@ def submit_form():
 
 
 @app.route("/uploads/<path:filename>")
+@login_required
 def uploaded_file(filename):
     """Serve uploaded files with proper content type handling"""
     # Get the directory and filename from the path
@@ -228,6 +290,7 @@ def uploaded_file(filename):
 
 
 @app.route("/approve/<int:form_id>")
+@login_required
 def approve_training(form_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -246,12 +309,14 @@ def approve_training(form_id):
 
 
 @app.route("/success")
+@login_required
 def success():
     """Display success page after form submission"""
     return render_template("success.html", now=datetime.now())
 
 
 @app.route("/list")
+@login_required
 def list_forms():
     """Display a list of all training form submissions"""
     form = SearchForm()
@@ -310,6 +375,7 @@ def list_forms():
 
 
 @app.route("/view/<int:form_id>")
+@login_required
 def view_form(form_id):
     """Display a single training form submission"""
     form_data = get_training_form(form_id)
@@ -360,6 +426,7 @@ def view_form(form_id):
 
 
 @app.route("/edit/<int:form_id>", methods=["GET", "POST"])
+@login_required
 def edit_form(form_id):
     """Edit an existing training form submission"""
     logging.debug(f"Edit form request - Method: {request.method}, Form ID: {form_id}")
@@ -418,6 +485,13 @@ def edit_form(form_id):
             # Get form data
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
+            
+            # Get the existing form to preserve the submitter
+            existing_form = get_training_form(form_id)
+            if existing_form and existing_form.get("submitter"):
+                form_data["submitter"] = existing_form["submitter"]
+            else:
+                form_data["submitter"] = current_user.email
 
             # Validate required fields
             if not form_data.get("training_description"):
@@ -559,6 +633,7 @@ def edit_form(form_id):
 
 
 @app.route("/api/employees")
+@login_required
 def get_employees():
     """API endpoint to get employees from the CSV file"""
     try:
@@ -601,11 +676,67 @@ def get_employees():
         return jsonify([])
 
 
+@app.route("/export_claim5")
+@login_required
+def export_claim5():
+    """Export approved training forms to an Excel file."""
+    try:
+        # Get all approved forms
+        approved_forms = get_approved_forms_for_export()
+
+        if not approved_forms:
+            flash("No approved forms found to export.", "info")
+            return redirect(url_for("list_forms"))
+
+        # Convert to pandas DataFrame
+        df = pd.DataFrame(approved_forms)
+        
+        # Optional: Select/Rename columns if needed for Claim 5 format
+        # df = df[['column1', 'column2', ...]] # Select specific columns
+        # df.rename(columns={'old_name': 'new_name'}, inplace=True)
+
+        # Create an in-memory Excel file
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Approved Trainings')
+        output.seek(0)
+
+        # Send the file to the user
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='claim5_approved_forms_export.xlsx'
+        )
+
+    except Exception as e:
+        logging.error(f"Error exporting data to Excel: {e}", exc_info=True)
+        flash("An error occurred during the export process.", "danger")
+        return redirect(url_for("list_forms"))
+
+
 @app.errorhandler(500)
 def internal_error(error):
     """Handle internal server errors"""
     flash("An internal server error occurred. Please try again later.", "danger")
     return render_template("index.html", form=TrainingForm(), now=datetime.now()), 500
+
+
+# Add user information to layout template context
+@app.context_processor
+def inject_user():
+    """Add user information to template context"""
+    user_info = {}
+    if current_user.is_authenticated:
+        user_info = {
+            'username': current_user.username,
+            'display_name': current_user.display_name or current_user.username,
+            'email': current_user.email,
+            'first_name': current_user.first_name,
+            'last_name': current_user.last_name,
+            'is_admin': getattr(current_user, 'is_admin', False)  # Get admin status if available
+        }
+    return {'user_info': user_info}
 
 
 if __name__ == "__main__":

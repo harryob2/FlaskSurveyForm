@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 const {
   BASE_URL,
   gotoHome,
+  loginAsAdmin,
   addTrainee,
   setTrainerName,
   fillBasicInternalTrainingForm,
@@ -15,6 +16,11 @@ console.log("--- Loading form_validation.spec.js ---");
 
 test.describe('Form Validation Errors', () => {
   console.log("--- Defining validation test suite ---");
+  
+  // Login once before all tests in this file
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
 
   // Test 1: Trainer Name validation
   test('1. should show error if Trainer Name is empty for Internal Training', async ({ page }) => {

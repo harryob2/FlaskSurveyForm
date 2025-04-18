@@ -4,6 +4,7 @@ const { test, expect } = require('@playwright/test');
 const {
   BASE_URL,
   gotoHome,
+  loginAsAdmin,
   addTrainee,
   setTrainerName,
   addExpenses,
@@ -15,6 +16,11 @@ const {
 // Define the test suite
 test.describe('Survey Form Submission', () => {
   console.log("--- Defining test suite ---");
+  
+  // Login once before all tests in this file
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
 
   // Define the specific test case
   test('1. should fill and submit the form successfully for internal training', async ({ page }) => {

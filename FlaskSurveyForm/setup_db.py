@@ -25,6 +25,6 @@ def setup_database(force_recreate=False):
     # Create tables
     create_tables()
     print("Database setup complete")
-
+    
 if __name__ == '__main__':
     setup_database(force_recreate=True)

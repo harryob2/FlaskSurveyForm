@@ -208,6 +208,9 @@
         <!-- Card Footer -->
         <div class="card-footer text-muted small">
             Submitted on {{ form.submission_date }}
+            {% if form.submitter %}
+            by {{ form.submitter }}
+            {% endif %}
             <div class="float-end">
                 <a href="{{ url_for('list_forms') }}" class="btn btn-sm btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Back to List

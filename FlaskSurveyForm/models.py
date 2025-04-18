@@ -49,6 +49,7 @@ def create_tables():
             other_expense_description TEXT,
             trainee_days REAL,
             training_description TEXT NOT NULL,
+            submitter TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """
@@ -81,8 +82,8 @@ def insert_training_form(form_data):
             location_details, start_date, end_date,
             trainer_days, trainees_data, approved, concur_claim, travel_cost,
             food_cost, materials_cost, other_cost, other_expense_description,
-            trainee_days, training_description
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            trainee_days, training_description, submitter
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             form_data["training_type"],
@@ -103,6 +104,7 @@ def insert_training_form(form_data):
             form_data.get("other_expense_description"),
             form_data.get("trainee_days"),
             form_data["training_description"],
+            form_data.get("submitter"),
         ),
     )
 
@@ -136,7 +138,8 @@ def update_training_form(form_id, form_data):
             concur_claim = ?,
             other_expense_description = ?,
             trainee_days = ?,
-            training_description = ?
+            training_description = ?,
+            submitter = ?
         WHERE id = ?
     """,
         (
@@ -157,6 +160,7 @@ def update_training_form(form_id, form_data):
             form_data.get("other_expense_description"),
             form_data.get("trainee_days"),
             form_data["training_description"],
+            form_data.get("submitter"),
             form_id,
         ),
     )
@@ -182,21 +186,6 @@ def get_training_form(form_id):
     conn.close()
 
     if row:
-        print(
-            "Row Form Data: ",
-            "&row[11]: ",
-            row[11],
-            "&row[12]: ",
-            row[12],
-            "&row[13]: ",
-            row[13],
-            "&row[14]: ",
-            row[14],
-            "&row[15]: ",
-            row[15],
-            "&row[16]: ",
-            row[16],
-        )
         row_dict = dict(row)
         return {
             "id": row_dict["id"],
@@ -219,6 +208,7 @@ def get_training_form(form_id):
             "approved": bool(row_dict.get("approved", False)),
             "trainee_days": row_dict.get("trainee_days", 0.0) or 0.0,
             "training_description": row_dict["training_description"],
+            "submitter": row_dict.get("submitter"),
         }
     return None
 
@@ -310,10 +300,52 @@ def get_all_training_forms(
                 "trainer_days": row_dict["trainer_days"],
                 "trainees_data": row_dict["trainees_data"],
                 "submission_date": row_dict["submission_date"],
-                # Add the approved field, converting to boolean
-                "approved": bool(row_dict.get("approved", False))
+                "approved": bool(row_dict.get("approved", False)),
+                "submitter": row_dict.get("submitter"),
             }
         )
 
     conn.close()
     return forms, total_count
+
+
+def get_approved_forms_for_export():
+    """Get all approved training forms for export, without pagination."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """SELECT * FROM training_forms WHERE approved = 1 ORDER BY submission_date DESC"""
+    )
+    
+    rows = cursor.fetchall()
+    conn.close()
+
+    forms = []
+    for row in rows:
+        row_dict = dict(row)
+        forms.append({
+            "id": row_dict["id"],
+            "training_type": row_dict["training_type"],
+            "trainer_name": row_dict["trainer_name"],
+            "supplier_name": row_dict["supplier_name"],
+            "location_type": row_dict["location_type"],
+            "location_details": row_dict["location_details"],
+            "start_date": row_dict["start_date"],
+            "end_date": row_dict["end_date"],
+            "trainer_days": row_dict["trainer_days"],
+            "trainees_data": row_dict["trainees_data"],
+            "submission_date": row_dict["submission_date"],
+            "travel_cost": float(row_dict.get("travel_cost", 0)),
+            "food_cost": float(row_dict.get("food_cost", 0)),
+            "materials_cost": float(row_dict.get("materials_cost", 0)),
+            "other_cost": float(row_dict.get("other_cost", 0)),
+            "concur_claim": row_dict.get("concur_claim"),
+            "other_expense_description": row_dict.get("other_expense_description"),
+            "approved": bool(row_dict.get("approved", False)),
+            "trainee_days": row_dict.get("trainee_days", 0.0) or 0.0,
+            "training_description": row_dict["training_description"],
+            "submitter": row_dict.get("submitter"),
+        })
+    
+    return forms
