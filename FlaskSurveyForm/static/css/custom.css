@@ -12,6 +12,14 @@
     width: auto;
 }
 
+/* Form container styling with max width and outline */
+.training-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    border-radius: 8px;
+    padding: 20px;
+}
+
 /* Form section headings */
 .form-section-heading {
     border-bottom: 1px solid var(--bs-gray-600);
@@ -73,4 +81,63 @@
 /* Custom styling for date picker inputs */
 .flatpickr-input {
     background-color: var(--bs-body-bg) !important;
+}
+
+/* Icon hover swap */
+a.approve-btn .icon-hover {
+    display: none;
+}
+a.approve-btn .icon-default {
+    display: inline-block; /* Or inline-flex if needed */
+}
+a.approve-btn:hover .icon-default {
+    display: none;
+}
+a.approve-btn:hover .icon-hover {
+    display: inline-block; /* Or inline-flex if needed */
+}
+
+/* Approval button text replacement */
+a.approve-btn .btn-text {
+    color: transparent;
+    position: relative;
+    font-size: 0; /* Collapse original text space */
+    line-height: 0; /* Further collapse space */
+}
+a.approve-btn .btn-text::before {
+    font-size: initial; /* Reset font size for pseudo-element */
+    line-height: initial; /* Reset line height */
+    display: inline-block; /* Ensure it behaves like text */
+}
+a.approve-btn.unapproved .btn-text::before {
+    content: "Unapproved";
+    color: var(--bs-secondary);
+}
+a.approve-btn.unapproved:hover .btn-text::before {
+    content: "Approve";
+    color: var(--bs-success);
+}
+a.approve-btn.unapproved:hover {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+    color: var(--bs-white); /* Ensure icon color changes */
+}
+a.approve-btn.unapproved:hover .btn-text::before {
+    color: var(--bs-white); /* Explicitly set text color on hover */
+}
+a.approve-btn.approved .btn-text::before {
+    content: "Approved";
+    color: var(--bs-success);
+}
+a.approve-btn.approved:hover .btn-text::before {
+    content: "Unapprove";
+    color: var(--bs-danger);
+}
+a.approve-btn.approved:hover {
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+    color: var(--bs-white); /* Ensure icon color changes */
+}
+a.approve-btn.approved:hover .btn-text::before {
+    color: var(--bs-white); /* Explicitly set text color on hover */
 }

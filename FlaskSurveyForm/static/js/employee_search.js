@@ -342,7 +342,7 @@ function addTraineesFromEmails(emails) {
         added: 0,
         invalid: [],
         duplicate: [],
-        notFound: []
+        notFound: [] // Keep track of emails not found
     };
 
     emails.forEach((email) => {
@@ -353,30 +353,31 @@ function addTraineesFromEmails(emails) {
 
         // Try to find employee in the employee list
         const employee = findEmployeeByEmail(email);
-        
+
         if (employee) {
             // Use existing addTrainee function with full employee data
             const added = addTrainee(
-                employee.displayName, 
-                employee.email, 
+                employee.displayName,
+                employee.email,
                 employee.department
             );
-            
+
             if (added) {
                 results.added++;
             } else {
                 results.duplicate.push(email);
             }
         } else {
-            // Employee not found in list
+            // Employee not found, add to notFound list
             results.notFound.push(email);
+            console.log(`Employee not found for email: ${email}`); // Log not found emails
         }
     });
 
-    // Show results
+    // Show results, including which emails were not found
     let messages = [];
     if (results.added > 0) {
-        messages.push(`Added ${results.added} new trainee(s).`);
+        messages.push(`Added ${results.added} trainee(s).`);
     }
     if (results.invalid.length > 0) {
         messages.push(`Invalid email format: ${results.invalid.join(", ")}`);
@@ -384,16 +385,14 @@ function addTraineesFromEmails(emails) {
     if (results.duplicate.length > 0) {
         messages.push(`Already added: ${results.duplicate.join(", ")}`);
     }
+    // Updated message for not found emails
     if (results.notFound.length > 0) {
-        messages.push(`Not found in employee list: ${results.notFound.join(", ")}`);
+        messages.push(`Could not find/add employees for emails: ${results.notFound.join(", ")}`);
     }
 
     if (messages.length > 0) {
         alert(messages.join("\n"));
     }
-
-    // Clear the input
-    document.getElementById("trainee_emails").value = "";
 }
 
 // Initialize when DOM is loaded
@@ -471,20 +470,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Handle the bulk add trainees button and modal
+  const bulkAddTraineesBtn = document.getElementById("bulk-add-trainees-btn");
+  if (bulkAddTraineesBtn) {
+    bulkAddTraineesBtn.addEventListener("click", function() {
+      // Check if Bootstrap is available
+      if (typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(document.getElementById('bulkAddModal'));
+        modal.show();
+      } else {
+        console.error('Bootstrap not loaded. Cannot show modal.');
+        // Fallback if Bootstrap is not available
+        alert('Modal functionality requires Bootstrap. Please ensure it is loaded properly.');
+      }
+    });
+  }
+
   // Handle trainee emails field
   const traineeEmailsField = document.getElementById("trainee_emails");
-  if (traineeEmailsField) {
-    // Add a button next to the trainee emails field
-    const traineeEmailsContainer = traineeEmailsField.parentElement;
-    const addEmailsBtn = document.createElement("button");
-    addEmailsBtn.type = "button";
-    addEmailsBtn.className = "btn btn-success mt-2";
-    addEmailsBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Add Emails';
-    addEmailsBtn.id = "add-emails-btn";
-
-    // Add the button after the textarea
-    traineeEmailsContainer.appendChild(addEmailsBtn);
-
+  const addEmailsBtn = document.getElementById("add-emails-btn");
+  
+  if (traineeEmailsField && addEmailsBtn) {
     // Add event listener to the button
     addEmailsBtn.addEventListener("click", function () {
       const emailsText = traineeEmailsField.value.trim();
@@ -492,6 +498,16 @@ document.addEventListener("DOMContentLoaded", function () {
         const emails = parseEmails(emailsText);
         if (emails.length > 0) {
           addTraineesFromEmails(emails);
+          // Clear the input
+          traineeEmailsField.value = "";
+          
+          // Close the modal after adding
+          if (typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModal'));
+            if (modal) {
+              modal.hide();
+            }
+          }
         }
       }
     });

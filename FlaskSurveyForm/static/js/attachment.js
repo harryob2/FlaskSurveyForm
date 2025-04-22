@@ -3,9 +3,8 @@ console.log("Attachments script loaded");
 document.addEventListener("DOMContentLoaded", function () {
   const dropzone = document.getElementById("dropzone");
   const fileInput = document.getElementById("file-input");
-  const attachmentTable = document
-    .getElementById("attachment-table")
-    .querySelector("tbody");
+  const attachmentTable = document.getElementById("attachment-table").querySelector("tbody");
+  const attachmentPreviewsContainer = document.getElementById("attachment-previews");
   const form = document.getElementById("training-form");
 
   let attachments = [];
@@ -30,28 +29,42 @@ document.addEventListener("DOMContentLoaded", function () {
         isExisting: true
       };
       attachments.push(attachment);
-      addAttachmentRow(attachment);
+      addAttachmentPreview(attachment);
     });
-    // Make sure the table is visible if we have existing attachments
-    toggleAttachmentTable();
   }
 
-  // Handle file drag over
-  dropzone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropzone.classList.add("dragging");
+  // Improved drag and drop event handling
+  ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+    dropzone.addEventListener(eventName, preventDefaults, false);
   });
 
-  // Handle drag leave
-  dropzone.addEventListener("dragleave", () => {
-    dropzone.classList.remove("dragging");
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  // Visual feedback for drag actions
+  ["dragenter", "dragover"].forEach(eventName => {
+    dropzone.addEventListener(eventName, highlight, false);
   });
+
+  ["dragleave", "drop"].forEach(eventName => {
+    dropzone.addEventListener(eventName, unhighlight, false);
+  });
+
+  function highlight() {
+    dropzone.classList.add("dragging");
+  }
+
+  function unhighlight() {
+    dropzone.classList.remove("dragging");
+  }
 
   // Handle file drop
   dropzone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropzone.classList.remove("dragging");
-    handleFiles(e.dataTransfer.files);
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFiles(files);
   });
 
   // Handle file browse
@@ -59,46 +72,87 @@ document.addEventListener("DOMContentLoaded", function () {
   fileInput.addEventListener("change", () => handleFiles(fileInput.files));
 
   function handleFiles(files) {
-    Array.from(files).forEach((file) => {
+    Array.from(files).forEach(file => {
       const attachment = { file, description: "", isExisting: false };
       attachments.push(attachment);
-      addAttachmentRow(attachment);
+      addAttachmentPreview(attachment);
     });
     fileInput.value = ""; // Reset file input
-    toggleAttachmentTable();
   }
 
-  function addAttachmentRow(attachment) {
-    console.log("Adding attachment row:", attachment);
-    const row = document.createElement("tr");
-
-    // File name column
-    const fileNameCell = document.createElement("td");
-    if (attachment.isExisting) {
-      fileNameCell.textContent = attachment.filename;
-    } else {
-      fileNameCell.textContent = attachment.file.name;
+  function addAttachmentPreview(attachment) {
+    console.log("Adding attachment preview:", attachment);
+    
+    // Create preview container
+    const previewContainer = document.createElement("div");
+    previewContainer.className = "attachment-preview d-flex align-items-center gap-3 mb-2 p-2 border rounded";
+    
+    // Create thumbnail element
+    const thumbnailEl = document.createElement("img");
+    thumbnailEl.className = "rounded";
+    thumbnailEl.style.width = "48px";
+    thumbnailEl.style.height = "48px";
+    thumbnailEl.style.objectFit = "cover";
+    
+    // Default icon for non-image files
+    thumbnailEl.src = "/static/images/file-icon.png";
+    thumbnailEl.alt = "File";
+    
+    // For new attachments, try to create a thumbnail if it's an image
+    if (!attachment.isExisting && attachment.file) {
+      const fileType = attachment.file.type;
+      if (fileType.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          thumbnailEl.src = e.target.result;
+        };
+        reader.readAsDataURL(attachment.file);
+      }
     }
-    row.appendChild(fileNameCell);
-
-    // Description column
-    const descriptionCell = document.createElement("td");
+    
+    // Create content container
+    const contentContainer = document.createElement("div");
+    contentContainer.className = "flex-grow-1";
+    
+    // Add filename
+    const filenameEl = document.createElement("div");
+    filenameEl.className = "attachment-filename small";
+    filenameEl.textContent = attachment.isExisting ? attachment.filename : attachment.file.name;
+    contentContainer.appendChild(filenameEl);
+    
+    // Add progress bar
+    const progressContainer = document.createElement("div");
+    progressContainer.className = "progress";
+    progressContainer.style.height = "8px";
+    
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar bg-success";
+    progressBar.role = "progressbar";
+    progressBar.style.width = "0%";
+    progressBar.setAttribute("aria-valuenow", "0");
+    progressBar.setAttribute("aria-valuemin", "0");
+    progressBar.setAttribute("aria-valuemax", "100");
+    
+    progressContainer.appendChild(progressBar);
+    contentContainer.appendChild(progressContainer);
+    
+    // Add description input
     const descriptionInput = document.createElement("input");
     descriptionInput.type = "text";
-    descriptionInput.className = "form-control";
-    descriptionInput.placeholder = "Enter description";
+    descriptionInput.className = "form-control form-control-sm mt-1";
+    descriptionInput.placeholder = "Description (optional)";
     descriptionInput.value = attachment.description || "";
     descriptionInput.addEventListener("input", (e) => {
       attachment.description = e.target.value;
     });
-    descriptionCell.appendChild(descriptionInput);
-    row.appendChild(descriptionCell);
-
-    // Actions column
-    const actionsCell = document.createElement("td");
+    contentContainer.appendChild(descriptionInput);
+    
+    // Create remove button
     const removeButton = document.createElement("button");
-    removeButton.className = "btn btn-danger btn-sm";
-    removeButton.textContent = "Remove";
+    removeButton.type = "button";
+    removeButton.className = "btn btn-sm btn-outline-danger remove-attachment-btn";
+    removeButton.innerHTML = "×";
+    removeButton.setAttribute("aria-label", "Remove");
     removeButton.addEventListener("click", () => {
       if (attachment.isExisting) {
         // Add a hidden input to mark this attachment for deletion
@@ -109,42 +163,28 @@ document.addEventListener("DOMContentLoaded", function () {
         form.appendChild(deleteInput);
       }
       attachments = attachments.filter((att) => att !== attachment);
-      row.remove();
-      toggleAttachmentTable();
+      previewContainer.remove();
     });
-    actionsCell.appendChild(removeButton);
-    row.appendChild(actionsCell);
-
-    attachmentTable.appendChild(row);
-  }
-
-  function toggleAttachmentTable() {
-    console.log("Toggling attachment table. Attachments count:", attachments.length);
-    if (attachments.length > 0) {
-      attachmentTable.parentElement.classList.remove("d-none");
-    } else {
-      attachmentTable.parentElement.classList.add("d-none");
-    }
+    
+    // Assemble the preview element
+    previewContainer.appendChild(thumbnailEl);
+    previewContainer.appendChild(contentContainer);
+    previewContainer.appendChild(removeButton);
+    
+    // Add to the document
+    attachmentPreviewsContainer.appendChild(previewContainer);
+    
+    // Animate progress bar for visual feedback
+    setTimeout(() => {
+      progressBar.style.width = "100%";
+      progressBar.setAttribute("aria-valuenow", "100");
+    }, 50);
   }
 
   // Prepare attachments for form submission (to be called manually)
   window.prepareAttachmentsForSubmit = function() {
-    // Clear any previously added temp inputs to avoid duplicates if validation fails and user retries
-    form.querySelectorAll('input[name="attachments"], input[name="attachment_descriptions[]"], input[name="update_attachment_descriptions[]"], input[name="delete_attachments[]"]').forEach(input => {
-        // Only remove inputs added by this script (maybe check for a specific class or attribute if needed)
-        // For now, assuming these names are unique to this process
-        if (!input.dataset.persist) { // Avoid removing inputs added manually or by server-side rendering if any
-            // Let's rethink this - removing delete_attachments[] here is wrong.
-            // We only want to remove the dynamically added file/description inputs for *new* files
-            // and the update_description inputs for *existing* files.
-            // delete_attachments[] are added when the user clicks remove and should persist.
-        }
-    });
-    // Let's refine the removal logic.
-    // Remove only the inputs we are about to add.
+    // Clear any previously added temp inputs to avoid duplicates
     form.querySelectorAll('input[name="attachments"], input[name="attachment_descriptions[]"], input[name="update_attachment_descriptions[]"]').forEach(input => {
-        // Check if it's one of ours - maybe add a data attribute when creating?
-        // For simplicity now, just remove all with these names. User shouldn't define these manually.
         input.remove();
     });
 
@@ -156,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fileInput.type = 'file';
             fileInput.style.display = 'none';
             fileInput.name = 'attachments';
-            fileInput.setAttribute('data-attachment-temp', 'true'); // Mark as temp
+            fileInput.setAttribute('data-attachment-temp', 'true');
             
             // Create a DataTransfer object to create a FileList
             const dataTransfer = new DataTransfer();
@@ -168,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
             descInput.type = 'hidden';
             descInput.name = 'attachment_descriptions[]';
             descInput.value = attachment.description || '';
-            descInput.setAttribute('data-attachment-temp', 'true'); // Mark as temp
+            descInput.setAttribute('data-attachment-temp', 'true');
             
             // Append both to the form
             form.appendChild(fileInput);
@@ -178,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const descInput = document.createElement('input');
             descInput.type = 'hidden';
             descInput.name = 'update_attachment_descriptions[]';
-            descInput.setAttribute('data-attachment-temp', 'true'); // Mark as temp
+            descInput.setAttribute('data-attachment-temp', 'true');
             descInput.value = JSON.stringify({
                 id: attachment.id,
                 description: attachment.description
@@ -187,12 +227,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Log what we're adding
     console.log('Prepared form for submission with', attachments.length, 'attachments logic.');
-    // Debug: Log current form data right before potential submission
-    // const formData = new FormData(form);
-    // for (let [key, value] of formData.entries()) {
-    //     console.log(`${key}: ${value}`);
-    // }
   };
 });

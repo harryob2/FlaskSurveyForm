@@ -679,7 +679,7 @@ def get_employees():
 @app.route("/export_claim5")
 @login_required
 def export_claim5():
-    """Export approved training forms to an Excel file."""
+    """Export approved training forms to an Excel template file."""
     try:
         # Get all approved forms
         approved_forms = get_approved_forms_for_export()
@@ -688,29 +688,95 @@ def export_claim5():
             flash("No approved forms found to export.", "info")
             return redirect(url_for("list_forms"))
 
-        # Convert to pandas DataFrame
-        df = pd.DataFrame(approved_forms)
+        # Path to the template Excel file
+        template_path = os.path.join("attached_assets", "Claim-Form-5-revised-Training.xlsx")
         
-        # Optional: Select/Rename columns if needed for Claim 5 format
-        # df = df[['column1', 'column2', ...]] # Select specific columns
-        # df.rename(columns={'old_name': 'new_name'}, inplace=True)
-
-        # Create an in-memory Excel file
+        # Load the template using openpyxl
+        from openpyxl import load_workbook
+        wb = load_workbook(template_path)
+        ws = wb.active  # Assuming the template has only one sheet
+        
+        # Column headers are in row 8, data starts from row 9
+        start_row = 9
+        current_row = start_row
+        
+        # Process each training form
+        for form in approved_forms:
+            # Get trainees data for this form
+            trainees = []
+            if form.get("trainees_data"):
+                try:
+                    trainees_data = json.loads(form["trainees_data"])
+                    if isinstance(trainees_data, list):
+                        # Handle different possible formats of trainees_data
+                        if trainees_data and isinstance(trainees_data[0], dict):
+                            trainees = trainees_data
+                        else:
+                            # Simple list of emails, convert to dict format
+                            trainees = [{"email": email, "name": email} for email in trainees_data]
+                except json.JSONDecodeError:
+                    logging.error(f"Error parsing trainees_data for form {form['id']}")
+                    trainees = []
+                    
+            # If no trainees found, add a placeholder row
+            if not trainees:
+                trainees = [{"name": "Unknown", "email": ""}]
+            
+            # Determine location value based on location_type
+            if form.get("location_type") == "Onsite":
+                location = "Onsite (Stryker Limerick)"
+            else:
+                location = form.get("location_details", "")
+                
+            # Process each trainee
+            for i, trainee in enumerate(trainees):
+                trainee_name = trainee.get("name", trainee.get("email", "Unknown Trainee"))
+                
+                # Insert new rows if we're exceeding the template's initial capacity
+                if current_row > 23:  # 23 is the last empty row in the template
+                    ws.insert_rows(current_row)
+                
+                # Fill the row with data according to requirements
+                ws.cell(row=current_row, column=1).value = trainee_name  # Names of Trainees
+                ws.cell(row=current_row, column=2).value = location  # Location
+                ws.cell(row=current_row, column=3).value = ""  # Weekly Wage (blank)
+                ws.cell(row=current_row, column=4).value = form.get("trainee_days", "")  # Nr of Weeks/days/hours
+                ws.cell(row=current_row, column=5).value = ""  # New blank column
+                
+                # Only fill these fields for the first trainee of each form
+                if i == 0:
+                    ws.cell(row=current_row, column=6).value = form.get("trainer_name", "")  # Name of trainer (moved from col 5)
+                    ws.cell(row=current_row, column=7).value = ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
+                    ws.cell(row=current_row, column=8).value = location  # Location (same as trainee location) (moved from col 7)
+                    ws.cell(row=current_row, column=9).value = ""  # Salary (blank) (moved from col 8)
+                    ws.cell(row=current_row, column=10).value = form.get("supplier_name", "")  # Supplier/Name (moved from col 9)
+                    ws.cell(row=current_row, column=11).value = form.get("travel_cost", "")  # Travel (moved from col 10)
+                    ws.cell(row=current_row, column=12).value = form.get("food_cost", "")  # Subsistence (moved from col 11)
+                    ws.cell(row=current_row, column=13).value = form.get("materials_cost", "")  # External Trainer / Course Costs (moved from col 12)
+                    ws.cell(row=current_row, column=14).value = form.get("materials_cost", "")  # Materials (moved from col 13)
+                
+                current_row += 1
+            
+            # Add an empty row between different training forms
+            if current_row <= 23 or len(approved_forms) > 1:
+                ws.insert_rows(current_row)
+                current_row += 1
+        
+        # Create an in-memory file to store the Excel
         output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Approved Trainings')
+        wb.save(output)
         output.seek(0)
-
+        
         # Send the file to the user
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name='claim5_approved_forms_export.xlsx'
+            download_name='claim5_export.xlsx'
         )
 
     except Exception as e:
-        logging.error(f"Error exporting data to Excel: {e}", exc_info=True)
+        logging.error(f"Error exporting data to Excel template: {e}", exc_info=True)
         flash("An error occurred during the export process.", "danger")
         return redirect(url_for("list_forms"))
 

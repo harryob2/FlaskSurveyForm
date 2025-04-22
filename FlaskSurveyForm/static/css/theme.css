@@ -1,0 +1,90 @@
+/* Theme overrides for Stryker Training Form */
+
+/* Bootstrap theme color overrides */
+[data-bs-theme="dark"] {
+  --bs-primary: #8B7BFF;
+  --bs-primary-rgb: 139, 123, 255;
+  --bs-body-bg: #0F172A;
+  --bs-btn-color: #ffffff;
+  --bs-btn-hover-color: #ffffff;
+}
+
+/* Card background override */
+.card {
+  --bs-card-bg: #1F2538;
+  background-color: var(--bs-card-bg);
+}
+
+/* Override border-radius globally */
+:root {
+  --bs-border-radius: .5rem;
+  --bs-border-radius-sm: .4rem;
+  --bs-border-radius-lg: .6rem;
+}
+
+/* Style for upgraded card wrapper */
+.card.upgraded {
+  background: linear-gradient(180deg, #1F2538 0%, #1A2030 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Style for section titles */
+.form-section-title {
+  border-left: 3px solid var(--bs-primary);
+  padding-left: .75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Global micro-motion (Task 5) */
+.btn, .form-control, .form-select, .form-floating > label, .card {
+  transition: all .15s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Subtle hover effect for buttons */
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Auto-resize textarea styling */
+.auto-resize-textarea {
+  resize: none;
+  transition: height 0.15s ease-in-out;
+}
+
+/* Modal with auto-resize textarea */
+#bulkAddModal .modal-body {
+  transition: height 0.15s ease-in-out;
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn, .form-control, .form-select, .form-floating > label, .card, .btn:hover,
+  .auto-resize-textarea, #bulkAddModal .modal-body {
+    transition: none;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Attachment preview styles (Task 4) */
+#attachment-previews {
+  margin: 1rem 0;
+}
+
+.attachment-preview {
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.15s ease;
+}
+
+.attachment-preview:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.attachment-filename {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+} 

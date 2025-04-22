@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from '_macros.html' import render_check_icon, render_x_icon %}
 
 {% block title %}Training Form Submissions{% endblock %}
 
@@ -36,7 +37,7 @@
     <div class="btn-group-header">
         <a href="{{ url_for('export_claim5') }}" class="btn btn-success">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
-                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9h-3V6h-2v3H6V6H4v3H2V2a1 1 0 0 1 1-1h5.5v2zM3 12v-2h2v2H3zm0 1h2v2H4a1 1 0 0 1-1-1v-1zm3 2v-2h3v2H6zm4 0v-2h3v1a1 1 0 0 1-1 1h-2zm3-3h-3v-2h3v2zm0-3h-3V9h3v2z"/>
+                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9h-3V6h-2v3H6V6H4v3H2V2a1 1 0 0 1 1-1h5.5v2zM3 12v-2h2v2H3zm0 1h2v2H4a1 1 0 0 1-1-1v-1zm3 2v-2h3v1a1 1 0 0 1-1 1h-2zm4 0v-2h3v1a1 1 0 0 1-1 1h-2zm3-3h-3v-2h3v2zm0-3h-3V9h3v2z"/>
               </svg>
             Export to Claim 5 Form
         </a>
@@ -209,20 +210,16 @@
                             </svg>
                             Edit
                         </a>
-                        <a href="{{ url_for('approve_training', form_id=form.id) }}" class="btn btn-sm btn-{% if form.approved %}outline-danger{% else %}outline-success{% endif %}">
+                        <a href="{{ url_for('approve_training', form_id=form.id) }}"
+                           class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}">
                             {% if form.approved %}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                            </svg>
-                            Unapprove
+                            {{ render_check_icon('icon-default') }}
+                            {{ render_x_icon('icon-hover') }}
                             {% else %}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-                              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-                            </svg>
-                            Approve
+                            {{ render_x_icon('icon-default') }}
+                            {{ render_check_icon('icon-hover') }}
                             {% endif %}
+                             <span class="btn-text">{% if form.approved %}Unapprove{% else %}Approve{% endif %}</span>
                         </a>
                     </div>
                 </td>
