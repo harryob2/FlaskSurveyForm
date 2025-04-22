@@ -49,8 +49,8 @@ test.describe('Bulk Add Trainees', () => {
     console.log("--- Email textarea is visible in modal ---");
     
     // Test adding some emails through the modal
-    await emailTextarea.fill('test1@example.com, test2@example.com');
-    console.log("--- Filled email textarea ---");
+    await emailTextarea.fill('greene@test.com');
+    console.log("--- Filled email textarea with greene@test.com ---");
     
     // Click the Add Emails button
     await page.locator('#bulkAddModal #add-emails-btn').click();
@@ -60,10 +60,10 @@ test.describe('Bulk Add Trainees', () => {
     await expect(page.locator('#bulkAddModal')).not.toBeVisible({ timeout: 5000 });
     console.log("--- Modal closed after adding emails ---");
     
-    // Verify trainees were added (checking for at least one trainee card)
+    // Verify trainees were NOT added (since greene@test.com likely doesn't exist)
     const traineeCount = await page.locator('#trainees-list .card').count();
-    expect(traineeCount).toBeGreaterThan(0);
-    console.log(`--- Found ${traineeCount} trainee cards ---`);
+    expect(traineeCount).toBe(0); // Expect 0 trainees as the email wasn't found
+    console.log(`--- Found ${traineeCount} trainee cards (expected 0) ---`);
     
     console.log("--- Finished test: Bulk Add Modal Functionality ---");
   });

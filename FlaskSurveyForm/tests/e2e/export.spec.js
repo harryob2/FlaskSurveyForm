@@ -118,7 +118,7 @@ test.describe('Export Approved Forms', () => {
     await exportButton.click();
     
     // Take a screenshot to see what appears after clicking export with no approved forms
-    await page.screenshot({ path: 'export-no-approved.png' });
+    // await page.screenshot({ path: 'export-no-approved.png' }); // Removed screenshot
   
     // --- 3. Just verify we're still on the list page (the feature works even if no specific message is shown) ---
     await expect(page).toHaveURL(new RegExp(`${BASE_URL}/list`)); 
