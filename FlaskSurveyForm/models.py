@@ -317,35 +317,127 @@ def get_approved_forms_for_export():
     cursor.execute(
         """SELECT * FROM training_forms WHERE approved = 1 ORDER BY submission_date DESC"""
     )
-    
+
     rows = cursor.fetchall()
     conn.close()
 
     forms = []
     for row in rows:
         row_dict = dict(row)
-        forms.append({
-            "id": row_dict["id"],
-            "training_type": row_dict["training_type"],
-            "trainer_name": row_dict["trainer_name"],
-            "supplier_name": row_dict["supplier_name"],
-            "location_type": row_dict["location_type"],
-            "location_details": row_dict["location_details"],
-            "start_date": row_dict["start_date"],
-            "end_date": row_dict["end_date"],
-            "trainer_days": row_dict["trainer_days"],
-            "trainees_data": row_dict["trainees_data"],
-            "submission_date": row_dict["submission_date"],
-            "travel_cost": float(row_dict.get("travel_cost", 0)),
-            "food_cost": float(row_dict.get("food_cost", 0)),
-            "materials_cost": float(row_dict.get("materials_cost", 0)),
-            "other_cost": float(row_dict.get("other_cost", 0)),
-            "concur_claim": row_dict.get("concur_claim"),
-            "other_expense_description": row_dict.get("other_expense_description"),
-            "approved": bool(row_dict.get("approved", False)),
-            "trainee_days": row_dict.get("trainee_days", 0.0) or 0.0,
-            "training_description": row_dict["training_description"],
-            "submitter": row_dict.get("submitter"),
-        })
-    
+        forms.append(
+            {
+                "id": row_dict["id"],
+                "training_type": row_dict["training_type"],
+                "trainer_name": row_dict["trainer_name"],
+                "supplier_name": row_dict["supplier_name"],
+                "location_type": row_dict["location_type"],
+                "location_details": row_dict["location_details"],
+                "start_date": row_dict["start_date"],
+                "end_date": row_dict["end_date"],
+                "trainer_days": row_dict["trainer_days"],
+                "trainees_data": row_dict["trainees_data"],
+                "submission_date": row_dict["submission_date"],
+                "travel_cost": float(row_dict.get("travel_cost", 0)),
+                "food_cost": float(row_dict.get("food_cost", 0)),
+                "materials_cost": float(row_dict.get("materials_cost", 0)),
+                "other_cost": float(row_dict.get("other_cost", 0)),
+                "concur_claim": row_dict.get("concur_claim"),
+                "other_expense_description": row_dict.get("other_expense_description"),
+                "approved": bool(row_dict.get("approved", False)),
+                "trainee_days": row_dict.get("trainee_days", 0.0) or 0.0,
+                "training_description": row_dict["training_description"],
+                "submitter": row_dict.get("submitter"),
+            }
+        )
+
     return forms
+
+
+def get_user_training_forms(
+    submitter_email,
+    search_term="",
+    date_from=None,
+    date_to=None,
+    training_type=None,
+    sort_by="submission_date",
+    sort_order="DESC",
+    page=1,
+):
+    """Get all training forms for a specific user with optional filtering and pagination"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Build the query
+    query = "SELECT * FROM training_forms WHERE submitter = ?"
+    params = [submitter_email]
+
+    if search_term:
+        query += " AND (trainer_name LIKE ? OR supplier_name LIKE ? OR location_details LIKE ?)"
+        search_param = f"%{search_term}%"
+        params.extend([search_param, search_param, search_param])
+
+    if date_from:
+        query += " AND start_date >= ?"
+        params.append(date_from)
+
+    if date_to:
+        query += " AND end_date <= ?"
+        params.append(date_to)
+
+    if training_type:
+        query += " AND training_type = ?"
+        params.append(training_type)
+
+    # Add sorting
+    query += f" ORDER BY {sort_by} {sort_order}"
+
+    # Add pagination
+    query += " LIMIT ? OFFSET ?"
+    params.extend([10, (page - 1) * 10])
+
+    # Get total count
+    count_query = "SELECT COUNT(*) FROM training_forms WHERE submitter = ?"
+    count_params = [submitter_email]
+    if search_term:
+        count_query += " AND (trainer_name LIKE ? OR supplier_name LIKE ? OR location_details LIKE ?)"
+        search_param = f"%{search_term}%"
+        count_params.extend([search_param, search_param, search_param])
+    if date_from:
+        count_query += " AND start_date >= ?"
+        count_params.append(date_from)
+    if date_to:
+        count_query += " AND end_date <= ?"
+        count_params.append(date_to)
+    if training_type:
+        count_query += " AND training_type = ?"
+        count_params.append(training_type)
+
+    cursor.execute(count_query, count_params)
+    total_count = cursor.fetchone()[0]
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+
+    forms = []
+    for row in rows:
+        row_dict = dict(row)
+        forms.append(
+            {
+                "id": row_dict["id"],
+                "training_type": row_dict["training_type"],
+                "trainer_name": row_dict["trainer_name"],
+                "supplier_name": row_dict["supplier_name"],
+                "location_type": row_dict["location_type"],
+                "location_details": row_dict["location_details"],
+                "start_date": row_dict["start_date"],
+                "end_date": row_dict["end_date"],
+                "trainer_days": row_dict["trainer_days"],
+                "trainees_data": row_dict["trainees_data"],
+                "submission_date": row_dict["submission_date"],
+                "approved": bool(row_dict.get("approved", False)),
+                "submitter": row_dict.get("submitter"),
+            }
+        )
+
+    conn.close()
+    return forms, total_count
