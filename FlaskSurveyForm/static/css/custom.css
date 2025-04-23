@@ -141,3 +141,31 @@ a.approve-btn.approved:hover {
 a.approve-btn.approved:hover .btn-text::before {
     color: var(--bs-white); /* Explicitly set text color on hover */
 }
+
+/* Modal styling overrides */
+.modal-backdrop.show {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(41px);
+  -webkit-backdrop-filter: blur(41px);
+}
+
+.modal-content {
+  background: #28293d;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 6px !important;
+  position: relative;
+}
+
+/* Accent stripe at top of modal */
+.modal-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--bs-primary);
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
