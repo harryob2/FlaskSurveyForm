@@ -692,9 +692,34 @@ def export_claim5():
         template_path = os.path.join("attached_assets", "Claim-Form-5-revised-Training.xlsx")
         
         # Load the template using openpyxl
-        from openpyxl import load_workbook
-        wb = load_workbook(template_path)
-        ws = wb.active  # Assuming the template has only one sheet
+        from openpyxl import load_workbook, Workbook
+        if not os.path.exists(template_path):
+            logging.warning(f"Template file not found at {template_path}. Creating a new template.")
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Claim Form 5"
+
+            # Add headers to the template
+            headers = [
+            "Names of Trainees", "Location", "Weekly Wage", "Nr of Weeks/days/hours",
+            "", "Name of trainer", "", "Location", "", "Supplier/Name",
+            "Travel", "Subsistence", "External Trainer / Course Costs", "Materials"
+            ]
+            headers = [
+                "Trainee Name", "Training Location", "Weekly Wage", "Duration (Weeks/Days/Hours)",
+                "Additional Info", "Trainer Name", "Trainer Duration", "Trainer Location",
+                "Trainer Salary", "Supplier Name", "Travel Cost", "Subsistence Cost",
+                "Trainer/Course Cost", "Materials Cost"
+            ]
+            ws.append(headers)
+
+            # Save the new template
+            os.makedirs(os.path.dirname(template_path), exist_ok=True)
+            wb.save(template_path)
+            logging.info(f"New template created at {template_path}")
+        else:
+            wb = load_workbook(template_path)
+            ws = wb.active  # Assuming the template has only one sheet
         
         # Column headers are in row 8, data starts from row 9
         start_row = 9
@@ -767,12 +792,13 @@ def export_claim5():
         wb.save(output)
         output.seek(0)
         
+        logging.info(f"Exported {len(approved_forms)} approved forms to Excel template.")
         # Send the file to the user
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name='claim5_export.xlsx'
+            download_name='claim5_export.xlsx'  
         )
 
     except Exception as e:
