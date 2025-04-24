@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Get the Other Expense Description container
   const descriptionContainer = document.getElementById(
-    "other-expense-description-container"
+    "other-expense-description-container",
   );
 
   // Get the Other Expense Description field (might not be needed anymore, but keep reference just in case)

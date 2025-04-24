@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Limerick Training Form System</h1>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('new_form') }}" class="text-decoration-none">
+                <div class="card h-100 text-center hover-card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-plus-circle fa-4x text-primary"></i>
+                        </div>
+                        <h3 class="card-title">Submit New Form</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('my_submissions') }}" class="text-decoration-none">
+                <div class="card h-100 text-center hover-card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-list-alt fa-4x text-primary"></i>
+                        </div>
+                        <h3 class="card-title">My Submissions</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% if is_admin %}
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('list_forms') }}" class="text-decoration-none">
+                <div class="card h-100 text-center hover-card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <i class="fas fa-clipboard-list fa-4x text-primary"></i>
+                        </div>
+                        <h3 class="card-title">All Submissions</h3>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        background-color: #1a1e24;
+        border: 1px solid #2a2f35;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .text-primary {
+        color: #6c8eef !important;
+    }
+
+    .card-title {
+        color: #ffffff;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}

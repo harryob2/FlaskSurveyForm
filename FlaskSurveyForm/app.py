@@ -9,10 +9,9 @@ import csv
 import json
 import logging
 from datetime import datetime
-import re
-from models import get_db, create_tables
-import pandas as pd
+from models import get_db
 from io import BytesIO
+import functools
 
 from flask import (
     Flask,
@@ -33,14 +32,13 @@ from forms import TrainingForm, SearchForm, LoginForm
 from models import (
     insert_training_form,
     update_training_form,
-    create_tables,
     get_all_training_forms,
     get_training_form,
     get_approved_forms_for_export,
+    get_user_training_forms,
 )
-from utils import prepare_form_data
 from setup_db import setup_database
-from auth import init_auth, authenticate_user
+from auth import init_auth, authenticate_user, is_admin_email
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -80,7 +78,7 @@ def from_json(value):
     """Convert a JSON string to a Python object"""
     try:
         return json.loads(value)
-    except:
+    except Exception:
         return []
 
 
@@ -100,14 +98,33 @@ def inject_current_year():
     return {"current_year": datetime.now().year}
 
 
+def is_admin_user(user):
+    return user.is_authenticated and is_admin_email(user.email)
+
+
+def admin_required(f):
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_admin_user(current_user):
+            abort(403)
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
 @app.route("/")
 def index():
     """Display the training form or redirect to login if not authenticated"""
     if not current_user.is_authenticated:
-        return redirect(url_for('login'))
-    
+        return redirect(url_for("login"))
     form = TrainingForm()
     return render_template("index.html", form=form, now=datetime.now())
+@app.route("/home")
+def home():
+    """Display the home page or redirect to login if not authenticated"""
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    return render_template("home.html", is_admin=is_admin_user(current_user))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -115,35 +132,35 @@ def login():
     """Handle user login via LDAP"""
     # Redirect to home if already logged in
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
+        return redirect(url_for("index"))
+
     form = LoginForm()
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
-        
+
         # If username doesn't include domain, add it
-        if '@' not in username and app.config.get('LDAP_DOMAIN'):
+        if "@" not in username and app.config.get("LDAP_DOMAIN"):
             username = f"{username}@{app.config['LDAP_DOMAIN']}"
-        
+
         # Authenticate user against LDAP
         user = authenticate_user(username, password)
-        
+
         if user:
             # Log the user in
             login_user(user)
             logging.info(f"User {username} logged in successfully")
-            
+
             # Redirect to the requested page or the index
-            next_page = request.args.get('next')
+            next_page = request.args.get("next")
             if next_page:
                 return redirect(next_page)
-            return redirect(url_for('index'))
-        
+            return redirect(url_for("index"))
+
         # If we get here, authentication failed (flash messages set in authenticate_user)
         logging.warning(f"Failed login attempt for {username}")
-    
-    return render_template('login.html', form=form)
+
+    return render_template("login.html", form=form)
 
 
 @app.route("/logout")
@@ -152,7 +169,7 @@ def logout():
     """Log the user out and redirect to login page"""
     logout_user()
     flash("You have been logged out.", "info")
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
 @app.route("/submit", methods=["GET", "POST"])
@@ -169,12 +186,11 @@ def submit_form():
     # Validate the form data
     if form.validate_on_submit():
         try:
-
             # Get trainees data from form
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
                 form.trainees_data.data = trainees_data
-                
+
             # Prepare form data using the form's method
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
@@ -201,11 +217,11 @@ def submit_form():
                 new_files = request.files.getlist("attachments")
                 descriptions = request.form.getlist("attachment_descriptions[]")
                 logging.debug(f"Processing {len(new_files)} new attachments.")
-                
+
                 # Ensure descriptions list matches file list length if necessary
                 # Pad descriptions if some files didn't get a description input (shouldn't happen with current JS)
                 if len(descriptions) < len(new_files):
-                    descriptions.extend([''] * (len(new_files) - len(descriptions)))
+                    descriptions.extend([""] * (len(new_files) - len(descriptions)))
 
                 for i, file in enumerate(new_files):
                     # Check if the file object exists and has a filename
@@ -233,23 +249,28 @@ def submit_form():
                             )
                             conn.commit()
                         except Exception as db_err:
-                            logging.error(f"Database error inserting attachment {filename}: {db_err}")
+                            logging.error(
+                                f"Database error inserting attachment {filename}: {db_err}"
+                            )
                         finally:
                             if conn:
                                 conn.close()
                     else:
                         logging.debug(f"Skipping empty file input at index {i}.")
-                
+
             # If no files were submitted via request.files['attachments'], log that.
             elif not request.files.getlist("attachments"):
-                 logging.debug("No new files found in request.files for key 'attachments'.")
-            
+                logging.debug(
+                    "No new files found in request.files for key 'attachments'."
+                )
+
             flash("Form submitted successfully!", "success")
             return redirect(url_for("success"))
         except Exception as e:
             logging.error(f"Error processing form submission: {e}", exc_info=True)
             flash(
-                "An error occurred while submitting the form. Please try again.", "danger"
+                "An error occurred while submitting the form. Please try again.",
+                "danger",
             )
             return render_template("index.html", form=form, now=datetime.now())
     else:
@@ -267,30 +288,31 @@ def uploaded_file(filename):
     # Get the directory and filename from the path
     directory = os.path.dirname(filename)
     filename = os.path.basename(filename)
-    
+
     # Get the file extension
     file_ext = os.path.splitext(filename)[1].lower()
-    
+
     # Define viewable file types
-    viewable_types = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.txt', '.pdf'}
-    
+    viewable_types = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".txt", ".pdf"}
+
     # Determine if file should be viewed or downloaded
     if file_ext in viewable_types:
         return send_from_directory(
             os.path.join(app.config["UPLOAD_FOLDER"], directory),
             filename,
-            as_attachment=False
+            as_attachment=False,
         )
     else:
         return send_from_directory(
             os.path.join(app.config["UPLOAD_FOLDER"], directory),
             filename,
-            as_attachment=True
+            as_attachment=True,
         )
 
 
 @app.route("/approve/<int:form_id>")
 @login_required
+@admin_required
 def approve_training(form_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -302,7 +324,7 @@ def approve_training(form_id):
 
     # Determine redirect target based on referrer
     referrer = request.referrer
-    if referrer and url_for('list_forms') in referrer:
+    if referrer and url_for("list_forms") in referrer:
         return redirect(referrer)
     else:
         return redirect(url_for("view_form", form_id=form_id))
@@ -346,12 +368,12 @@ def list_forms():
 
     # Create params dictionary for maintaining filters in pagination
     params = {
-        'search': search_term,
-        'date_from': date_from,
-        'date_to': date_to,
-        'training_type': training_type,
-        'sort_by': sort_by,
-        'sort_order': sort_order
+        "search": search_term,
+        "date_from": date_from,
+        "date_to": date_to,
+        "training_type": training_type,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
     }
 
     return render_template(
@@ -370,7 +392,8 @@ def list_forms():
         now=datetime.now(),
         params=params,
         has_filters=bool(search_term or date_from or date_to or training_type),
-        total_forms=total_count
+        total_forms=total_count,
+        is_admin=is_admin_user(current_user),
     )
 
 
@@ -405,7 +428,7 @@ def view_form(form_id):
                 and not isinstance(trainees[0], dict)
             ):
                 trainees = [{"email": email} for email in trainees]
-        except:
+        except Exception:
             trainees = []
     # Parse comma-separated trainee emails
     trainee_emails = []
@@ -422,6 +445,7 @@ def view_form(form_id):
         attachments=attachments,
         trainee_emails=trainee_emails,
         now=datetime.now(),
+        is_admin=is_admin_user(current_user),
     )
 
 
@@ -473,7 +497,7 @@ def edit_form(form_id):
 
             # Load trainees data
             if form_data.get("trainees_data"):
-                form.trainees_data.data = form_data.get('trainees_data')
+                form.trainees_data.data = form_data.get("trainees_data")
 
     if form.validate_on_submit():
         try:
@@ -481,11 +505,11 @@ def edit_form(form_id):
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
                 form.trainees_data.data = trainees_data
-                
+
             # Get form data
             form_data = form.prepare_form_data()
             logging.debug(f"Prepared form data: {form_data}")
-            
+
             # Get the existing form to preserve the submitter
             existing_form = get_training_form(form_id)
             if existing_form and existing_form.get("submitter"):
@@ -504,7 +528,7 @@ def edit_form(form_id):
             update_training_form(form_id, form_data)
             logging.debug(f"Form {form_id} core data updated.")
 
-            # --- Handle Attachments --- 
+            # --- Handle Attachments ---
             unique_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"form_{form_id}")
             os.makedirs(unique_folder, exist_ok=True)
             logging.debug(f"Ensured attachment directory exists: {unique_folder}")
@@ -513,12 +537,16 @@ def edit_form(form_id):
             # Use request.files directly as WTForms field might not populate from dynamic inputs
             if "attachments" in request.files:
                 new_files = request.files.getlist("attachments")
-                descriptions = request.form.getlist("attachment_descriptions[]") # Descriptions for NEW files
-                logging.debug(f"Processing {len(new_files)} new attachments for form {form_id}.")
+                descriptions = request.form.getlist(
+                    "attachment_descriptions[]"
+                )  # Descriptions for NEW files
+                logging.debug(
+                    f"Processing {len(new_files)} new attachments for form {form_id}."
+                )
 
                 # Pad descriptions if necessary (belt-and-suspenders)
                 if len(descriptions) < len(new_files):
-                    descriptions.extend([''] * (len(new_files) - len(descriptions)))
+                    descriptions.extend([""] * (len(new_files) - len(descriptions)))
 
                 for i, file in enumerate(new_files):
                     if file and file.filename:
@@ -544,30 +572,38 @@ def edit_form(form_id):
                             )
                             conn.commit()
                         except Exception as db_err:
-                            logging.error(f"Database error inserting new attachment {filename}: {db_err}")
+                            logging.error(
+                                f"Database error inserting new attachment {filename}: {db_err}"
+                            )
                         finally:
                             if conn:
                                 conn.close()
                     else:
                         logging.debug(f"Skipping empty new file input at index {i}.")
             else:
-                 logging.debug("No new files found in request.files for key 'attachments'.")
+                logging.debug(
+                    "No new files found in request.files for key 'attachments'."
+                )
 
             # Handle attachment DELETIONS
             delete_attachments = request.form.getlist("delete_attachments[]")
             if delete_attachments:
-                logging.debug(f"Processing deletions for attachment IDs: {delete_attachments}")
+                logging.debug(
+                    f"Processing deletions for attachment IDs: {delete_attachments}"
+                )
                 # TODO: Optionally delete the actual files from the filesystem
                 try:
                     conn = get_db()
                     cursor = conn.cursor()
                     # Placeholders for safe query
-                    placeholders = ', '.join('?' * len(delete_attachments))
+                    placeholders = ", ".join("?" * len(delete_attachments))
                     query = f"DELETE FROM attachments WHERE id IN ({placeholders}) AND training_id = ?"
-                    params = delete_attachments + [form_id] # Add form_id for security
+                    params = delete_attachments + [form_id]  # Add form_id for security
                     cursor.execute(query, params)
                     conn.commit()
-                    logging.info(f"Deleted {cursor.rowcount} attachment records for form {form_id}.")
+                    logging.info(
+                        f"Deleted {cursor.rowcount} attachment records for form {form_id}."
+                    )
                 except Exception as db_err:
                     logging.error(f"Database error deleting attachments: {db_err}")
                 finally:
@@ -575,7 +611,9 @@ def edit_form(form_id):
                         conn.close()
 
             # Handle attachment description UPDATES for existing files
-            update_descriptions = request.form.getlist("update_attachment_descriptions[]")
+            update_descriptions = request.form.getlist(
+                "update_attachment_descriptions[]"
+            )
             if update_descriptions:
                 logging.debug(f"Processing description updates: {update_descriptions}")
                 try:
@@ -584,25 +622,33 @@ def edit_form(form_id):
                     for desc_json in update_descriptions:
                         try:
                             desc_data = json.loads(desc_json)
-                            att_id = desc_data.get('id')
-                            new_desc = desc_data.get('description', '')
+                            att_id = desc_data.get("id")
+                            new_desc = desc_data.get("description", "")
                             if att_id:
                                 cursor.execute(
                                     """
                                     UPDATE attachments SET description = ? 
                                     WHERE id = ? AND training_id = ?
                                     """,
-                                    (new_desc, att_id, form_id) # Add form_id check
+                                    (new_desc, att_id, form_id),  # Add form_id check
                                 )
                             else:
-                                logging.warning(f"Skipping description update due to missing ID in JSON: {desc_json}")
+                                logging.warning(
+                                    f"Skipping description update due to missing ID in JSON: {desc_json}"
+                                )
                         except json.JSONDecodeError:
-                            logging.error(f"Invalid JSON in attachment description update: {desc_json}")
+                            logging.error(
+                                f"Invalid JSON in attachment description update: {desc_json}"
+                            )
                         except KeyError:
-                             logging.error(f"Missing 'id' or 'description' key in JSON: {desc_json}")
+                            logging.error(
+                                f"Missing 'id' or 'description' key in JSON: {desc_json}"
+                            )
                     conn.commit()
                 except Exception as db_err:
-                    logging.error(f"Database error updating attachment descriptions: {db_err}")
+                    logging.error(
+                        f"Database error updating attachment descriptions: {db_err}"
+                    )
                 finally:
                     if conn:
                         conn.close()
@@ -689,17 +735,24 @@ def export_claim5():
             return redirect(url_for("list_forms"))
 
         # Path to the template Excel file
-        template_path = os.path.join("attached_assets", "Claim-Form-5-revised-Training.xlsx")
-        
+        template_path = os.path.join(
+            "attached_assets", "Claim-Form-5-revised-Training.xlsx"
+        )
+
         # Load the template using openpyxl
         from openpyxl import load_workbook
+
+        if not os.path.exists(template_path):
+            flash("Template file not found.", "danger")
+            return redirect(url_for("list_forms"))
+
         wb = load_workbook(template_path)
         ws = wb.active  # Assuming the template has only one sheet
-        
+
         # Column headers are in row 8, data starts from row 9
         start_row = 9
         current_row = start_row
-        
+
         # Process each training form
         for form in approved_forms:
             # Get trainees data for this form
@@ -713,66 +766,96 @@ def export_claim5():
                             trainees = trainees_data
                         else:
                             # Simple list of emails, convert to dict format
-                            trainees = [{"email": email, "name": email} for email in trainees_data]
+                            trainees = [
+                                {"email": email, "name": email}
+                                for email in trainees_data
+                            ]
                 except json.JSONDecodeError:
                     logging.error(f"Error parsing trainees_data for form {form['id']}")
                     trainees = []
-                    
+
             # If no trainees found, add a placeholder row
             if not trainees:
                 trainees = [{"name": "Unknown", "email": ""}]
-            
+
             # Determine location value based on location_type
             if form.get("location_type") == "Onsite":
                 location = "Onsite (Stryker Limerick)"
             else:
                 location = form.get("location_details", "")
-                
+
             # Process each trainee
             for i, trainee in enumerate(trainees):
-                trainee_name = trainee.get("name", trainee.get("email", "Unknown Trainee"))
-                
+                trainee_name = trainee.get(
+                    "name", trainee.get("email", "Unknown Trainee")
+                )
+
                 # Insert new rows if we're exceeding the template's initial capacity
                 if current_row > 23:  # 23 is the last empty row in the template
                     ws.insert_rows(current_row)
-                
+
                 # Fill the row with data according to requirements
-                ws.cell(row=current_row, column=1).value = trainee_name  # Names of Trainees
+                ws.cell(row=current_row, column=1).value = (
+                    trainee_name  # Names of Trainees
+                )
                 ws.cell(row=current_row, column=2).value = location  # Location
                 ws.cell(row=current_row, column=3).value = ""  # Weekly Wage (blank)
-                ws.cell(row=current_row, column=4).value = form.get("trainee_days", "")  # Nr of Weeks/days/hours
+                ws.cell(row=current_row, column=4).value = form.get(
+                    "trainee_days", ""
+                )  # Nr of Weeks/days/hours
                 ws.cell(row=current_row, column=5).value = ""  # New blank column
-                
+
                 # Only fill these fields for the first trainee of each form
                 if i == 0:
-                    ws.cell(row=current_row, column=6).value = form.get("trainer_name", "")  # Name of trainer (moved from col 5)
-                    ws.cell(row=current_row, column=7).value = ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
-                    ws.cell(row=current_row, column=8).value = location  # Location (same as trainee location) (moved from col 7)
-                    ws.cell(row=current_row, column=9).value = ""  # Salary (blank) (moved from col 8)
-                    ws.cell(row=current_row, column=10).value = form.get("supplier_name", "")  # Supplier/Name (moved from col 9)
-                    ws.cell(row=current_row, column=11).value = form.get("travel_cost", "")  # Travel (moved from col 10)
-                    ws.cell(row=current_row, column=12).value = form.get("food_cost", "")  # Subsistence (moved from col 11)
-                    ws.cell(row=current_row, column=13).value = form.get("materials_cost", "")  # External Trainer / Course Costs (moved from col 12)
-                    ws.cell(row=current_row, column=14).value = form.get("materials_cost", "")  # Materials (moved from col 13)
-                
+                    ws.cell(row=current_row, column=6).value = form.get(
+                        "trainer_name", ""
+                    )  # Name of trainer (moved from col 5)
+                    ws.cell(row=current_row, column=7).value = (
+                        ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
+                    )
+                    ws.cell(row=current_row, column=8).value = (
+                        location  # Location (same as trainee location) (moved from col 7)
+                    )
+                    ws.cell(row=current_row, column=9).value = (
+                        ""  # Salary (blank) (moved from col 8)
+                    )
+                    ws.cell(row=current_row, column=10).value = form.get(
+                        "supplier_name", ""
+                    )  # Supplier/Name (moved from col 9)
+                    ws.cell(row=current_row, column=11).value = form.get(
+                        "travel_cost", ""
+                    )  # Travel (moved from col 10)
+                    ws.cell(row=current_row, column=12).value = form.get(
+                        "food_cost", ""
+                    )  # Subsistence (moved from col 11)
+                    ws.cell(row=current_row, column=13).value = form.get(
+                        "materials_cost", ""
+                    )  # External Trainer / Course Costs (moved from col 12)
+                    ws.cell(row=current_row, column=14).value = form.get(
+                        "materials_cost", ""
+                    )  # Materials (moved from col 13)
+
                 current_row += 1
-            
+
             # Add an empty row between different training forms
             if current_row <= 23 or len(approved_forms) > 1:
                 ws.insert_rows(current_row)
                 current_row += 1
-        
+
         # Create an in-memory file to store the Excel
         output = BytesIO()
         wb.save(output)
         output.seek(0)
-        
+
+        logging.info(
+            f"Exported {len(approved_forms)} approved forms to Excel template."
+        )
         # Send the file to the user
         return send_file(
             output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             as_attachment=True,
-            download_name='claim5_export.xlsx'
+            download_name="claim5_export.xlsx",
         )
 
     except Exception as e:
@@ -788,6 +871,13 @@ def internal_error(error):
     return render_template("index.html", form=TrainingForm(), now=datetime.now()), 500
 
 
+@app.errorhandler(403)
+def forbidden(e):
+    # Flash a message for 403 errors and redirect to the previous page
+    flash("You do not have permission to perform this action.", "danger")
+    return redirect(request.referrer or url_for("index")), 403
+
+
 # Add user information to layout template context
 @app.context_processor
 def inject_user():
@@ -795,14 +885,78 @@ def inject_user():
     user_info = {}
     if current_user.is_authenticated:
         user_info = {
-            'username': current_user.username,
-            'display_name': current_user.display_name or current_user.username,
-            'email': current_user.email,
-            'first_name': current_user.first_name,
-            'last_name': current_user.last_name,
-            'is_admin': getattr(current_user, 'is_admin', False)  # Get admin status if available
+            "username": current_user.username,
+            "display_name": current_user.display_name or current_user.username,
+            "email": current_user.email,
+            "first_name": current_user.first_name,
+            "last_name": current_user.last_name,
+            "is_admin": getattr(
+                current_user, "is_admin", False
+            ),  # Get admin status if available
         }
-    return {'user_info': user_info}
+    return {"user_info": user_info}
+
+
+@app.route("/my_submissions")
+@login_required
+def my_submissions():
+    """Display a list of the current user's training form submissions"""
+    form = SearchForm()
+    search_term = request.args.get("search", "")
+    date_from = request.args.get("date_from", "")
+    date_to = request.args.get("date_to", "")
+    training_type = request.args.get("training_type", "")
+    sort_by = request.args.get("sort_by", "submission_date")
+    sort_order = request.args.get("sort_order", "DESC")
+    page = request.args.get("page", 1, type=int)
+
+    forms, total_count = get_user_training_forms(
+        current_user.email,
+        search_term=search_term,
+        date_from=date_from,
+        date_to=date_to,
+        training_type=training_type,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page=page,
+    )
+    total_pages = (total_count + 9) // 10
+    params = {
+        "search": search_term,
+        "date_from": date_from,
+        "date_to": date_to,
+        "training_type": training_type,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+    }
+    return render_template(
+        "list.html",
+        form=form,
+        forms=forms,
+        total_count=total_count,
+        total_pages=total_pages,
+        current_page=page,
+        search_term=search_term,
+        date_from=date_from,
+        date_to=date_to,
+        training_type=training_type,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        now=datetime.now(),
+        params=params,
+        has_filters=bool(search_term or date_from or date_to or training_type),
+        total_forms=total_count,
+        my_submissions=True,
+        is_admin=is_admin_user(current_user),
+    )
+
+
+@app.route("/new")
+@login_required
+def new_form():
+    """Display the training form"""
+    form = TrainingForm()
+    return render_template("index.html", form=form, now=datetime.now())
 
 
 if __name__ == "__main__":

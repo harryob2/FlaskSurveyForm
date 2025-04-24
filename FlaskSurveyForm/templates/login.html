@@ -1,61 +1,63 @@
-{% extends "base.html" %}
-
-{% block title %}Login - Training Form System{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Login - Training Form System{%
+endblock %} {% block content %}
 <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow training-form-container">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Login</h3>
-                </div>
-                <div class="card-body">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <form method="POST" action="{{ url_for('login') }}">
-                        {{ form.hidden_tag() }}
-                        <div class="form-group mb-3">
-                            {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control", placeholder="your.email@stryker.com") }}
-                            {% if form.username.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.username.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="form-group mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control") }}
-                            {% if form.password.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.password.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="d-grid gap-2">
-                            {{ form.submit(class="btn btn-primary btn-block") }}
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-muted">
-                    <small>
-                        <p class="mb-0">Use your Stryker Active Directory credentials.</p>
-                        <p class="mb-0">Contact <a href="mailto:harry.obrien@stryker.com?subject=Training%20App%20Login%20Issues">harry.obrien@stryker.com</a> if you need help with accessing this application.</p>
-                    </small>
-                </div>
-            </div>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow training-form-container">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Login</h3>
         </div>
+        <div class="card-body">
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %} {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %} {% endif %} {% endwith %}
+
+          <form method="POST" action="{{ url_for('login') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group mb-3">
+              {{ form.username.label(class="form-label") }} {{
+              form.username(class="form-control",
+              placeholder="your.email@stryker.com") }} {% if
+              form.username.errors %}
+              <div class="text-danger">
+                {% for error in form.username.errors %}
+                <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="form-group mb-3">
+              {{ form.password.label(class="form-label") }} {{
+              form.password(class="form-control") }} {% if form.password.errors
+              %}
+              <div class="text-danger">
+                {% for error in form.password.errors %}
+                <small>{{ error }}</small>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="d-grid gap-2">
+              {{ form.submit(class="btn btn-primary btn-block") }}
+            </div>
+          </form>
+        </div>
+        <div class="card-footer text-muted">
+          <small>
+            <p class="mb-0">Use your Stryker Active Directory credentials.</p>
+            <p class="mb-0">
+              Contact
+              <a
+                href="mailto:harry.obrien@stryker.com?subject=Training%20App%20Login%20Issues"
+                >harry.obrien@stryker.com</a
+              >
+              if you need help with accessing this application.
+            </p>
+          </small>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-{% endblock %} 
+{% endblock %}

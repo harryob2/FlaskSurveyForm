@@ -9,23 +9,27 @@ import re
 import json
 
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import (
     StringField,
     SelectField,
     RadioField,
     DecimalField,
-    IntegerField,
     DateField,
     SubmitField,
-    SearchField,
     TextAreaField,
     HiddenField,
     FloatField,
     MultipleFileField,
     PasswordField,
 )
-from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError, Length, Regexp, Email, InputRequired
+from wtforms.validators import (
+    DataRequired,
+    NumberRange,
+    Optional,
+    ValidationError,
+    Email,
+)
 
 # Training types
 TRAINING_TYPES = ["Internal Training", "External Training"]
@@ -52,15 +56,18 @@ ALLOWED_EXTENSIONS = {
     "txt",
 }
 
+
 def RequiredIf(condition_field, condition_value):
     """Custom validator that makes a field required if another field has a specific value"""
-    message = f'This field is required when {condition_field} is {condition_value}'
+    message = f"This field is required when {condition_field} is {condition_value}"
 
     def _validate(form, field):
         try:
             other_field = getattr(form, condition_field)
         except AttributeError:
-            raise ValidationError(f"No field named '{condition_field}' in form for RequiredIf validator.")
+            raise ValidationError(
+                f"No field named '{condition_field}' in form for RequiredIf validator."
+            )
 
         # Check if the condition field has the specified value
         if other_field.data == condition_value:
@@ -69,13 +76,14 @@ def RequiredIf(condition_field, condition_value):
                 raise ValidationError(message)
             # Handle string data that might just be whitespace
             if isinstance(field.data, str) and not field.data.strip():
-                 raise ValidationError(message)
+                raise ValidationError(message)
             # Handle numeric data that might be zero if zero isn't allowed implicitly
             # (Adjust if 0 is valid for Decimal/Float) - NumberRange usually handles this
             # if isinstance(field.data, (int, float, Decimal)) and field.data == 0:
             #     raise ValidationError(message) # Uncomment if 0 is not allowed
 
     return _validate
+
 
 class TrainingForm(FlaskForm):
     """Form for training submissions"""
@@ -92,7 +100,9 @@ class TrainingForm(FlaskForm):
     location_type = RadioField(
         "Location",
         choices=[("Onsite", "Onsite"), ("Offsite", "Offsite")],
-        validators=[DataRequired("Please select a location type.")], # Custom message example
+        validators=[
+            DataRequired("Please select a location type.")
+        ],  # Custom message example
     )
     start_date = DateField(
         "Start Date", validators=[DataRequired()], format="%Y-%m-%d", default=date.today
@@ -104,34 +114,39 @@ class TrainingForm(FlaskForm):
         "Training Description", validators=[DataRequired()]
     )
     trainee_days = DecimalField(
-        "Trainee Days", validators=[DataRequired(), NumberRange(min=0.01, message="Trainee days must be positive.")], places=2
-    ) # Changed min to 0.01 example
+        "Trainee Days",
+        validators=[
+            DataRequired(),
+            NumberRange(min=0.01, message="Trainee days must be positive."),
+        ],
+        places=2,
+    )  # Changed min to 0.01 example
 
     # Conditionally Required
     trainer_name = StringField(
         "Trainer Name",
-        validators=[RequiredIf('training_type', 'Internal Training')],
+        validators=[RequiredIf("training_type", "Internal Training")],
         description="For internal training, select from employee list",
     )
     supplier_name = StringField(
         "Supplier Name",
-        validators=[RequiredIf('training_type', 'External Training')],
+        validators=[RequiredIf("training_type", "External Training")],
         description="For external training, enter supplier name",
     )
     location_details = StringField(
         "Location Details",
-        validators=[RequiredIf('location_type', 'Offsite')],
+        validators=[RequiredIf("location_type", "Offsite")],
         description="Required for offsite training",
     )
     trainer_days = DecimalField(
         "Trainer Days",
         validators=[
-            RequiredIf('training_type', 'Internal Training'),
+            RequiredIf("training_type", "Internal Training"),
             Optional(),
-            NumberRange(min=0.01, message="Trainer days must be positive if entered.")
+            NumberRange(min=0.01, message="Trainer days must be positive if entered."),
         ],
         places=2,
-        default=None
+        default=None,
     )
 
     # Optional or complex validation
@@ -157,11 +172,15 @@ class TrainingForm(FlaskForm):
 
     # Hidden fields
     department = HiddenField("Department", default="Engineering")
-    trainees_data = HiddenField("Trainees Data") # Add validation if needed
+    trainees_data = HiddenField("Trainees Data")  # Add validation if needed
 
     # Attachment fields
-    attachments = MultipleFileField("Attachments", validators=[Optional()]) # Example: Make optional
-    attachment_descriptions = TextAreaField("Attachment Descriptions (one per line)", validators=[Optional()])
+    attachments = MultipleFileField(
+        "Attachments", validators=[Optional()]
+    )  # Example: Make optional
+    attachment_descriptions = TextAreaField(
+        "Attachment Descriptions (one per line)", validators=[Optional()]
+    )
 
     # Updated trainee field
     trainee_emails = TextAreaField(
@@ -195,7 +214,11 @@ class TrainingForm(FlaskForm):
 
     def validate_other_expense_description(self, field):
         """Validate that other expense description is provided when other expenses > 0"""
-        if self.other_cost.data and self.other_cost.data > 0 and (not field.data or not field.data.strip()):
+        if (
+            self.other_cost.data
+            and self.other_cost.data > 0
+            and (not field.data or not field.data.strip())
+        ):
             raise ValidationError(
                 "Description is required when other expenses are entered."
             )
@@ -223,12 +246,8 @@ class TrainingForm(FlaskForm):
         is_internal = self.training_type.data == "Internal Training"
         data = {
             "training_type": self.training_type.data,
-            "trainer_name": (
-                self.trainer_name.data if is_internal else None
-            ),
-            "supplier_name": (
-                self.supplier_name.data if not is_internal else None
-            ),
+            "trainer_name": (self.trainer_name.data if is_internal else None),
+            "supplier_name": (self.supplier_name.data if not is_internal else None),
             "location_type": self.location_type.data,
             "location_details": (
                 self.location_details.data
@@ -238,7 +257,9 @@ class TrainingForm(FlaskForm):
             "start_date": self.start_date.data.strftime("%Y-%m-%d"),
             "end_date": self.end_date.data.strftime("%Y-%m-%d"),
             "trainer_days": (
-                float(str(self.trainer_days.data)) if is_internal and self.trainer_days.data else None
+                float(str(self.trainer_days.data))
+                if is_internal and self.trainer_days.data
+                else None
             ),
             "training_description": self.training_description.data or "",
             "trainees_data": self.trainees_data.data or "[]",
@@ -256,7 +277,9 @@ class TrainingForm(FlaskForm):
                 else None
             ),
             "concur_claim": self.concur_claim.data,
-            "trainee_days": float(str(self.trainee_days.data)) if self.trainee_days.data else 0.0,
+            "trainee_days": float(str(self.trainee_days.data))
+            if self.trainee_days.data
+            else 0.0,
         }
 
         # Handle trainees data
@@ -362,6 +385,7 @@ class SearchForm(FlaskForm):
 
 class LoginForm(FlaskForm):
     """Form for user login"""
-    username = StringField('Username (Email)', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
+
+    username = StringField("Username (Email)", validators=[DataRequired(), Email()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Login")

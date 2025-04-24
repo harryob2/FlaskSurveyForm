@@ -1,23 +1,15 @@
-{% extends "base.html" %}
-
-{% block title %}{% if edit_mode %}Edit{% else %}Submit{% endif %} Training Form{% endblock %}
-
-{% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/trainee_search.css') }}">
-{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}{% if edit_mode %}Edit{% else
+%}Submit{% endif %} Training Form{% endblock %} {% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trainee_search.css') }}" />
+{% endblock %} {% block content %}
 <div class="card upgraded training-form-container">
     <div class="card-header {% if edit_mode %}bg-secondary{% else %}bg-primary{% endif %} text-white">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="fs-4 mb-0">
-                {% if edit_mode %}
-                Edit Training Form #{{ form_id }}
-                {% else %}
-                Training Form
-                {% endif %}
+                {% if edit_mode %} Edit Training Form #{{ form_id }} {% else %} Training
+                Form {% endif %}
             </h2>
             {% if edit_mode %}
             <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-outline-light btn-sm">
@@ -38,13 +30,12 @@
             enctype="multipart/form-data">
             {% else %}
             <form method="POST" action="{{ url_for('submit_form') }}" id="training-form" enctype="multipart/form-data">
-                {% endif %}
-                {{ form.csrf_token }}
+                {% endif %} {{ form.csrf_token }}
 
                 <!-- Hidden fields for JavaScript -->
                 {{ form.department(class="d-none", id="department_hidden") }}
                 <input type="hidden" id="trainees_data" name="trainees_data"
-                    value="{{ form.trainees_data.data if form.trainees_data.data else '[]' }}">
+                    value="{{ form.trainees_data.data if form.trainees_data.data else '[]' }}" />
 
                 <div class="row">
                     <div class="col-md-12 mb-3">
@@ -68,7 +59,7 @@
 
                     <!-- Conditional sections based on training type -->
                     <div id="training-details-section" class="col-12 mb-3 d-none">
-                        <hr>
+                        <hr />
 
                         <!-- Trainer/Supplier Name Fields (shown conditionally based on training type) -->
                         <div id="internal-trainer-container" class="col-md-12 mb-3 d-none">
@@ -76,13 +67,14 @@
                             <div class="trainee-search-box">
                                 <input type="text" class="form-control" id="trainer_name_search"
                                     name="trainer_name_search" placeholder="Search by name or email..."
-                                    autocomplete="off">
+                                    autocomplete="off" />
                                 <!-- Dropdown for trainer search results -->
                                 <div id="trainer-search-results" class="trainee-search-results hidden"></div>
                             </div>
-                            {{ form.trainer_name(class="form-control d-none", id="trainer_name_hidden") }}
-                            <div class="form-text trainer-search-hint">Type at least 2 characters to search for an
-                                employee
+                            {{ form.trainer_name(class="form-control d-none",
+                            id="trainer_name_hidden") }}
+                            <div class="form-text trainer-search-hint">
+                                Type at least 2 characters to search for an employee
                             </div>
                         </div>
 
@@ -110,8 +102,8 @@
 
                         <div id="location-details-container" class="col-md-12 mb-3 d-none">
                             <div class="form-floating">
-                                {{ form.location_details(class="form-control", placeholder=" ") }}
-                                {{ form.location_details.label }}
+                                {{ form.location_details(class="form-control", placeholder=" ")
+                                }} {{ form.location_details.label }}
                                 <div class="form-text">Required for offsite training</div>
                             </div>
                         </div>
@@ -120,19 +112,25 @@
                             <!-- Trainer Days (only shown for Internal Training) -->
                             <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
                                 <div class="form-floating">
-                                    {{ form.trainer_days(class="form-control", type="number", step="0.01", min="0", placeholder=" ") }}
-                                    {{ form.trainer_days.label }}
+                                    {{ form.trainer_days(class="form-control", type="number",
+                                    step="0.01", min="0", placeholder=" ") }} {{
+                                    form.trainer_days.label }}
                                 </div>
-                                <div class="form-text">Enter the amount of time the trainer spent preparing and
-                                    administering this training in days</div>
+                                <div class="form-text">
+                                    Enter the amount of time the trainer spent preparing and
+                                    administering this training in days
+                                </div>
                             </div>
                             <!-- Trainee Days -->
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
-                                    {{ form.trainee_days(class="form-control", type="number", step="0.01", min="0", placeholder=" ") }}
-                                    {{ form.trainee_days.label }}
+                                    {{ form.trainee_days(class="form-control", type="number",
+                                    step="0.01", min="0", placeholder=" ") }} {{
+                                    form.trainee_days.label }}
                                 </div>
-                                <div class="form-text">How much time the trainees spent at the training, in working days
+                                <div class="form-text">
+                                    How much time the trainees spent at the training, in working
+                                    days
                                 </div>
                             </div>
                         </div>
@@ -141,15 +139,15 @@
                         <div class="row g-3">
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
-                                    {{ form.start_date(class="form-control date-picker", placeholder=" ") }}
-                                    {{ form.start_date.label }}
+                                    {{ form.start_date(class="form-control date-picker",
+                                    placeholder=" ") }} {{ form.start_date.label }}
                                 </div>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
-                                    {{ form.end_date(class="form-control date-picker", placeholder=" ") }}
-                                    {{ form.end_date.label }}
+                                    {{ form.end_date(class="form-control date-picker",
+                                    placeholder=" ") }} {{ form.end_date.label }}
                                 </div>
                             </div>
                         </div>
@@ -158,10 +156,13 @@
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <div class="form-floating">
-                                    {{ form.training_description(class="form-control", style="height: 120px", placeholder=" ") }}
-                                    {{ form.training_description.label }}
+                                    {{ form.training_description(class="form-control",
+                                    style="height: 120px", placeholder=" ") }} {{
+                                    form.training_description.label }}
                                 </div>
-                                <div class="form-text">Briefly describe the training delivered</div>
+                                <div class="form-text">
+                                    Briefly describe the training delivered
+                                </div>
                             </div>
                         </div>
 
@@ -172,43 +173,45 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <div class="form-floating">
-                                            {{ form.travel_cost(class="form-control money", placeholder=" ") }}
-                                            {{ form.travel_cost.label }}
+                                            {{ form.travel_cost(class="form-control money",
+                                            placeholder=" ") }} {{ form.travel_cost.label }}
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-floating">
-                                            {{ form.food_cost(class="form-control money", placeholder=" ") }}
-                                            {{ form.food_cost.label }}
+                                            {{ form.food_cost(class="form-control money",
+                                            placeholder=" ") }} {{ form.food_cost.label }}
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-floating">
-                                            {{ form.materials_cost(class="form-control money", placeholder=" ") }}
-                                            {{ form.materials_cost.label }}
+                                            {{ form.materials_cost(class="form-control money",
+                                            placeholder=" ") }} {{ form.materials_cost.label }}
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            {{ form.other_cost(class="form-control money", placeholder=" ") }}
-                                            {{ form.other_cost.label }}
+                                            {{ form.other_cost(class="form-control money",
+                                            placeholder=" ") }} {{ form.other_cost.label }}
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            {{ form.concur_claim(class="form-control", placeholder=" ") }}
-                                            {{ form.concur_claim.label }}
+                                            {{ form.concur_claim(class="form-control", placeholder="
+                                            ") }} {{ form.concur_claim.label }}
                                         </div>
-                                        <div id="concur-required-message" class="form-text text-danger d-none mt-1" style="font-size: 0.85em;">
+                                        <div id="concur-required-message" class="form-text text-danger d-none mt-1"
+                                            style="font-size: 0.85em">
                                             * Required when expenses are entered
                                         </div>
                                     </div>
-                                    
+
                                     <div id="other-expense-description-container" class="col-md-12 mb-3 d-none">
                                         <div class="form-floating">
-                                            {{ form.other_expense_description(class="form-control", style="height: 100px", placeholder=" ") }}
-                                            {{ form.other_expense_description.label }}
+                                            {{ form.other_expense_description(class="form-control",
+                                            style="height: 100px", placeholder=" ") }} {{
+                                            form.other_expense_description.label }}
                                         </div>
                                         <div class="form-text text-danger other-expense-required-text">
                                             * Required when other expenses are entered
@@ -220,13 +223,10 @@
                         {% if edit_mode and existing_attachments %}
                         <!-- Hidden container for existing attachments data -->
                         {% for att in existing_attachments %}
-                        <div class="existing-attachment d-none" 
-                             data-id="{{ att['id'] }}" 
-                             data-filename="{{ att['filename'] }}" 
-                             data-description="{{ att['description'] or '' }}">
+                        <div class="existing-attachment d-none" data-id="{{ att['id'] }}"
+                            data-filename="{{ att['filename'] }}" data-description="{{ att['description'] or '' }}">
                         </div>
-                        {% endfor %}
-                        {% endif %}
+                        {% endfor %} {% endif %}
                         <!-- Attachments Section -->
                         <div class="row mb-4">
                             <div class="col-md-12">
@@ -234,7 +234,7 @@
                                 <div id="dropzone" class="dropzone border p-3 mb-3 text-center">
                                     <i class="bi bi-upload fs-1 text-primary"></i>
                                     <p>Drag and drop files here or click to browse</p>
-                                    <input type="file" id="file-input" class="d-none" multiple>
+                                    <input type="file" id="file-input" class="d-none" multiple />
                                 </div>
                                 <!-- New Attachment Previews Container -->
                                 <div id="attachment-previews"></div>
@@ -264,7 +264,7 @@
                             <div class="trainee-search-box">
                                 <div class="input-group mb-3">
                                     <input type="text" id="trainee-search-input" class="form-control"
-                                        placeholder="Search by name or email..." autocomplete="off">
+                                        placeholder="Search by name or email..." autocomplete="off" />
                                     <button class="btn btn-primary" type="button" id="add-trainee-btn">
                                         <i class="bi bi-plus-lg"></i> Add Trainee
                                     </button>
@@ -279,7 +279,7 @@
                             </div>
 
                             <div id="trainees-list" class="trainees-list"></div>
-                            
+
                             <!-- Add Bulk Add button -->
                             <button type="button" id="bulk-add-trainees-btn" class="btn btn-outline-primary mt-3">
                                 <i class="bi bi-people-fill me-1"></i> Bulk Add Trainees
@@ -291,9 +291,13 @@
                         <div class="d-flex justify-content-between">
                             {% if edit_mode %}
                             <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-secondary">Cancel</a>
-                            <button type="button" id="submit-training-form-btn" class="btn btn-success">Save Changes</button>
+                            <button type="submit" id="submit-training-form-btn" class="btn btn-success">
+                                Save Changes
+                            </button>
                             {% else %}
-                            <button type="button" id="submit-training-form-btn" class="btn btn-primary">Submit Form</button>
+                            <button type="submit" id="submit-training-form-btn" class="btn btn-primary">
+                                Submit Form
+                            </button>
                             {% endif %}
                         </div>
                     </div>
@@ -301,7 +305,6 @@
             </form>
     </div>
 </div>
-
 <!-- Add the Modal for Bulk Adding Trainees -->
 {% block modals %}
 <div class="modal fade" id="bulkAddModal" tabindex="-1" aria-labelledby="bulkAddModalLabel" aria-hidden="true">
@@ -314,8 +317,9 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <div class="form-floating">
-                        {{ form.trainee_emails(class="form-control auto-resize-textarea", placeholder=" ", rows=4, style="min-height: 120px; max-height: 300px; overflow-y: auto;") }}
-                        {{ form.trainee_emails.label }}
+                        {{ form.trainee_emails(class="form-control auto-resize-textarea",
+                        placeholder=" ", rows=4, style="min-height: 120px; max-height:
+                        300px; overflow-y: auto;") }} {{ form.trainee_emails.label }}
                     </div>
                     <small class="form-text text-muted">
                         Example: john@example.com, jane@domain.com
@@ -323,16 +327,17 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="add-emails-btn" class="btn btn-primary">Add Emails</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" id="add-emails-btn" class="btn btn-primary">
+                    Add Emails
+                </button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
 <script src="{{ url_for('static', filename='data/employees.js') }}"></script>
@@ -340,84 +345,110 @@
 <script src="{{ url_for('static', filename='js/attachment.js') }}"></script>
 <script src="{{ url_for('static', filename='js/other_expense.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('training-form');
-        const trainingTypeRadios = form.elements['training_type'];
-        const trainingDetailsSection = document.getElementById('training-details-section');
-        const internalTrainerContainer = document.getElementById('internal-trainer-container');
-        const externalSupplierContainer = document.getElementById('external-supplier-container');
-        const trainerDaysContainer = document.getElementById('trainer-days-container');
-        const locationTypeRadios = form.elements['location_type'];
-        const locationDetailsContainer = document.getElementById('location-details-container');
-        const otherCostInput = document.getElementById('other_cost');
-        const submitButton = document.getElementById('submit-training-form-btn'); // Get the button
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("training-form");
+        const trainingTypeRadios = form.elements["training_type"];
+        const trainingDetailsSection = document.getElementById(
+            "training-details-section",
+        );
+        const internalTrainerContainer = document.getElementById(
+            "internal-trainer-container",
+        );
+        const externalSupplierContainer = document.getElementById(
+            "external-supplier-container",
+        );
+        const trainerDaysContainer = document.getElementById(
+            "trainer-days-container",
+        );
+        const locationTypeRadios = form.elements["location_type"];
+        const locationDetailsContainer = document.getElementById(
+            "location-details-container",
+        );
+        const otherCostInput = document.getElementById("other_cost");
+        const submitButton = document.getElementById("submit-training-form-btn"); // Get the button
 
         // Auto-resize textarea functionality
-        document.querySelectorAll('.auto-resize-textarea').forEach(textarea => {
-            textarea.addEventListener('input', function() {
-                // Reset height temporarily to get the correct scrollHeight
-                this.style.height = 'auto';
-                
-                // Set new height based on scrollHeight, with a maximum
-                const maxHeight = 300; // Max height in px
-                this.style.height = Math.min(this.scrollHeight, maxHeight) + 'px';
-                
-                // Add scrollbar if content exceeds max height
-                this.style.overflowY = this.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        document
+            .querySelectorAll(".auto-resize-textarea")
+            .forEach((textarea) => {
+                textarea.addEventListener("input", function () {
+                    // Reset height temporarily to get the correct scrollHeight
+                    this.style.height = "auto";
+
+                    // Set new height based on scrollHeight, with a maximum
+                    const maxHeight = 300; // Max height in px
+                    this.style.height = Math.min(this.scrollHeight, maxHeight) + "px";
+
+                    // Add scrollbar if content exceeds max height
+                    this.style.overflowY =
+                        this.scrollHeight > maxHeight ? "auto" : "hidden";
+                });
+
+                // Initialize on page load (in case there's content already)
+                if (textarea.value) {
+                    textarea.dispatchEvent(new Event("input"));
+                }
             });
-            
-            // Initialize on page load (in case there's content already)
-            if (textarea.value) {
-                textarea.dispatchEvent(new Event('input'));
-            }
-        });
 
         // --- Expense related elements ---
-        const travelCostInput = form.elements['travel_cost'];
-        const foodCostInput = form.elements['food_cost'];
-        const materialsCostInput = form.elements['materials_cost'];
+        const travelCostInput = form.elements["travel_cost"];
+        const foodCostInput = form.elements["food_cost"];
+        const materialsCostInput = form.elements["materials_cost"];
         // otherCostInput already defined above
-        const concurRequiredMessageDiv = document.getElementById('concur-required-message');
-        const expenseInputs = [travelCostInput, foodCostInput, materialsCostInput, otherCostInput];
+        const concurRequiredMessageDiv = document.getElementById(
+            "concur-required-message",
+        );
+        const expenseInputs = [
+            travelCostInput,
+            foodCostInput,
+            materialsCostInput,
+            otherCostInput,
+        ];
 
         // --- Date Pickers, Visibility Logic, etc. ---
         flatpickr(".date-picker", { dateFormat: "Y-m-d", allowInput: true });
 
         function handleTrainingTypeChange() {
-             const selectedTrainingType = form.elements['training_type'].value;
-             if (selectedTrainingType) {
-                 trainingDetailsSection.classList.remove('d-none');
-                 if (selectedTrainingType === 'Internal Training') {
-                     internalTrainerContainer.classList.remove('d-none');
-                     externalSupplierContainer.classList.add('d-none');
-                     trainerDaysContainer.classList.remove('d-none');
-                 } else if (selectedTrainingType === 'External Training') {
-                     internalTrainerContainer.classList.add('d-none');
-                     externalSupplierContainer.classList.remove('d-none');
-                     trainerDaysContainer.classList.add('d-none');
-                 }
-             } else {
-                 trainingDetailsSection.classList.add('d-none');
-             }
-         }
-        function handleLocationTypeChange() {
-            const selectedLocationType = form.elements['location_type'].value;
-            if (selectedLocationType === 'Offsite') {
-                locationDetailsContainer.classList.remove('d-none');
+            const selectedTrainingType = form.elements["training_type"].value;
+            if (selectedTrainingType) {
+                trainingDetailsSection.classList.remove("d-none");
+                if (selectedTrainingType === "Internal Training") {
+                    internalTrainerContainer.classList.remove("d-none");
+                    externalSupplierContainer.classList.add("d-none");
+                    trainerDaysContainer.classList.remove("d-none");
+                } else if (selectedTrainingType === "External Training") {
+                    internalTrainerContainer.classList.add("d-none");
+                    externalSupplierContainer.classList.remove("d-none");
+                    trainerDaysContainer.classList.add("d-none");
+                }
             } else {
-                locationDetailsContainer.classList.add('d-none');
+                trainingDetailsSection.classList.add("d-none");
             }
         }
-        Array.from(trainingTypeRadios).forEach(radio => { radio.addEventListener('change', handleTrainingTypeChange); });
-        Array.from(locationTypeRadios).forEach(radio => { radio.addEventListener('change', handleLocationTypeChange); });
+        function handleLocationTypeChange() {
+            const selectedLocationType = form.elements["location_type"].value;
+            if (selectedLocationType === "Offsite") {
+                locationDetailsContainer.classList.remove("d-none");
+            } else {
+                locationDetailsContainer.classList.add("d-none");
+            }
+        }
+        Array.from(trainingTypeRadios).forEach((radio) => {
+            radio.addEventListener("change", handleTrainingTypeChange);
+        });
+        Array.from(locationTypeRadios).forEach((radio) => {
+            radio.addEventListener("change", handleLocationTypeChange);
+        });
         handleTrainingTypeChange();
         handleLocationTypeChange();
-        if (window.checkOtherExpenses) { window.checkOtherExpenses(); } // For other_expense.js
+        if (window.checkOtherExpenses) {
+            window.checkOtherExpenses();
+        } // For other_expense.js
 
         // --- Function to update Concur message visibility ---
         function updateConcurMessageVisibility() {
             let hasAnyExpense = false;
-            expenseInputs.forEach(input => {
+            expenseInputs.forEach((input) => {
                 const value = parseFloat(input.value);
                 if (!isNaN(value) && value > 0) {
                     hasAnyExpense = true;
@@ -425,15 +456,15 @@
             });
 
             if (hasAnyExpense) {
-                concurRequiredMessageDiv.classList.remove('d-none');
+                concurRequiredMessageDiv.classList.remove("d-none");
             } else {
-                concurRequiredMessageDiv.classList.add('d-none');
+                concurRequiredMessageDiv.classList.add("d-none");
             }
         }
 
         // --- Attach listeners to expense inputs ---
-        expenseInputs.forEach(input => {
-            input.addEventListener('input', updateConcurMessageVisibility);
+        expenseInputs.forEach((input) => {
+            input.addEventListener("input", updateConcurMessageVisibility);
         });
 
         // --- Initial check on page load ---
@@ -441,85 +472,264 @@
 
         // Keep critical error logs
         if (!form) {
-             console.error("CRITICAL: Form element #training-form not found!");
-             return; 
+            console.error("CRITICAL: Form element #training-form not found!");
+            return;
         }
-         if (!submitButton) {
-             console.error("CRITICAL: Button #submit-training-form-btn not found! Cannot attach click listener.");
-             return; // Stop if button isn't found
+        if (!submitButton) {
+            console.error(
+                "CRITICAL: Button #submit-training-form-btn not found! Cannot attach click listener.",
+            );
+            return; // Stop if button isn't found
         }
-        
-        // --- Form Validation triggered by BUTTON CLICK --- 
-        submitButton.addEventListener('click', function (event) {
-             event.preventDefault(); // Prevent default button action
 
+        // Helper: Check if an element (or its container) is visible
+        function isReallyVisible(element) {
+            let el = element, visible = false, depth = 0;
+            while (el && el !== document.body && depth < 10) {
+                const style = window.getComputedStyle(el);
+                if (
+                    style.display === "none" ||
+                    style.visibility === "hidden" ||
+                    parseFloat(style.opacity) === 0
+                ) return false;
+                if (
+                    style.display !== "none" &&
+                    (el.offsetWidth > 0 || el.offsetHeight > 0)
+                ) visible = true;
+                el = el.parentElement;
+                depth++;
+            }
+            return visible;
+        }
+
+        // --- Form Validation triggered by BUTTON CLICK ---
+        submitButton.addEventListener("click", function (event) {
             // ... (Remove messages, reset state) ...
-            document.querySelectorAll('.validation-message').forEach(el => el.remove());
-            form.classList.remove('was-validated'); 
+            document.querySelectorAll(".validation-message").forEach((el) => el.remove());
+            form.classList.remove("was-validated");
 
             // ... (STEP 1: Validate Training Type) ...
-            const trainingType = form.elements['training_type'];
+            const trainingType = form.elements["training_type"];
             if (!trainingType.value) {
                 const message = "Please select a training type.";
-                const targetElement = trainingType[0].closest('.form-group') || trainingType[0].parentElement;
-                const messageElement = document.createElement('div');
-                messageElement.className = 'validation-message alert alert-danger mt-2';
-                messageElement.style.cssText = 'padding: 0.5rem; font-size: 0.9rem;';
+                const targetElement =
+                    trainingType[0].closest(".form-group") || trainingType[0].parentElement;
+                const messageElement = document.createElement("div");
+                messageElement.className = "validation-message alert alert-danger mt-2";
+                messageElement.style.cssText = "padding: 0.5rem; font-size: 0.9rem;";
                 messageElement.textContent = message;
                 try {
-                    if (targetElement.nextSibling) { targetElement.parentNode.insertBefore(messageElement, targetElement.nextSibling); } 
-                    else { targetElement.parentNode.appendChild(messageElement); }
-                } catch (e) { console.error("Error inserting Training Type message:", e); }
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                 setTimeout(() => { if (trainingType[0].focus) { trainingType[0].focus({ preventScroll: true }); } }, 150);
-                return; 
+                    if (targetElement.nextSibling) {
+                        targetElement.parentNode.insertBefore(
+                            messageElement,
+                            targetElement.nextSibling,
+                        );
+                    } else {
+                        targetElement.parentNode.appendChild(messageElement);
+                    }
+                } catch (e) {
+                    console.error("Error inserting Training Type message:", e);
+                }
+                targetElement.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                });
+                setTimeout(() => {
+                    if (trainingType[0].focus) {
+                        trainingType[0].focus({ preventScroll: true });
+                    }
+                }, 150);
+                event.preventDefault();
+                return;
             }
 
             // ... (STEP 2: Set Custom Validity) ...
-            const startDate = form.elements['start_date']; const endDate = form.elements['end_date'];
+            const startDate = form.elements["start_date"];
+            const endDate = form.elements["end_date"];
             validateDates(startDate, endDate);
-            if (trainingType.value && !form.elements['location_type'].value) { form.elements['location_type'][0].setCustomValidity("Please select a location type."); } else { form.elements['location_type'][0].setCustomValidity(""); }
-            const travelCost = form.elements['travel_cost']; const foodCost = form.elements['food_cost']; const materialsCost = form.elements['materials_cost']; const otherCost = form.elements['other_cost']; const concurClaim = form.elements['concur_claim']; const otherDesc = form.elements['other_expense_description'];
-            const hasExpenses = (travelCost.value && parseFloat(travelCost.value) > 0) || (foodCost.value && parseFloat(foodCost.value) > 0) || (materialsCost.value && parseFloat(materialsCost.value) > 0) || (otherCost.value && parseFloat(otherCost.value) > 0);
-            if (hasExpenses && !concurClaim.value.trim()) { concurClaim.setCustomValidity("Concur Claim Number is required when expenses are entered."); } else { concurClaim.setCustomValidity(""); }
-            if (otherCost.value && parseFloat(otherCost.value) > 0 && !otherDesc.value.trim()) { otherDesc.setCustomValidity("Description is required when other expenses are entered."); } else { otherDesc.setCustomValidity(""); }
-            const trainerNameSearch = document.getElementById('trainer_name_search'); const trainerNameHidden = form.elements['trainer_name'];
-            if (trainingType.value === 'Internal Training' && !trainerNameHidden.value.trim()) { trainerNameSearch.setCustomValidity("Trainer name is required for internal training."); } else { trainerNameSearch.setCustomValidity(""); }
+            if (trainingType.value && !form.elements["location_type"].value) {
+                form.elements["location_type"][0].setCustomValidity(
+                    "Please select a location type.",
+                );
+            } else {
+                form.elements["location_type"][0].setCustomValidity("");
+            }
+            const travelCost = form.elements["travel_cost"];
+            const foodCost = form.elements["food_cost"];
+            const materialsCost = form.elements["materials_cost"];
+            const otherCost = form.elements["other_cost"];
+            const concurClaim = form.elements["concur_claim"];
+            const otherDesc = form.elements["other_expense_description"];
+            const expenseInputs = [travelCost, foodCost, materialsCost, otherCost];
+            function hasExpenses(inputs) {
+                return inputs.some((input) => input.value && parseFloat(input.value) > 0);
+            }
+            if (hasExpenses(expenseInputs) && !concurClaim.value.trim()) {
+                concurClaim.setCustomValidity(
+                    "Concur Claim Number is required when expenses are entered.",
+                );
+            } else {
+                concurClaim.setCustomValidity("");
+            }
+            if (otherCost.value && parseFloat(otherCost.value) > 0 && !otherDesc.value.trim()) {
+                otherDesc.setCustomValidity(
+                    "Description is required when other expenses are entered.",
+                );
+            } else {
+                otherDesc.setCustomValidity("");
+            }
+            const trainerNameSearch = document.getElementById("trainer_name_search");
+            const trainerNameHidden = form.elements["trainer_name"];
+            if (
+                trainingType.value === "Internal Training" &&
+                !trainerNameHidden.value.trim()
+            ) {
+                trainerNameSearch.setCustomValidity(
+                    "Trainer name is required for internal training.",
+                );
+            } else {
+                trainerNameSearch.setCustomValidity("");
+            }
 
             // ... (STEP 3: Final Check and Message Display) ...
             const isFormValid = form.checkValidity();
 
             if (!isFormValid) {
-                form.classList.add('was-validated'); 
+                form.classList.add("was-validated");
                 const invalidElements = [];
                 const elements = form.elements;
                 for (let i = 0; i < elements.length; i++) {
-                    const element = elements[i]; if (element.name === 'training_type') continue;
+                    const element = elements[i];
+                    if (element.name === "training_type") continue;
                     if (!element.validity.valid) {
-                        let currentElement = element; let isVisible = false; let visibilityCheckDepth = 0;
-                        while(currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) { isVisible = false; break; } if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) { isVisible = true; } if(isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) { isVisible = false; break; } currentElement = currentElement.parentElement; visibilityCheckDepth++; }
-                        if (element.type === 'radio') { let radioGroupContainer = element.closest('.form-group') || element.closest('.form-check') || element.parentElement; currentElement = radioGroupContainer; isVisible = false; visibilityCheckDepth = 0; while(currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {isVisible = false; break;} if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) {isVisible = true;} if(isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) {isVisible = false; break;} currentElement = currentElement.parentElement; visibilityCheckDepth++; } }
-                        if (element.id === 'trainer_name') { let searchInput = document.getElementById('trainer_name_search'); currentElement = searchInput; isVisible = false; visibilityCheckDepth = 0; while(currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {isVisible = false; break;} if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) {isVisible = true;} if(isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) {isVisible = false; break;} currentElement = currentElement.parentElement; visibilityCheckDepth++; } if (isVisible) { if (!invalidElements.some(item => item.element.id === 'trainer_name_search')) { invalidElements.push({ element: searchInput, message: "Trainer name is required for internal training." }); } } continue; }
-                        if (element.type === 'radio' && invalidElements.some(item => item.element.name === element.name)) { continue; }
-                        if (isVisible) { let message = element.validationMessage || "This field is required"; let targetElement = element; if (element.type === 'radio') { targetElement = element.closest('.form-group') || element.parentElement; } if (!invalidElements.some(item => item.element === targetElement)) { invalidElements.push({ element: targetElement, message: message }); } }
+                        let currentElement = element;
+                        let isVisible = isReallyVisible(currentElement);
+                        if (element.type === "radio") {
+                            let radioGroupContainer =
+                                element.closest(".form-group") ||
+                                element.closest(".form-check") ||
+                                element.parentElement;
+                            currentElement = radioGroupContainer;
+                            isVisible = isReallyVisible(currentElement);
+                        }
+                        if (element.id === "trainer_name") {
+                            let searchInput = document.getElementById("trainer_name_search");
+                            currentElement = searchInput;
+                            isVisible = isReallyVisible(currentElement);
+                            if (isVisible) {
+                                if (
+                                    !invalidElements.some(
+                                        (item) => item.element.id === "trainer_name_search",
+                                    )
+                                ) {
+                                    invalidElements.push({
+                                        element: searchInput,
+                                        message: "Trainer name is required for internal training.",
+                                    });
+                                }
+                            }
+                            continue;
+                        }
+                        if (
+                            element.type === "radio" &&
+                            invalidElements.some((item) => item.element.name === element.name)
+                        ) {
+                            continue;
+                        }
+                        if (isVisible) {
+                            let message = element.validationMessage || "This field is required";
+                            let targetElement = element;
+                            if (element.type === "radio") {
+                                targetElement =
+                                    element.closest(".form-group") || element.parentElement;
+                            }
+                            if (
+                                !invalidElements.some((item) => item.element === targetElement)
+                            ) {
+                                invalidElements.push({
+                                    element: targetElement,
+                                    message: message,
+                                });
+                            }
+                        }
                     }
                 }
-                
-                invalidElements.forEach((item, index) => { const element = item.element; const message = item.message; const messageElement = document.createElement('div'); messageElement.className = 'validation-message alert alert-danger mt-2'; messageElement.style.cssText = 'padding: 0.5rem; font-size: 0.9rem;'; messageElement.textContent = message; let insertTarget = element; if (element.id === 'trainer_name_search') { insertTarget = element.closest('.trainee-search-box') || element.parentElement; } const parentContainer = insertTarget.closest('.form-group') || insertTarget.closest('.mb-3') || insertTarget.parentElement; insertTarget = parentContainer || insertTarget; try { if (insertTarget.nextSibling) { insertTarget.parentNode.insertBefore(messageElement, insertTarget.nextSibling); } else { insertTarget.parentNode.appendChild(messageElement); } } catch (e) { console.error(`Error inserting message for element:`, element, e); } });
-                
-                if (invalidElements.length > 0) { let firstTarget = invalidElements[0].element; if (firstTarget.id === 'trainer_name_search') { firstTarget = firstTarget.closest('.trainee-search-box') || firstTarget; } const firstScrollTarget = firstTarget.closest('.form-group') || firstTarget.closest('.mb-3') || firstTarget; firstScrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { let focusableElement = invalidElements[0].element; if(focusableElement.id === 'trainer_name_search'){ } else if (focusableElement.classList.contains('form-group') || focusableElement.classList.contains('form-check')) { focusableElement = focusableElement.querySelector('input:not([type=hidden]), textarea, select'); } if (focusableElement && focusableElement.focus) { focusableElement.focus({ preventScroll: true }); } }, 150); }
+
+                invalidElements.forEach((item, index) => {
+                    const element = item.element;
+                    const message = item.message;
+                    const messageElement = document.createElement("div");
+                    messageElement.className = "validation-message alert alert-danger mt-2";
+                    messageElement.style.cssText = "padding: 0.5rem; font-size: 0.9rem;";
+                    messageElement.textContent = message;
+                    let insertTarget = element;
+                    if (element.id === "trainer_name_search") {
+                        insertTarget =
+                            element.closest(".trainee-search-box") || element.parentElement;
+                    }
+                    const parentContainer =
+                        insertTarget.closest(".form-group") ||
+                        insertTarget.closest(".mb-3") ||
+                        insertTarget.parentElement;
+                    insertTarget = parentContainer || insertTarget;
+                    try {
+                        if (insertTarget.nextSibling) {
+                            insertTarget.parentNode.insertBefore(
+                                messageElement,
+                                insertTarget.nextSibling,
+                            );
+                        } else {
+                            insertTarget.parentNode.appendChild(messageElement);
+                        }
+                    } catch (e) {
+                        console.error(`Error inserting message for element:`, element, e);
+                    }
+                });
+
+                if (invalidElements.length > 0) {
+                    let firstTarget = invalidElements[0].element;
+                    if (firstTarget.id === "trainer_name_search") {
+                        firstTarget =
+                            firstTarget.closest(".trainee-search-box") || firstTarget;
+                    }
+                    const firstScrollTarget =
+                        firstTarget.closest(".form-group") ||
+                        firstTarget.closest(".mb-3") ||
+                        firstTarget;
+                    firstScrollTarget.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                    });
+                    setTimeout(() => {
+                        let focusableElement = invalidElements[0].element;
+                        if (focusableElement.id === "trainer_name_search") {
+                        } else if (
+                            focusableElement.classList.contains("form-group") ||
+                            focusableElement.classList.contains("form-check")
+                        ) {
+                            focusableElement = focusableElement.querySelector(
+                                "input:not([type=hidden]), textarea, select",
+                            );
+                        }
+                        if (focusableElement && focusableElement.focus) {
+                            focusableElement.focus({ preventScroll: true });
+                        }
+                    }, 150);
+                }
+                event.preventDefault();
             } else {
                 // Form IS valid
-                form.classList.remove('was-validated');
+                form.classList.remove("was-validated");
                 if (window.prepareAttachmentsForSubmit) {
                     window.prepareAttachmentsForSubmit();
                 } else {
-                     console.error("prepareAttachmentsForSubmit function not found!");
+                    console.error("prepareAttachmentsForSubmit function not found!");
                 }
-                form.submit(); // Manually submit the form
             }
         }); // End of CLICK listener
-
     }); // End of DOMContentLoaded listener
 </script>
 {% endblock %}
+</form>
+</div>
+</div>
