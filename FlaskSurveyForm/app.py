@@ -337,10 +337,8 @@ def success():
     return render_template("success.html", now=datetime.now())
 
 
-@admin_required
 @app.route("/list")
 @login_required
-@admin_required
 def list_forms():
     """Display a list of all training form submissions"""
     form = SearchForm()
