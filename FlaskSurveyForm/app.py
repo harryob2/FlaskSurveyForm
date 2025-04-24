@@ -307,6 +307,7 @@ def uploaded_file(filename):
 
 @app.route("/approve/<int:form_id>")
 @login_required
+@admin_required
 def approve_training(form_id):
     conn = get_db()
     cursor = conn.cursor()
