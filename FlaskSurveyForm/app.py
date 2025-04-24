@@ -42,7 +42,7 @@ from models import (
 )
 from utils import prepare_form_data
 from setup_db import setup_database
-from auth import init_auth, authenticate_user
+from auth import init_auth, authenticate_user, is_admin_email
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -102,17 +102,8 @@ def inject_current_year():
     return {"current_year": datetime.now().year}
 
 
-@functools.lru_cache(maxsize=1)
-def get_admin_emails():
-    admin_file = os.path.join(os.path.dirname(__file__), "admin.txt")
-    if not os.path.exists(admin_file):
-        return set()
-    with open(admin_file, "r") as f:
-        return set(line.strip().lower() for line in f if line.strip())
-
-
 def is_admin_user(user):
-    return user.is_authenticated and user.email.lower() in get_admin_emails()
+    return user.is_authenticated and is_admin_email(user.email)
 
 
 def admin_required(f):

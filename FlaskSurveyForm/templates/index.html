@@ -120,7 +120,8 @@
                             <!-- Trainer Days (only shown for Internal Training) -->
                             <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
                                 <div class="form-floating">
-                                    {{ form.trainer_days(class="form-control", type="number", step="0.01", min="0", placeholder=" ") }}
+                                    {{ form.trainer_days(class="form-control", type="number", step="0.01", min="0",
+                                    placeholder=" ") }}
                                     {{ form.trainer_days.label }}
                                 </div>
                                 <div class="form-text">Enter the amount of time the trainer spent preparing and
@@ -129,7 +130,8 @@
                             <!-- Trainee Days -->
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
-                                    {{ form.trainee_days(class="form-control", type="number", step="0.01", min="0", placeholder=" ") }}
+                                    {{ form.trainee_days(class="form-control", type="number", step="0.01", min="0",
+                                    placeholder=" ") }}
                                     {{ form.trainee_days.label }}
                                 </div>
                                 <div class="form-text">How much time the trainees spent at the training, in working days
@@ -158,7 +160,8 @@
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <div class="form-floating">
-                                    {{ form.training_description(class="form-control", style="height: 120px", placeholder=" ") }}
+                                    {{ form.training_description(class="form-control", style="height: 120px",
+                                    placeholder=" ") }}
                                     {{ form.training_description.label }}
                                 </div>
                                 <div class="form-text">Briefly describe the training delivered</div>
@@ -188,7 +191,7 @@
                                             {{ form.materials_cost.label }}
                                         </div>
                                     </div>
-                                    
+
                                     <div class="col-md-6">
                                         <div class="form-floating">
                                             {{ form.other_cost(class="form-control money", placeholder=" ") }}
@@ -200,14 +203,16 @@
                                             {{ form.concur_claim(class="form-control", placeholder=" ") }}
                                             {{ form.concur_claim.label }}
                                         </div>
-                                        <div id="concur-required-message" class="form-text text-danger d-none mt-1" style="font-size: 0.85em;">
+                                        <div id="concur-required-message" class="form-text text-danger d-none mt-1"
+                                            style="font-size: 0.85em;">
                                             * Required when expenses are entered
                                         </div>
                                     </div>
-                                    
+
                                     <div id="other-expense-description-container" class="col-md-12 mb-3 d-none">
                                         <div class="form-floating">
-                                            {{ form.other_expense_description(class="form-control", style="height: 100px", placeholder=" ") }}
+                                            {{ form.other_expense_description(class="form-control", style="height:
+                                            100px", placeholder=" ") }}
                                             {{ form.other_expense_description.label }}
                                         </div>
                                         <div class="form-text text-danger other-expense-required-text">
@@ -220,10 +225,8 @@
                         {% if edit_mode and existing_attachments %}
                         <!-- Hidden container for existing attachments data -->
                         {% for att in existing_attachments %}
-                        <div class="existing-attachment d-none" 
-                             data-id="{{ att['id'] }}" 
-                             data-filename="{{ att['filename'] }}" 
-                             data-description="{{ att['description'] or '' }}">
+                        <div class="existing-attachment d-none" data-id="{{ att['id'] }}"
+                            data-filename="{{ att['filename'] }}" data-description="{{ att['description'] or '' }}">
                         </div>
                         {% endfor %}
                         {% endif %}
@@ -279,7 +282,7 @@
                             </div>
 
                             <div id="trainees-list" class="trainees-list"></div>
-                            
+
                             <!-- Add Bulk Add button -->
                             <button type="button" id="bulk-add-trainees-btn" class="btn btn-outline-primary mt-3">
                                 <i class="bi bi-people-fill me-1"></i> Bulk Add Trainees
@@ -291,9 +294,11 @@
                         <div class="d-flex justify-content-between">
                             {% if edit_mode %}
                             <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-secondary">Cancel</a>
-                            <button type="button" id="submit-training-form-btn" class="btn btn-success">Save Changes</button>
+                            <button type="button" id="submit-training-form-btn" class="btn btn-success">Save
+                                Changes</button>
                             {% else %}
-                            <button type="button" id="submit-training-form-btn" class="btn btn-primary">Submit Form</button>
+                            <button type="button" id="submit-training-form-btn" class="btn btn-primary">Submit
+                                Form</button>
                             {% endif %}
                         </div>
                     </div>
@@ -314,7 +319,8 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <div class="form-floating">
-                        {{ form.trainee_emails(class="form-control auto-resize-textarea", placeholder=" ", rows=4, style="min-height: 120px; max-height: 300px; overflow-y: auto;") }}
+                        {{ form.trainee_emails(class="form-control auto-resize-textarea", placeholder=" ", rows=4,
+                        style="min-height: 120px; max-height: 300px; overflow-y: auto;") }}
                         {{ form.trainee_emails.label }}
                     </div>
                     <small class="form-text text-muted">
@@ -354,18 +360,18 @@
 
         // Auto-resize textarea functionality
         document.querySelectorAll('.auto-resize-textarea').forEach(textarea => {
-            textarea.addEventListener('input', function() {
+            textarea.addEventListener('input', function () {
                 // Reset height temporarily to get the correct scrollHeight
                 this.style.height = 'auto';
-                
+
                 // Set new height based on scrollHeight, with a maximum
                 const maxHeight = 300; // Max height in px
                 this.style.height = Math.min(this.scrollHeight, maxHeight) + 'px';
-                
+
                 // Add scrollbar if content exceeds max height
                 this.style.overflowY = this.scrollHeight > maxHeight ? 'auto' : 'hidden';
             });
-            
+
             // Initialize on page load (in case there's content already)
             if (textarea.value) {
                 textarea.dispatchEvent(new Event('input'));
@@ -384,22 +390,22 @@
         flatpickr(".date-picker", { dateFormat: "Y-m-d", allowInput: true });
 
         function handleTrainingTypeChange() {
-             const selectedTrainingType = form.elements['training_type'].value;
-             if (selectedTrainingType) {
-                 trainingDetailsSection.classList.remove('d-none');
-                 if (selectedTrainingType === 'Internal Training') {
-                     internalTrainerContainer.classList.remove('d-none');
-                     externalSupplierContainer.classList.add('d-none');
-                     trainerDaysContainer.classList.remove('d-none');
-                 } else if (selectedTrainingType === 'External Training') {
-                     internalTrainerContainer.classList.add('d-none');
-                     externalSupplierContainer.classList.remove('d-none');
-                     trainerDaysContainer.classList.add('d-none');
-                 }
-             } else {
-                 trainingDetailsSection.classList.add('d-none');
-             }
-         }
+            const selectedTrainingType = form.elements['training_type'].value;
+            if (selectedTrainingType) {
+                trainingDetailsSection.classList.remove('d-none');
+                if (selectedTrainingType === 'Internal Training') {
+                    internalTrainerContainer.classList.remove('d-none');
+                    externalSupplierContainer.classList.add('d-none');
+                    trainerDaysContainer.classList.remove('d-none');
+                } else if (selectedTrainingType === 'External Training') {
+                    internalTrainerContainer.classList.add('d-none');
+                    externalSupplierContainer.classList.remove('d-none');
+                    trainerDaysContainer.classList.add('d-none');
+                }
+            } else {
+                trainingDetailsSection.classList.add('d-none');
+            }
+        }
         function handleLocationTypeChange() {
             const selectedLocationType = form.elements['location_type'].value;
             if (selectedLocationType === 'Offsite') {
@@ -441,21 +447,21 @@
 
         // Keep critical error logs
         if (!form) {
-             console.error("CRITICAL: Form element #training-form not found!");
-             return; 
+            console.error("CRITICAL: Form element #training-form not found!");
+            return;
         }
-         if (!submitButton) {
-             console.error("CRITICAL: Button #submit-training-form-btn not found! Cannot attach click listener.");
-             return; // Stop if button isn't found
+        if (!submitButton) {
+            console.error("CRITICAL: Button #submit-training-form-btn not found! Cannot attach click listener.");
+            return; // Stop if button isn't found
         }
-        
+
         // --- Form Validation triggered by BUTTON CLICK --- 
         submitButton.addEventListener('click', function (event) {
-             event.preventDefault(); // Prevent default button action
+            event.preventDefault(); // Prevent default button action
 
             // ... (Remove messages, reset state) ...
             document.querySelectorAll('.validation-message').forEach(el => el.remove());
-            form.classList.remove('was-validated'); 
+            form.classList.remove('was-validated');
 
             // ... (STEP 1: Validate Training Type) ...
             const trainingType = form.elements['training_type'];
@@ -467,12 +473,12 @@
                 messageElement.style.cssText = 'padding: 0.5rem; font-size: 0.9rem;';
                 messageElement.textContent = message;
                 try {
-                    if (targetElement.nextSibling) { targetElement.parentNode.insertBefore(messageElement, targetElement.nextSibling); } 
+                    if (targetElement.nextSibling) { targetElement.parentNode.insertBefore(messageElement, targetElement.nextSibling); }
                     else { targetElement.parentNode.appendChild(messageElement); }
                 } catch (e) { console.error("Error inserting Training Type message:", e); }
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                 setTimeout(() => { if (trainingType[0].focus) { trainingType[0].focus({ preventScroll: true }); } }, 150);
-                return; 
+                setTimeout(() => { if (trainingType[0].focus) { trainingType[0].focus({ preventScroll: true }); } }, 150);
+                return;
             }
 
             // ... (STEP 2: Set Custom Validity) ...
@@ -480,8 +486,11 @@
             validateDates(startDate, endDate);
             if (trainingType.value && !form.elements['location_type'].value) { form.elements['location_type'][0].setCustomValidity("Please select a location type."); } else { form.elements['location_type'][0].setCustomValidity(""); }
             const travelCost = form.elements['travel_cost']; const foodCost = form.elements['food_cost']; const materialsCost = form.elements['materials_cost']; const otherCost = form.elements['other_cost']; const concurClaim = form.elements['concur_claim']; const otherDesc = form.elements['other_expense_description'];
-            const hasExpenses = (travelCost.value && parseFloat(travelCost.value) > 0) || (foodCost.value && parseFloat(foodCost.value) > 0) || (materialsCost.value && parseFloat(materialsCost.value) > 0) || (otherCost.value && parseFloat(otherCost.value) > 0);
-            if (hasExpenses && !concurClaim.value.trim()) { concurClaim.setCustomValidity("Concur Claim Number is required when expenses are entered."); } else { concurClaim.setCustomValidity(""); }
+            const expenseInputs = [travelCost, foodCost, materialsCost, otherCost];
+            function hasExpenses(inputs) {
+                return inputs.some(input => input.value && parseFloat(input.value) > 0);
+            }
+            if (hasExpenses(expenseInputs) && !concurClaim.value.trim()) { concurClaim.setCustomValidity("Concur Claim Number is required when expenses are entered."); } else { concurClaim.setCustomValidity(""); }
             if (otherCost.value && parseFloat(otherCost.value) > 0 && !otherDesc.value.trim()) { otherDesc.setCustomValidity("Description is required when other expenses are entered."); } else { otherDesc.setCustomValidity(""); }
             const trainerNameSearch = document.getElementById('trainer_name_search'); const trainerNameHidden = form.elements['trainer_name'];
             if (trainingType.value === 'Internal Training' && !trainerNameHidden.value.trim()) { trainerNameSearch.setCustomValidity("Trainer name is required for internal training."); } else { trainerNameSearch.setCustomValidity(""); }
@@ -490,31 +499,31 @@
             const isFormValid = form.checkValidity();
 
             if (!isFormValid) {
-                form.classList.add('was-validated'); 
+                form.classList.add('was-validated');
                 const invalidElements = [];
                 const elements = form.elements;
                 for (let i = 0; i < elements.length; i++) {
                     const element = elements[i]; if (element.name === 'training_type') continue;
                     if (!element.validity.valid) {
                         let currentElement = element; let isVisible = false; let visibilityCheckDepth = 0;
-                        while(currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) { isVisible = false; break; } if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) { isVisible = true; } if(isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) { isVisible = false; break; } currentElement = currentElement.parentElement; visibilityCheckDepth++; }
-                        if (element.type === 'radio') { let radioGroupContainer = element.closest('.form-group') || element.closest('.form-check') || element.parentElement; currentElement = radioGroupContainer; isVisible = false; visibilityCheckDepth = 0; while(currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {isVisible = false; break;} if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) {isVisible = true;} if(isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) {isVisible = false; break;} currentElement = currentElement.parentElement; visibilityCheckDepth++; } }
-                        if (element.id === 'trainer_name') { let searchInput = document.getElementById('trainer_name_search'); currentElement = searchInput; isVisible = false; visibilityCheckDepth = 0; while(currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {isVisible = false; break;} if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) {isVisible = true;} if(isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) {isVisible = false; break;} currentElement = currentElement.parentElement; visibilityCheckDepth++; } if (isVisible) { if (!invalidElements.some(item => item.element.id === 'trainer_name_search')) { invalidElements.push({ element: searchInput, message: "Trainer name is required for internal training." }); } } continue; }
+                        while (currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) { isVisible = false; break; } if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) { isVisible = true; } if (isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) { isVisible = false; break; } currentElement = currentElement.parentElement; visibilityCheckDepth++; }
+                        if (element.type === 'radio') { let radioGroupContainer = element.closest('.form-group') || element.closest('.form-check') || element.parentElement; currentElement = radioGroupContainer; isVisible = false; visibilityCheckDepth = 0; while (currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) { isVisible = false; break; } if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) { isVisible = true; } if (isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) { isVisible = false; break; } currentElement = currentElement.parentElement; visibilityCheckDepth++; } }
+                        if (element.id === 'trainer_name') { let searchInput = document.getElementById('trainer_name_search'); currentElement = searchInput; isVisible = false; visibilityCheckDepth = 0; while (currentElement && currentElement !== document.body && visibilityCheckDepth < 10) { const style = window.getComputedStyle(currentElement); if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) { isVisible = false; break; } if (style.display !== 'none' && (currentElement.offsetWidth > 0 || currentElement.offsetHeight > 0)) { isVisible = true; } if (isVisible && (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0)) { isVisible = false; break; } currentElement = currentElement.parentElement; visibilityCheckDepth++; } if (isVisible) { if (!invalidElements.some(item => item.element.id === 'trainer_name_search')) { invalidElements.push({ element: searchInput, message: "Trainer name is required for internal training." }); } } continue; }
                         if (element.type === 'radio' && invalidElements.some(item => item.element.name === element.name)) { continue; }
                         if (isVisible) { let message = element.validationMessage || "This field is required"; let targetElement = element; if (element.type === 'radio') { targetElement = element.closest('.form-group') || element.parentElement; } if (!invalidElements.some(item => item.element === targetElement)) { invalidElements.push({ element: targetElement, message: message }); } }
                     }
                 }
-                
+
                 invalidElements.forEach((item, index) => { const element = item.element; const message = item.message; const messageElement = document.createElement('div'); messageElement.className = 'validation-message alert alert-danger mt-2'; messageElement.style.cssText = 'padding: 0.5rem; font-size: 0.9rem;'; messageElement.textContent = message; let insertTarget = element; if (element.id === 'trainer_name_search') { insertTarget = element.closest('.trainee-search-box') || element.parentElement; } const parentContainer = insertTarget.closest('.form-group') || insertTarget.closest('.mb-3') || insertTarget.parentElement; insertTarget = parentContainer || insertTarget; try { if (insertTarget.nextSibling) { insertTarget.parentNode.insertBefore(messageElement, insertTarget.nextSibling); } else { insertTarget.parentNode.appendChild(messageElement); } } catch (e) { console.error(`Error inserting message for element:`, element, e); } });
-                
-                if (invalidElements.length > 0) { let firstTarget = invalidElements[0].element; if (firstTarget.id === 'trainer_name_search') { firstTarget = firstTarget.closest('.trainee-search-box') || firstTarget; } const firstScrollTarget = firstTarget.closest('.form-group') || firstTarget.closest('.mb-3') || firstTarget; firstScrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { let focusableElement = invalidElements[0].element; if(focusableElement.id === 'trainer_name_search'){ } else if (focusableElement.classList.contains('form-group') || focusableElement.classList.contains('form-check')) { focusableElement = focusableElement.querySelector('input:not([type=hidden]), textarea, select'); } if (focusableElement && focusableElement.focus) { focusableElement.focus({ preventScroll: true }); } }, 150); }
+
+                if (invalidElements.length > 0) { let firstTarget = invalidElements[0].element; if (firstTarget.id === 'trainer_name_search') { firstTarget = firstTarget.closest('.trainee-search-box') || firstTarget; } const firstScrollTarget = firstTarget.closest('.form-group') || firstTarget.closest('.mb-3') || firstTarget; firstScrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { let focusableElement = invalidElements[0].element; if (focusableElement.id === 'trainer_name_search') { } else if (focusableElement.classList.contains('form-group') || focusableElement.classList.contains('form-check')) { focusableElement = focusableElement.querySelector('input:not([type=hidden]), textarea, select'); } if (focusableElement && focusableElement.focus) { focusableElement.focus({ preventScroll: true }); } }, 150); }
             } else {
                 // Form IS valid
                 form.classList.remove('was-validated');
                 if (window.prepareAttachmentsForSubmit) {
                     window.prepareAttachmentsForSubmit();
                 } else {
-                     console.error("prepareAttachmentsForSubmit function not found!");
+                    console.error("prepareAttachmentsForSubmit function not found!");
                 }
                 form.submit(); // Manually submit the form
             }
