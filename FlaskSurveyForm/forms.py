@@ -9,23 +9,21 @@ import re
 import json
 
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import (
     StringField,
     SelectField,
     RadioField,
     DecimalField,
-    IntegerField,
     DateField,
     SubmitField,
-    SearchField,
     TextAreaField,
     HiddenField,
     FloatField,
     MultipleFileField,
     PasswordField,
 )
-from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError, Length, Regexp, Email, InputRequired
+from wtforms.validators import DataRequired, NumberRange, Optional, ValidationError, Email
 
 # Training types
 TRAINING_TYPES = ["Internal Training", "External Training"]

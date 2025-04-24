@@ -9,9 +9,7 @@ import csv
 import json
 import logging
 from datetime import datetime
-import re
-from models import get_db, create_tables
-import pandas as pd
+from models import get_db
 from io import BytesIO
 import functools
 
@@ -34,13 +32,11 @@ from forms import TrainingForm, SearchForm, LoginForm
 from models import (
     insert_training_form,
     update_training_form,
-    create_tables,
     get_all_training_forms,
     get_training_form,
     get_approved_forms_for_export,
     get_user_training_forms,
 )
-from utils import prepare_form_data
 from setup_db import setup_database
 from auth import init_auth, authenticate_user, is_admin_email
 
@@ -82,7 +78,7 @@ def from_json(value):
     """Convert a JSON string to a Python object"""
     try:
         return json.loads(value)
-    except:
+    except Exception:
         return []
 
 
@@ -428,7 +424,7 @@ def view_form(form_id):
                 and not isinstance(trainees[0], dict)
             ):
                 trainees = [{"email": email} for email in trainees]
-        except:
+        except Exception:
             trainees = []
     # Parse comma-separated trainee emails
     trainee_emails = []

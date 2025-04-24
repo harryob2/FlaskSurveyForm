@@ -4,9 +4,7 @@ Database setup script for the training form application.
 This script initializes the database by creating the necessary tables.
 """
 import os
-import sys
 import logging
-import sqlite3
 from models import create_tables
 
 # Configure logging

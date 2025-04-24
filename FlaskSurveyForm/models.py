@@ -5,10 +5,6 @@ This module defines the database schema and functions for interacting with the d
 """
 
 import sqlite3
-import json
-import logging
-from datetime import datetime
-from sqlalchemy import Column, Float, String, DateTime, Date
 
 
 def get_db():

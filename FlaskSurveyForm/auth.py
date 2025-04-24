@@ -7,7 +7,7 @@ This module handles user authentication via LDAP and Flask-Login integration.
 import logging
 import os
 import functools
-from flask import current_app, flash
+from flask import flash
 from flask_login import LoginManager, UserMixin
 from flask_ldap3_login import LDAP3LoginManager
 import hashlib
