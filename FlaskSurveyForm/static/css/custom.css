@@ -2,142 +2,142 @@
 
 /* Logo styling */
 .logo-container {
-    background-color: #ffffff;
-    border-radius: 4px;
-    padding: 5px 10px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  padding: 5px 10px;
 }
 
 .logo-container img {
-    max-height: 40px;
-    width: auto;
+  max-height: 40px;
+  width: auto;
 }
 
 /* Form container styling with max width and outline */
 .training-form-container {
-    max-width: 800px;
-    margin: 0 auto;
-    border-radius: 8px;
-    padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 8px;
+  padding: 20px;
 }
 
 /* Form section headings */
 .form-section-heading {
-    border-bottom: 1px solid var(--bs-gray-600);
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--bs-gray-600);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
 }
 
 /* Improve form field spacing */
 .form-group {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 /* Custom field validation styling */
 .is-invalid {
-    border-color: var(--bs-danger) !important;
+  border-color: var(--bs-danger) !important;
 }
 
 .invalid-feedback {
-    color: var(--bs-danger);
-    display: block;
-    margin-top: 0.25rem;
+  color: var(--bs-danger);
+  display: block;
+  margin-top: 0.25rem;
 }
 
 /* Make certain elements stand out */
 .card-header {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 /* Style required field labels */
 .required-field::after {
-    content: "*";
-    color: var(--bs-danger);
-    margin-left: 0.25rem;
+  content: "*";
+  color: var(--bs-danger);
+  margin-left: 0.25rem;
 }
 
 /* Custom styling for radio buttons and checkboxes */
 .form-check-input:checked {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
 }
 
 /* File input styling */
 .form-control[type="file"]:not(:disabled):not([readonly]) {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .d-flex.justify-content-between {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .btn {
-        width: 100%;
-    }
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }
 
 /* Custom styling for date picker inputs */
 .flatpickr-input {
-    background-color: var(--bs-body-bg) !important;
+  background-color: var(--bs-body-bg) !important;
 }
 
 /* Icon hover swap */
 a.approve-btn .icon-hover {
-    display: none;
+  display: none;
 }
 a.approve-btn .icon-default {
-    display: inline-block; /* Or inline-flex if needed */
+  display: inline-block; /* Or inline-flex if needed */
 }
 a.approve-btn:hover .icon-default {
-    display: none;
+  display: none;
 }
 a.approve-btn:hover .icon-hover {
-    display: inline-block; /* Or inline-flex if needed */
+  display: inline-block; /* Or inline-flex if needed */
 }
 
 /* Approval button text replacement */
 a.approve-btn .btn-text {
-    color: transparent;
-    position: relative;
-    font-size: 0; /* Collapse original text space */
-    line-height: 0; /* Further collapse space */
+  color: transparent;
+  position: relative;
+  font-size: 0; /* Collapse original text space */
+  line-height: 0; /* Further collapse space */
 }
 a.approve-btn .btn-text::before {
-    font-size: initial; /* Reset font size for pseudo-element */
-    line-height: initial; /* Reset line height */
-    display: inline-block; /* Ensure it behaves like text */
+  font-size: initial; /* Reset font size for pseudo-element */
+  line-height: initial; /* Reset line height */
+  display: inline-block; /* Ensure it behaves like text */
 }
 a.approve-btn.unapproved .btn-text::before {
-    content: "Unapproved";
-    color: var(--bs-secondary);
+  content: "Unapproved";
+  color: var(--bs-secondary);
 }
 a.approve-btn.unapproved:hover .btn-text::before {
-    content: "Approve";
-    color: var(--bs-success);
+  content: "Approve";
+  color: var(--bs-success);
 }
 a.approve-btn.unapproved:hover {
-    background-color: var(--bs-success);
-    border-color: var(--bs-success);
-    color: var(--bs-white); /* Ensure icon color changes */
+  background-color: var(--bs-success);
+  border-color: var(--bs-success);
+  color: var(--bs-white); /* Ensure icon color changes */
 }
 a.approve-btn.unapproved:hover .btn-text::before {
-    color: var(--bs-white); /* Explicitly set text color on hover */
+  color: var(--bs-white); /* Explicitly set text color on hover */
 }
 a.approve-btn.approved .btn-text::before {
-    content: "Approved";
-    color: var(--bs-success);
+  content: "Approved";
+  color: var(--bs-success);
 }
 a.approve-btn.approved:hover .btn-text::before {
-    content: "Unapprove";
-    color: var(--bs-danger);
+  content: "Unapprove";
+  color: var(--bs-danger);
 }
 a.approve-btn.approved:hover {
-    background-color: var(--bs-danger);
-    border-color: var(--bs-danger);
-    color: var(--bs-white); /* Ensure icon color changes */
+  background-color: var(--bs-danger);
+  border-color: var(--bs-danger);
+  color: var(--bs-white); /* Ensure icon color changes */
 }
 a.approve-btn.approved:hover .btn-text::before {
-    color: var(--bs-white); /* Explicitly set text color on hover */
+  color: var(--bs-white); /* Explicitly set text color on hover */
 }

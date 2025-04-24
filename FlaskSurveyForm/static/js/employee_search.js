@@ -11,13 +11,13 @@ function initEmployeeSearch(
   inputId,
   resultsContainer,
   onSelectCallback,
-  options = {}
+  options = {},
 ) {
   console.log(`Initializing search for ${inputId}`);
   console.log(
     `Current employee list length: ${
       window.employeeList ? window.employeeList.length : 0
-    }`
+    }`,
   );
   const inputElement = document.getElementById(inputId);
   if (!inputElement) return;
@@ -27,7 +27,7 @@ function initEmployeeSearch(
     hiddenFieldId = null,
     clearInput = true,
     focusInput = false,
-    addToTrainees = false
+    addToTrainees = false,
   } = options;
 
   // Function to search and display results
@@ -90,7 +90,7 @@ function initEmployeeSearch(
           email: employee.email || "",
           department: employee.department || "Engineering",
           firstName: employee.firstName || "",
-          lastName: employee.lastName || ""
+          lastName: employee.lastName || "",
         };
 
         // Create HTML for display with name, email and department
@@ -127,7 +127,7 @@ function initEmployeeSearch(
             addTrainee(
               employeeCopy.name,
               employeeCopy.email,
-              employeeCopy.department
+              employeeCopy.department,
             );
           }
 
@@ -210,32 +210,34 @@ function initEmployeeSearch(
 
 // Function to find an employee by email in the employee list
 function findEmployeeByEmail(email) {
-    return window.employeeList.find(e => e.email.toLowerCase() === email.toLowerCase());
+  return window.employeeList.find(
+    (e) => e.email.toLowerCase() === email.toLowerCase(),
+  );
 }
 
 // Core function to add a trainee
 function addTrainee(name, email, department) {
-    console.log("Adding trainee:", { name, email, department });
+  console.log("Adding trainee:", { name, email, department });
 
-    // Check if trainee already exists
-    if (trainees.some((t) => t.email === email)) {
-        console.log("Trainee already exists:", email);
-        return false;
-    }
+  // Check if trainee already exists
+  if (trainees.some((t) => t.email === email)) {
+    console.log("Trainee already exists:", email);
+    return false;
+  }
 
-    // Add to trainees array
-    trainees.push({
-        name: name,
-        email: email,
-        department: department || "Engineering"
-    });
+  // Add to trainees array
+  trainees.push({
+    name: name,
+    email: email,
+    department: department || "Engineering",
+  });
 
-    console.log("Updated trainees array:", trainees);
+  console.log("Updated trainees array:", trainees);
 
-    // Update UI and hidden fields
-    updateTraineesUI();
-    updateTraineesData();
-    return true;
+  // Update UI and hidden fields
+  updateTraineesUI();
+  updateTraineesData();
+  return true;
 }
 
 // Function to remove a trainee from the list
@@ -336,70 +338,72 @@ function parseEmails(text) {
 
 // Function to add multiple trainees from emails
 function addTraineesFromEmails(emails) {
-    console.log("Adding trainees from emails:", emails);
+  console.log("Adding trainees from emails:", emails);
 
-    let results = {
-        added: 0,
-        invalid: [],
-        duplicate: [],
-        notFound: [] // Keep track of emails not found
-    };
+  let results = {
+    added: 0,
+    invalid: [],
+    duplicate: [],
+    notFound: [], // Keep track of emails not found
+  };
 
-    emails.forEach((email) => {
-        if (!isValidEmail(email)) {
-            results.invalid.push(email);
-            return;
-        }
-
-        // Try to find employee in the employee list
-        const employee = findEmployeeByEmail(email);
-
-        if (employee) {
-            // Use existing addTrainee function with full employee data
-            const added = addTrainee(
-                employee.displayName,
-                employee.email,
-                employee.department
-            );
-
-            if (added) {
-                results.added++;
-            } else {
-                results.duplicate.push(email);
-            }
-        } else {
-            // Employee not found, add to notFound list
-            results.notFound.push(email);
-            console.log(`Employee not found for email: ${email}`); // Log not found emails
-        }
-    });
-
-    // Show results, including which emails were not found
-    let messages = [];
-    if (results.added > 0) {
-        messages.push(`Added ${results.added} trainee(s).`);
-    }
-    if (results.invalid.length > 0) {
-        messages.push(`Invalid email format: ${results.invalid.join(", ")}`);
-    }
-    if (results.duplicate.length > 0) {
-        messages.push(`Already added: ${results.duplicate.join(", ")}`);
-    }
-    // Updated message for not found emails
-    if (results.notFound.length > 0) {
-        messages.push(`Could not find/add employees for emails: ${results.notFound.join(", ")}`);
+  emails.forEach((email) => {
+    if (!isValidEmail(email)) {
+      results.invalid.push(email);
+      return;
     }
 
-    if (messages.length > 0) {
-        alert(messages.join("\n"));
+    // Try to find employee in the employee list
+    const employee = findEmployeeByEmail(email);
+
+    if (employee) {
+      // Use existing addTrainee function with full employee data
+      const added = addTrainee(
+        employee.displayName,
+        employee.email,
+        employee.department,
+      );
+
+      if (added) {
+        results.added++;
+      } else {
+        results.duplicate.push(email);
+      }
+    } else {
+      // Employee not found, add to notFound list
+      results.notFound.push(email);
+      console.log(`Employee not found for email: ${email}`); // Log not found emails
     }
+  });
+
+  // Show results, including which emails were not found
+  let messages = [];
+  if (results.added > 0) {
+    messages.push(`Added ${results.added} trainee(s).`);
+  }
+  if (results.invalid.length > 0) {
+    messages.push(`Invalid email format: ${results.invalid.join(", ")}`);
+  }
+  if (results.duplicate.length > 0) {
+    messages.push(`Already added: ${results.duplicate.join(", ")}`);
+  }
+  // Updated message for not found emails
+  if (results.notFound.length > 0) {
+    messages.push(
+      `Could not find/add employees for emails: ${results.notFound.join(", ")}`,
+    );
+  }
+
+  if (messages.length > 0) {
+    alert(messages.join("\n"));
+  }
 }
 
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize trainer search
   const trainerSearchResults = document.getElementById(
-    "trainer-search-results"
+    "trainer-search-results",
   );
   if (trainerSearchResults) {
     initEmployeeSearch(
@@ -410,7 +414,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Trainer selected:", employee.name);
         // Update the visible input field with the selected trainer's name
         const trainerSearchInput = document.getElementById(
-          "trainer_name_search"
+          "trainer_name_search",
         );
         if (trainerSearchInput) {
           trainerSearchInput.value = employee.name;
@@ -418,14 +422,14 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       {
         hiddenFieldId: "trainer_name_hidden",
-        clearInput: false
-      }
+        clearInput: false,
+      },
     );
   }
 
   // Initialize trainee search
   const traineeSearchResults = document.getElementById(
-    "trainee-search-results"
+    "trainee-search-results",
   );
   if (traineeSearchResults) {
     initEmployeeSearch(
@@ -438,8 +442,8 @@ document.addEventListener("DOMContentLoaded", function () {
       {
         addToTrainees: true,
         clearInput: true,
-        focusInput: true
-      }
+        focusInput: true,
+      },
     );
   }
 
@@ -454,7 +458,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const employee = window.employeeList.find(
           (e) =>
             e.displayName.toLowerCase().includes(searchValue.toLowerCase()) ||
-            e.email.toLowerCase().includes(searchValue.toLowerCase())
+            e.email.toLowerCase().includes(searchValue.toLowerCase()),
         );
 
         if (employee) {
@@ -463,7 +467,7 @@ document.addEventListener("DOMContentLoaded", function () {
           document.getElementById("trainee-search-input").focus();
         } else {
           alert(
-            "Employee not found. Please search and select from the dropdown."
+            "Employee not found. Please search and select from the dropdown.",
           );
         }
       }
@@ -473,15 +477,19 @@ document.addEventListener("DOMContentLoaded", function () {
   // Handle the bulk add trainees button and modal
   const bulkAddTraineesBtn = document.getElementById("bulk-add-trainees-btn");
   if (bulkAddTraineesBtn) {
-    bulkAddTraineesBtn.addEventListener("click", function() {
+    bulkAddTraineesBtn.addEventListener("click", function () {
       // Check if Bootstrap is available
-      if (typeof bootstrap !== 'undefined') {
-        const modal = new bootstrap.Modal(document.getElementById('bulkAddModal'));
+      if (typeof bootstrap !== "undefined") {
+        const modal = new bootstrap.Modal(
+          document.getElementById("bulkAddModal"),
+        );
         modal.show();
       } else {
-        console.error('Bootstrap not loaded. Cannot show modal.');
+        console.error("Bootstrap not loaded. Cannot show modal.");
         // Fallback if Bootstrap is not available
-        alert('Modal functionality requires Bootstrap. Please ensure it is loaded properly.');
+        alert(
+          "Modal functionality requires Bootstrap. Please ensure it is loaded properly.",
+        );
       }
     });
   }
@@ -489,7 +497,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Handle trainee emails field
   const traineeEmailsField = document.getElementById("trainee_emails");
   const addEmailsBtn = document.getElementById("add-emails-btn");
-  
+
   if (traineeEmailsField && addEmailsBtn) {
     // Add event listener to the button
     addEmailsBtn.addEventListener("click", function () {
@@ -500,10 +508,12 @@ document.addEventListener("DOMContentLoaded", function () {
           addTraineesFromEmails(emails);
           // Clear the input
           traineeEmailsField.value = "";
-          
+
           // Close the modal after adding
-          if (typeof bootstrap !== 'undefined') {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModal'));
+          if (typeof bootstrap !== "undefined") {
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("bulkAddModal"),
+            );
             if (modal) {
               modal.hide();
             }

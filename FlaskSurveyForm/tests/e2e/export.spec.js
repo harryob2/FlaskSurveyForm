@@ -1,24 +1,24 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require("@playwright/test");
 const {
   BASE_URL,
   gotoHome,
   loginAsAdmin,
   fillBasicInternalTrainingForm,
   submitForm,
-  expectSuccessfulSubmission
-} = require('./utils/test-utils');
+  expectSuccessfulSubmission,
+} = require("./utils/test-utils");
 
 console.log("--- Loading export.spec.js ---");
 
-test.describe('Export Approved Forms', () => {
+test.describe("Export Approved Forms", () => {
   console.log("--- Defining export test suite ---");
-  
+
   // Login once before all tests in this file
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
   });
 
-  test('1. should export approved forms to an Excel file', async ({ page }) => {
+  test("1. should export approved forms to an Excel file", async ({ page }) => {
     console.log("--- Starting test: Export Approved Forms ---");
 
     // --- 1. Create and Submit a Form ---
@@ -27,22 +27,26 @@ test.describe('Export Approved Forms', () => {
     const uniqueTrainerName = `Export Tester ${Date.now()}`;
     await fillBasicInternalTrainingForm(page, {
       trainerName: uniqueTrainerName,
-      description: 'Form for export test',
-      includeTrainee: true
+      description: "Form for export test",
+      includeTrainee: true,
     });
     await submitForm(page);
     await expectSuccessfulSubmission(page);
     console.log("--- Form submitted successfully ---");
 
     // --- 2. Navigate to List Page ---
-    await page.goto(BASE_URL + '/list');
-    await expect(page.locator('h2:has-text("Training Form Submissions")')).toBeVisible();
+    await page.goto(BASE_URL + "/list");
+    await expect(
+      page.locator('h2:has-text("Training Form Submissions")'),
+    ).toBeVisible();
     console.log("--- Navigated to List Page ---");
 
     // --- 3. Approve the Form ---
     // Find the specific row for our unique trainer
-    const formRow = page.locator(`.trainings-table tbody tr:has-text("${uniqueTrainerName}")`);
-    await expect(formRow).toBeVisible(); 
+    const formRow = page.locator(
+      `.trainings-table tbody tr:has-text("${uniqueTrainerName}")`,
+    );
+    await expect(formRow).toBeVisible();
 
     const approveButton = formRow.locator('a.btn:has-text("Approve")');
     await expect(approveButton).toBeVisible();
@@ -54,86 +58,106 @@ test.describe('Export Approved Forms', () => {
     console.log("--- Form approved (Unapprove button visible) ---");
 
     // --- 4. Click Export Button and Verify Download ---
-    const exportButton = page.locator('a.btn:has-text("Export to Claim 5 Form")');
+    const exportButton = page.locator(
+      'a.btn:has-text("Export to Claim 5 Form")',
+    );
     await expect(exportButton).toBeVisible();
 
     // Start waiting for the download before clicking the button
-    const downloadPromise = page.waitForEvent('download', { timeout: 6000 }); 
+    const downloadPromise = page.waitForEvent("download", { timeout: 6000 });
     await exportButton.click();
 
     // Wait for the download to complete
     const download = await downloadPromise;
 
     // Verify the downloaded file name
-    const expectedFilename = 'claim5_export.xlsx';
+    const expectedFilename = "claim5_export.xlsx";
     expect(download.suggestedFilename()).toBe(expectedFilename);
-    console.log(`--- Download started with expected filename: ${expectedFilename} ---`);
+    console.log(
+      `--- Download started with expected filename: ${expectedFilename} ---`,
+    );
 
     console.log("--- Finished test: Export Approved Forms ---");
   });
 
-  test('2. should show info message if no approved forms exist for export', async ({ page }) => {
+  test("2. should show info message if no approved forms exist for export", async ({
+    page,
+  }) => {
     console.log("--- Starting test: Export with No Approved Forms ---");
-  
+
     // --- 1. Navigate to List Page and Ensure No Forms are Approved ---
-    await page.goto(BASE_URL + '/list');
-    await expect(page.locator('h2:has-text("Training Form Submissions")')).toBeVisible();
+    await page.goto(BASE_URL + "/list");
+    await expect(
+      page.locator('h2:has-text("Training Form Submissions")'),
+    ).toBeVisible();
     console.log("--- Navigated to List Page ---");
 
     // Attempt to unapprove any visible approved forms on the current page
-    const unapproveButtons = page.locator('.trainings-table tbody a.btn:has-text("Unapprove")');
+    const unapproveButtons = page.locator(
+      '.trainings-table tbody a.btn:has-text("Unapprove")',
+    );
     const count = await unapproveButtons.count();
-    console.log(`--- Found ${count} potentially approved forms to unapprove on this page ---`);
-    
+    console.log(
+      `--- Found ${count} potentially approved forms to unapprove on this page ---`,
+    );
+
     // If there are approved forms, unapprove them one by one
     if (count > 0) {
       for (let i = 0; i < count; i++) {
         // Get a fresh reference to avoid stale elements
-        const freshButtons = page.locator('.trainings-table tbody a.btn:has-text("Unapprove")');
-        if (await freshButtons.count() === 0) {
+        const freshButtons = page.locator(
+          '.trainings-table tbody a.btn:has-text("Unapprove")',
+        );
+        if ((await freshButtons.count()) === 0) {
           console.log("--- No more unapprove buttons found ---");
           break;
         }
-        
+
         // Get the first button (always index 0 since the list changes after each click)
         const button = freshButtons.first();
         console.log(`--- Clicking Unapprove button ${i + 1} ---`);
-        
+
         await button.click();
         // Wait briefly for potential DOM updates after clicking
-        await page.waitForTimeout(500); 
+        await page.waitForTimeout(500);
         // Re-query the list page to ensure we are on the right page after potential navigation
-        await page.goto(BASE_URL + '/list', { waitUntil: 'networkidle' }); 
+        await page.goto(BASE_URL + "/list", { waitUntil: "networkidle" });
       }
     }
-    
+
     // Add a final check to ensure no unapprove buttons are left after the loop
-    await expect(page.locator('.trainings-table tbody a.btn:has-text("Unapprove")')).toHaveCount(0, { timeout: 5000 });
+    await expect(
+      page.locator('.trainings-table tbody a.btn:has-text("Unapprove")'),
+    ).toHaveCount(0, { timeout: 5000 });
     console.log("--- Ensured no forms are approved on the current page ---");
 
-  
     // --- 2. Click Export Button ---
-    const exportButton = page.locator('a.btn:has-text("Export to Claim 5 Form")');
+    const exportButton = page.locator(
+      'a.btn:has-text("Export to Claim 5 Form")',
+    );
     await expect(exportButton).toBeVisible();
     await exportButton.click();
-    
+
     // Take a screenshot to see what appears after clicking export with no approved forms
     // await page.screenshot({ path: 'export-no-approved.png' }); // Removed screenshot
-  
+
     // --- 3. Just verify we're still on the list page (the feature works even if no specific message is shown) ---
-    await expect(page).toHaveURL(new RegExp(`${BASE_URL}/list`)); 
-    await expect(page.locator('h2:has-text("Training Form Submissions")')).toBeVisible();
-    
+    await expect(page).toHaveURL(new RegExp(`${BASE_URL}/list`));
+    await expect(
+      page.locator('h2:has-text("Training Form Submissions")'),
+    ).toBeVisible();
+
     // Check for any alert that might be visible, but don't fail the test if not found
-    const anyAlert = page.locator('.alert');
+    const anyAlert = page.locator(".alert");
     const alertVisible = await anyAlert.isVisible().catch(() => false);
     if (alertVisible) {
       console.log("Alert is visible with text:", await anyAlert.textContent());
     } else {
-      console.log("No alert is visible, but we're still on the list page, which is the expected behavior");
+      console.log(
+        "No alert is visible, but we're still on the list page, which is the expected behavior",
+      );
     }
-  
+
     console.log("--- Finished test: Export with No Approved Forms ---");
   });
-
-}); 
+});

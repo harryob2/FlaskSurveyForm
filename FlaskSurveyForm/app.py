@@ -181,7 +181,6 @@ def submit_form():
     # Validate the form data
     if form.validate_on_submit():
         try:
-
             # Get trainees data from form
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
@@ -834,9 +833,9 @@ def export_claim5():
                     ws.insert_rows(current_row)
 
                 # Fill the row with data according to requirements
-                ws.cell(row=current_row, column=1).value = (
-                    trainee_name  # Names of Trainees
-                )
+                ws.cell(
+                    row=current_row, column=1
+                ).value = trainee_name  # Names of Trainees
                 ws.cell(row=current_row, column=2).value = location  # Location
                 ws.cell(row=current_row, column=3).value = ""  # Weekly Wage (blank)
                 ws.cell(row=current_row, column=4).value = form.get(
@@ -849,15 +848,15 @@ def export_claim5():
                     ws.cell(row=current_row, column=6).value = form.get(
                         "trainer_name", ""
                     )  # Name of trainer (moved from col 5)
-                    ws.cell(row=current_row, column=7).value = (
-                        ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
-                    )
-                    ws.cell(row=current_row, column=8).value = (
-                        location  # Location (same as trainee location) (moved from col 7)
-                    )
-                    ws.cell(row=current_row, column=9).value = (
-                        ""  # Salary (blank) (moved from col 8)
-                    )
+                    ws.cell(
+                        row=current_row, column=7
+                    ).value = ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
+                    ws.cell(
+                        row=current_row, column=8
+                    ).value = location  # Location (same as trainee location) (moved from col 7)
+                    ws.cell(
+                        row=current_row, column=9
+                    ).value = ""  # Salary (blank) (moved from col 8)
                     ws.cell(row=current_row, column=10).value = form.get(
                         "supplier_name", ""
                     )  # Supplier/Name (moved from col 9)

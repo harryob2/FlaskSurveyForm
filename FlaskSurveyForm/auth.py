@@ -72,7 +72,7 @@ class User(UserMixin):
         return User(
             username=username,
             display_name=display_name,
-            email=username, 
+            email=username,
             first_name="Admin" if is_admin else None,
             last_name="User" if is_admin else None,
             is_admin=is_admin,
