@@ -1,10 +1,7 @@
 {% extends "base.html" %} {% from '_macros.html' import render_check_icon,
 render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
 %}Training Form Submissions{% endif %}{% endblock %} {% block extra_head %}
-<link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
-/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 <style>
   .search-panel {
     margin-bottom: 1.5rem;
@@ -44,33 +41,18 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
   <div class="btn-group-header">
     {% if not my_submissions %}
     <a href="{{ url_for('export_claim5') }}" class="btn btn-success">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="currentColor"
-        class="bi bi-file-earmark-spreadsheet"
-        viewBox="0 0 16 16"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+        class="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
         <path
-          d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9h-3V6h-2v3H6V6H4v3H2V2a1 1 0 0 1 1-1h5.5v2zM3 12v-2h2v2H3zm0 1h2v2H4a1 1 0 0 1-1-1v-1zm3 2v-2h3v1a1 1 0 0 1-1 1h-2zm4 0v-2h3v1a1 1 0 0 1-1 1h-2zm3-3h-3v-2h3v2zm0-3h-3V9h3v2z"
-        />
+          d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9h-3V6h-2v3H6V6H4v3H2V2a1 1 0 0 1 1-1h5.5v2zM3 12v-2h2v2H3zm0 1h2v2H4a1 1 0 0 1-1-1v-1zm3 2v-2h3v1a1 1 0 0 1-1 1h-2zm4 0v-2h3v1a1 1 0 0 1-1 1h-2zm3-3h-3v-2h3v2zm0-3h-3V9h3v2z" />
       </svg>
       Export to Claim 5 Form
     </a>
     {% endif %}
     <a href="{{ url_for('index') }}" class="btn btn-primary">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="currentColor"
-        class="bi bi-plus-lg"
-        viewBox="0 0 16 16"
-      >
-        <path
-          d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z"
-        />
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg"
+        viewBox="0 0 16 16">
+        <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z" />
       </svg>
       New Submission
     </a>
@@ -78,27 +60,14 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
 </div>
 
 <div class="card mb-4">
-  <div
-    class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
-  >
+  <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
     <h3 class="fs-5 mb-0">Search & Filter</h3>
-    <button
-      class="btn btn-outline-light btn-sm"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#searchCollapse"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="currentColor"
-        class="bi bi-funnel"
-        viewBox="0 0 16 16"
-      >
+    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse"
+      data-bs-target="#searchCollapse">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel"
+        viewBox="0 0 16 16">
         <path
-          d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"
-        />
+          d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z" />
       </svg>
       Filters
     </button>
@@ -111,17 +80,10 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
             {{ form.search(class="form-control", placeholder="Search by trainee,
             trainer, supplier, course code or invoice number") }}
             <button class="btn btn-primary" type="submit">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-search"
-                viewBox="0 0 16 16"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search"
+                viewBox="0 0 16 16">
                 <path
-                  d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"
-                />
+                  d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
               </svg>
               Search
             </button>
@@ -155,40 +117,20 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
 
         <div class="col-12">
           <div class="d-flex justify-content-between">
-            <button
-              type="reset"
-              class="btn btn-outline-secondary"
-              onclick="resetFilters()"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-x-circle"
-                viewBox="0 0 16 16"
-              >
+            <button type="reset" class="btn btn-outline-secondary" onclick="resetFilters()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle"
+                viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
                 <path
-                  d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
-                />
-                <path
-                  d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
-                />
+                  d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
               </svg>
               Clear Filters
             </button>
             <button type="submit" class="btn btn-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-filter"
-                viewBox="0 0 16 16"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-filter"
+                viewBox="0 0 16 16">
                 <path
-                  d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"
-                />
+                  d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z" />
               </svg>
               Apply Filters
             </button>
@@ -208,45 +150,30 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
     {% if search_term %}
     <span class="badge bg-primary me-2">
       Search: {{ search_term }}
-      <a
-        href="{{ url_for('list_forms', **params|remove_param('search')) }}"
-        class="text-white ms-1 text-decoration-none"
-        >×</a
-      >
+      <a href="{{ url_for('list_forms', **params|remove_param('search')) }}"
+        class="text-white ms-1 text-decoration-none">×</a>
     </span>
     {% endif %} {% if date_from %}
     <span class="badge bg-primary me-2">
       From: {{ date_from }}
-      <a
-        href="{{ url_for('list_forms', **params|remove_param('date_from')) }}"
-        class="text-white ms-1 text-decoration-none"
-        >×</a
-      >
+      <a href="{{ url_for('list_forms', **params|remove_param('date_from')) }}"
+        class="text-white ms-1 text-decoration-none">×</a>
     </span>
     {% endif %} {% if date_to %}
     <span class="badge bg-primary me-2">
       To: {{ date_to }}
-      <a
-        href="{{ url_for('list_forms', **params|remove_param('date_to')) }}"
-        class="text-white ms-1 text-decoration-none"
-        >×</a
-      >
+      <a href="{{ url_for('list_forms', **params|remove_param('date_to')) }}"
+        class="text-white ms-1 text-decoration-none">×</a>
     </span>
     {% endif %} {% if training_type %}
     <span class="badge bg-primary me-2">
       Training Type: {{ training_type }}
-      <a
-        href="{{ url_for('list_forms', **params|remove_param('training_type')) }}"
-        class="text-white ms-1 text-decoration-none"
-        >×</a
-      >
+      <a href="{{ url_for('list_forms', **params|remove_param('training_type')) }}"
+        class="text-white ms-1 text-decoration-none">×</a>
     </span>
     {% endif %}
 
-    <a
-      href="{{ url_for('list_forms') }}"
-      class="btn btn-sm btn-outline-light ms-auto"
-    >
+    <a href="{{ url_for('list_forms') }}" class="btn btn-sm btn-outline-light ms-auto">
       Clear All Filters
     </a>
   </div>
@@ -284,58 +211,43 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
         </td>
         <td>
           <div class="btn-group">
-            <a
-              href="{{ url_for('view_form', form_id=form.id) }}"
-              class="btn btn-sm btn-outline-primary"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-eye"
-                viewBox="0 0 16 16"
-              >
+            <a href="{{ url_for('view_form', form_id=form.id) }}" class="btn btn-sm btn-outline-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye"
+                viewBox="0 0 16 16">
                 <path
-                  d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"
-                />
-                <path
-                  d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"
-                />
+                  d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
               </svg>
               View
             </a>
-            <a
-              href="{{ url_for('edit_form', form_id=form.id) }}"
-              class="btn btn-sm btn-outline-secondary"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-pencil"
-                viewBox="0 0 16 16"
-              >
+            <a href="{{ url_for('edit_form', form_id=form.id) }}" class="btn btn-sm btn-outline-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil"
+                viewBox="0 0 16 16">
                 <path
-                  d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"
-                />
+                  d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
               </svg>
               Edit
             </a>
-            <a
-              href="{{ url_for('approve_training', form_id=form.id) }}"
-              class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}"
-            >
+            {% if is_admin %}
+            <a href="{{ url_for('approve_training', form_id=form.id) }}"
+              class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}">
               {% if form.approved %} {{ render_check_icon('icon-default') }} {{
               render_x_icon('icon-hover') }} {% else %} {{
               render_x_icon('icon-default') }} {{
               render_check_icon('icon-hover') }} {% endif %}
-              <span class="btn-text"
-                >{% if form.approved %}Unapprove{% else %}Approve{% endif
-                %}</span
-              >
+              <span class="btn-text">{% if form.approved %}Unapprove{% else %}Approve{% endif
+                %}</span>
             </a>
+            {% else %}
+            <span
+              class="btn btn-sm {% if form.approved %}btn-outline-success{% else %}btn-outline-secondary{% endif %} disabled">
+              {% if form.approved %}
+              <i class="fas fa-check-circle"></i> Approved
+              {% else %}
+              <i class="fas fa-clock"></i> Pending Approval
+              {% endif %}
+            </span>
+            {% endif %}
           </div>
         </td>
       </tr>
@@ -350,11 +262,8 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
   <ul class="pagination">
     {% if current_page > 1 %}
     <li class="page-item">
-      <a
-        class="page-link"
-        href="{{ url_for('list_forms', page=current_page-1, **params|remove_param('page')) }}"
-        >Previous</a
-      >
+      <a class="page-link"
+        href="{{ url_for('list_forms', page=current_page-1, **params|remove_param('page')) }}">Previous</a>
     </li>
     {% else %}
     <li class="page-item disabled">
@@ -362,25 +271,17 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
     </li>
     {% endif %} {% for p in range(1, total_pages + 1) %}
     <li class="page-item {% if p == current_page %}active{% endif %}">
-      <a
-        class="page-link"
-        href="{{ url_for('list_forms', page=p, **params|remove_param('page')) }}"
-        >{{ p }}</a
-      >
+      <a class="page-link" href="{{ url_for('list_forms', page=p, **params|remove_param('page')) }}">{{ p }}</a>
     </li>
-    {% endfor %} {% if current_page < total_pages %}
-    <li class="page-item">
-      <a
-        class="page-link"
-        href="{{ url_for('list_forms', page=current_page+1, **params|remove_param('page')) }}"
-        >Next</a
-      >
-    </li>
-    {% else %}
-    <li class="page-item disabled">
-      <span class="page-link">Next</span>
-    </li>
-    {% endif %}
+    {% endfor %} {% if current_page < total_pages %} <li class="page-item">
+      <a class="page-link"
+        href="{{ url_for('list_forms', page=current_page+1, **params|remove_param('page')) }}">Next</a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Next</span>
+      </li>
+      {% endif %}
   </ul>
 </nav>
 {% endif %}
@@ -393,31 +294,18 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
 
 {% else %}
 <div class="alert alert-info text-center">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    fill="currentColor"
-    class="bi bi-info-circle mb-2"
-    viewBox="0 0 16 16"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-info-circle mb-2"
+    viewBox="0 0 16 16">
+    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
     <path
-      d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
-    />
-    <path
-      d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"
-    />
+      d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
   </svg>
   <h4 class="alert-heading">No Training Forms Found</h4>
   <p>No training form submissions match your search criteria.</p>
   {% if has_filters %}
-  <a href="{{ url_for('list_forms') }}" class="btn btn-outline-primary mt-2"
-    >Clear All Filters</a
-  >
+  <a href="{{ url_for('list_forms') }}" class="btn btn-outline-primary mt-2">Clear All Filters</a>
   {% else %}
-  <a href="{{ url_for('index') }}" class="btn btn-primary mt-2"
-    >Submit a New Form</a
-  >
+  <a href="{{ url_for('index') }}" class="btn btn-primary mt-2">Submit a New Form</a>
   {% endif %}
 </div>
 {% endif %} {% endblock %} {% block scripts %}

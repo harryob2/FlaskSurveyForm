@@ -117,9 +117,14 @@ def index():
     """Display the training form or redirect to login if not authenticated"""
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
-
     form = TrainingForm()
     return render_template("index.html", form=form, now=datetime.now())
+@app.route("/home")
+def home():
+    """Display the home page or redirect to login if not authenticated"""
+    if not current_user.is_authenticated:
+        return redirect(url_for("login"))
+    return render_template("home.html", is_admin=is_admin_user(current_user))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -390,6 +395,7 @@ def list_forms():
         params=params,
         has_filters=bool(search_term or date_from or date_to or training_type),
         total_forms=total_count,
+        is_admin=is_admin_user(current_user),
     )
 
 
@@ -441,6 +447,7 @@ def view_form(form_id):
         attachments=attachments,
         trainee_emails=trainee_emails,
         now=datetime.now(),
+        is_admin=is_admin_user(current_user),
     )
 
 
@@ -735,58 +742,14 @@ def export_claim5():
         )
 
         # Load the template using openpyxl
-        from openpyxl import load_workbook, Workbook
+        from openpyxl import load_workbook
 
         if not os.path.exists(template_path):
-            logging.warning(
-                f"Template file not found at {template_path}. Creating a new template."
-            )
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Claim Form 5"
+            flash("Template file not found.", "danger")
+            return redirect(url_for("list_forms"))
 
-            # Add headers to the template
-            headers = [
-                "Names of Trainees",
-                "Location",
-                "Weekly Wage",
-                "Nr of Weeks/days/hours",
-                "",
-                "Name of trainer",
-                "",
-                "Location",
-                "",
-                "Supplier/Name",
-                "Travel",
-                "Subsistence",
-                "External Trainer / Course Costs",
-                "Materials",
-            ]
-            headers = [
-                "Trainee Name",
-                "Training Location",
-                "Weekly Wage",
-                "Duration (Weeks/Days/Hours)",
-                "Additional Info",
-                "Trainer Name",
-                "Trainer Duration",
-                "Trainer Location",
-                "Trainer Salary",
-                "Supplier Name",
-                "Travel Cost",
-                "Subsistence Cost",
-                "Trainer/Course Cost",
-                "Materials Cost",
-            ]
-            ws.append(headers)
-
-            # Save the new template
-            os.makedirs(os.path.dirname(template_path), exist_ok=True)
-            wb.save(template_path)
-            logging.info(f"New template created at {template_path}")
-        else:
-            wb = load_workbook(template_path)
-            ws = wb.active  # Assuming the template has only one sheet
+        wb = load_workbook(template_path)
+        ws = wb.active  # Assuming the template has only one sheet
 
         # Column headers are in row 8, data starts from row 9
         start_row = 9
@@ -834,9 +797,9 @@ def export_claim5():
                     ws.insert_rows(current_row)
 
                 # Fill the row with data according to requirements
-                ws.cell(
-                    row=current_row, column=1
-                ).value = trainee_name  # Names of Trainees
+                ws.cell(row=current_row, column=1).value = (
+                    trainee_name  # Names of Trainees
+                )
                 ws.cell(row=current_row, column=2).value = location  # Location
                 ws.cell(row=current_row, column=3).value = ""  # Weekly Wage (blank)
                 ws.cell(row=current_row, column=4).value = form.get(
@@ -849,15 +812,15 @@ def export_claim5():
                     ws.cell(row=current_row, column=6).value = form.get(
                         "trainer_name", ""
                     )  # Name of trainer (moved from col 5)
-                    ws.cell(
-                        row=current_row, column=7
-                    ).value = ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
-                    ws.cell(
-                        row=current_row, column=8
-                    ).value = location  # Location (same as trainee location) (moved from col 7)
-                    ws.cell(
-                        row=current_row, column=9
-                    ).value = ""  # Salary (blank) (moved from col 8)
+                    ws.cell(row=current_row, column=7).value = (
+                        ""  # Nr of Weeks/days/hours (blank) (moved from col 6)
+                    )
+                    ws.cell(row=current_row, column=8).value = (
+                        location  # Location (same as trainee location) (moved from col 7)
+                    )
+                    ws.cell(row=current_row, column=9).value = (
+                        ""  # Salary (blank) (moved from col 8)
+                    )
                     ws.cell(row=current_row, column=10).value = form.get(
                         "supplier_name", ""
                     )  # Supplier/Name (moved from col 9)
@@ -908,6 +871,13 @@ def internal_error(error):
     """Handle internal server errors"""
     flash("An internal server error occurred. Please try again later.", "danger")
     return render_template("index.html", form=TrainingForm(), now=datetime.now()), 500
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    # Flash a message for 403 errors and redirect to the previous page
+    flash("You do not have permission to perform this action.", "danger")
+    return redirect(request.referrer or url_for("index")), 403
 
 
 # Add user information to layout template context
@@ -979,7 +949,16 @@ def my_submissions():
         has_filters=bool(search_term or date_from or date_to or training_type),
         total_forms=total_count,
         my_submissions=True,
+        is_admin=is_admin_user(current_user),
     )
+
+
+@app.route("/new")
+@login_required
+def new_form():
+    """Display the training form"""
+    form = TrainingForm()
+    return render_template("index.html", form=form, now=datetime.now())
 
 
 if __name__ == "__main__":

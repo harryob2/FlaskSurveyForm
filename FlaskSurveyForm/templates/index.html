@@ -291,11 +291,11 @@
                         <div class="d-flex justify-content-between">
                             {% if edit_mode %}
                             <a href="{{ url_for('view_form', form_id=form_id) }}" class="btn btn-secondary">Cancel</a>
-                            <button type="button" id="submit-training-form-btn" class="btn btn-success">
+                            <button type="submit" id="submit-training-form-btn" class="btn btn-success">
                                 Save Changes
                             </button>
                             {% else %}
-                            <button type="button" id="submit-training-form-btn" class="btn btn-primary">
+                            <button type="submit" id="submit-training-form-btn" class="btn btn-primary">
                                 Submit Form
                             </button>
                             {% endif %}
@@ -504,8 +504,6 @@
 
         // --- Form Validation triggered by BUTTON CLICK ---
         submitButton.addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent default button action
-
             // ... (Remove messages, reset state) ...
             document.querySelectorAll(".validation-message").forEach((el) => el.remove());
             form.classList.remove("was-validated");
@@ -541,6 +539,7 @@
                         trainingType[0].focus({ preventScroll: true });
                     }
                 }, 150);
+                event.preventDefault();
                 return;
             }
 
@@ -717,6 +716,7 @@
                         }
                     }, 150);
                 }
+                event.preventDefault();
             } else {
                 // Form IS valid
                 form.classList.remove("was-validated");
@@ -725,7 +725,6 @@
                 } else {
                     console.error("prepareAttachmentsForSubmit function not found!");
                 }
-                form.submit(); // Manually submit the form
             }
         }); // End of CLICK listener
     }); // End of DOMContentLoaded listener
