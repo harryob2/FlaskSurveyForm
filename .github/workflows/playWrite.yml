@@ -9,25 +9,49 @@ on:
     branches: [main]
 
 jobs:
-  e2e-tests: # Renamed job
-    timeout-minutes: 60 # Kept timeout
-    runs-on: ubuntu-latest # or macos-latest, windows-latest
+  e2e-tests:
+    timeout-minutes: 60
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4 # Updated checkout action version
+      - uses: actions/checkout@v4
 
-      # Node setup is handled by playwright-github-action
-      # Dependency and browser installation is handled by playwright-github-action
+      # Setup Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Or specify your Python version
+
+      # Install Python dependencies
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+        working-directory: FlaskSurveyForm
+
+      # Start Flask server in the background
+      - name: Start Flask Server
+        run: python main.py & # Run in background
+        working-directory: FlaskSurveyForm
+
+      # Wait for the server to start (adjust sleep time if needed)
+      - name: Wait for Server
+        run: sleep 5
+
+      # Install Node.js, npm dependencies, and Playwright browsers
       - uses: microsoft/playwright-github-action@v1
-        # This action installs Node, dependencies (npm install), and Playwright browsers
 
-      - name: Run Playwright tests # Simplified step name
-        run: npx playwright test # Use npx playwright test directly
-        working-directory: FlaskSurveyForm # Specify working directory
+      # Run Playwright tests with environment variables
+      - name: Run Playwright tests
+        env:
+          BASE_URL: "http://127.0.0.1:5000"
+          ADMIN_EMAIL: "harry@test.com"
+          ADMIN_PASSWORD: "cork4liam"
+        run: npx playwright test
+        working-directory: FlaskSurveyForm
 
-      - uses: actions/upload-artifact@v4 # Re-added artifact upload
+      # Upload test results artifact
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: FlaskSurveyForm/test-result/ # Adjusted path for report location
-          retention-days: 30 # Set retention days for artifacts
+          retention-days: 30
