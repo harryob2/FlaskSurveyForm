@@ -11,7 +11,7 @@ on:
 jobs:
   e2e-tests: # Renamed job
     timeout-minutes: 60 # Kept timeout
-    runs-on: ubuntu-latest # or macos-latest, windows-latest
+    runs-on: ubuntu-22.04 
 
     steps:
       - uses: actions/checkout@v4 # Updated checkout action version
