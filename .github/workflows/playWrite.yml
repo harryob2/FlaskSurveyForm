@@ -17,6 +17,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "18" # Or your preferred Node.js version
+<<<<<<< HEAD
+=======
+      - name: List files in checkout directory # Added for debugging
+        run: cd FlaskSurveyForm
+>>>>>>> 724be8446455d2fac1b2e1b8c7719f4f097917af
       - name: Install dependencies
         run: npm install # Or use yarn install if you use Yarn
         working-directory: FlaskSurveyForm
