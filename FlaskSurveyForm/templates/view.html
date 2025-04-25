@@ -69,7 +69,7 @@ content %}
                 <dd class="col-sm-8">{{ form.trainer_name }}</dd>
 
                 <dt class="col-sm-4">Training Days</dt>
-                <dd class="col-sm-8">{{ form.trainer_days }}</dd>
+                <dd class="col-sm-8">{{ form.trainer_hours }}</dd>
                 {% else %}
                 <dt class="col-sm-4">Supplier</dt>
                 <dd class="col-sm-8">{{ form.supplier_name }}</dd>
@@ -179,7 +179,7 @@ content %}
         <div class="row mb-4">
           <div class="col-md-6">
             <h5 class="card-title text-muted small">Trainee Days</h5>
-            <div class="fs-5">{{ form.trainee_days|default(0) }} days</div>
+            <div class="fs-5">{{ form.trainee_hours|default(0) }} days</div>
           </div>
         </div>
 

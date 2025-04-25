@@ -67,7 +67,7 @@ async function gotoHome(page) {
 async function addTrainee(page, searchTerm = "gre", options = {}) {
   const defaults = {
     timeout: 10000, // 10 second timeout by default
-    retries: 2, // Number of retries if search fails
+    retries: 2 // Number of retries if search fails
   };
 
   const settings = { ...defaults, ...options };
@@ -94,7 +94,7 @@ async function addTrainee(page, searchTerm = "gre", options = {}) {
     } catch (error) {
       attempt++;
       console.log(
-        `Attempt ${attempt} failed for trainee search '${searchTerm}'. ${settings.retries - attempt + 1} retries left.`,
+        `Attempt ${attempt} failed for trainee search '${searchTerm}'. ${settings.retries - attempt + 1} retries left.`
       );
 
       if (attempt > settings.retries) {
@@ -134,8 +134,8 @@ async function setTrainerName(page, trainerName) {
 async function fillBasicInternalTrainingForm(page, options = {}) {
   const defaults = {
     trainerName: "Test Trainer",
-    trainerDays: "1",
-    traineeDays: "1",
+    trainerHours: "1",
+    traineeHours: "1",
     startDate: "2024-01-01",
     endDate: "2024-01-01",
     description: "Test training description",
@@ -144,7 +144,7 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
     addExpenses: false,
     locationType: "Onsite", // Allow setting location type
     locationDetails: null, // Optional location details for Offsite
-    skipBaseSetup: false, // Allow skipping basic setup
+    skipBaseSetup: false // Allow skipping basic setup
   };
 
   const settings = { ...defaults, ...options };
@@ -177,12 +177,16 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
   // Set trainer info if included
   if (settings.includeTrainer) {
     await setTrainerName(page, settings.trainerName);
-    await page.locator('input[name="trainer_days"]').fill(settings.trainerDays);
+    await page
+      .locator('input[name="trainer_hours"]')
+      .fill(settings.trainerHours);
   }
 
-  // Set trainee days
-  if (settings.traineeDays) {
-    await page.locator('input[name="trainee_days"]').fill(settings.traineeDays);
+  // Set trainee hours
+  if (settings.traineeHours) {
+    await page
+      .locator('input[name="trainee_hours"]')
+      .fill(settings.traineeHours);
   }
 
   // Set description
@@ -213,7 +217,7 @@ async function fillBasicExternalTrainingForm(page, options = {}) {
     startDate: "2024-07-01",
     endDate: "2024-07-01",
     description: "External training description",
-    includeTrainee: true,
+    includeTrainee: true
   };
 
   const settings = { ...defaults, ...options };
@@ -234,7 +238,9 @@ async function fillBasicExternalTrainingForm(page, options = {}) {
 
   // Set trainee days
   if (settings.traineeDays) {
-    await page.locator('input[name="trainee_days"]').fill(settings.traineeDays);
+    await page
+      .locator('input[name="trainee_hours"]')
+      .fill(settings.traineeDays);
   }
 
   // Set description
@@ -260,7 +266,7 @@ async function addExpenses(page, options = {}) {
     materialsCost: "5",
     otherCost: "5",
     otherDescription: "Test expenses",
-    concurClaim: "ABC123",
+    concurClaim: "ABC123"
   };
 
   const settings = { ...defaults, ...options };
@@ -288,7 +294,7 @@ async function addExpenses(page, options = {}) {
       try {
         // Try to click a button or make other_expense_description visible if needed
         const descField = page.locator(
-          'textarea[name="other_expense_description"]',
+          'textarea[name="other_expense_description"]'
         );
         const isVisible = await descField.isVisible().catch(() => false);
 
@@ -347,7 +353,7 @@ async function expectValidationError(page, selector, expectedMessage) {
   // Check the validation message
   const element = page.locator(selector);
   const validationMessage = await element.evaluate(
-    (el) => el.validationMessage,
+    (el) => el.validationMessage
   );
   expect(validationMessage).toContain(expectedMessage);
 }
@@ -363,5 +369,5 @@ module.exports = {
   addExpenses,
   submitForm,
   expectSuccessfulSubmission,
-  expectValidationError,
+  expectValidationError
 };

@@ -109,28 +109,26 @@
                         </div>
 
                         <div class="row g-3">
-                            <!-- Trainer Days (only shown for Internal Training) -->
+                            <!-- Trainer Hours (only shown for Internal Training) -->
                             <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
                                 <div class="form-floating">
-                                    {{ form.trainer_days(class="form-control", type="number",
-                                    step="0.01", min="0", placeholder=" ") }} {{
-                                    form.trainer_days.label }}
+                                    {{ form.trainer_hours(class="form-control", placeholder=" ") }} {{
+                                    form.trainer_hours.label }}
                                 </div>
                                 <div class="form-text">
                                     Enter the amount of time the trainer spent preparing and
-                                    administering this training in days
+                                    administering this training in hours
                                 </div>
                             </div>
-                            <!-- Trainee Days -->
+                            <!-- Trainee Hours -->
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
-                                    {{ form.trainee_days(class="form-control", type="number",
-                                    step="0.01", min="0", placeholder=" ") }} {{
-                                    form.trainee_days.label }}
+                                    {{ form.trainee_hours(class="form-control", placeholder=" ") }} {{
+                                    form.trainee_hours.label }}
                                 </div>
                                 <div class="form-text">
                                     How much time the trainees spent at the training, in working
-                                    days
+                                    hours
                                 </div>
                             </div>
                         </div>
@@ -449,7 +447,7 @@
         function updateConcurMessageVisibility() {
             let hasAnyExpense = false;
             expenseInputs.forEach((input) => {
-                const value = parseFloat(input.value);
+                const value = parseCurrency(input.value);
                 if (!isNaN(value) && value > 0) {
                     hasAnyExpense = true;
                 }
@@ -562,7 +560,7 @@
             const otherDesc = form.elements["other_expense_description"];
             const expenseInputs = [travelCost, foodCost, materialsCost, otherCost];
             function hasExpenses(inputs) {
-                return inputs.some((input) => input.value && parseFloat(input.value) > 0);
+                return inputs.some((input) => input.value && parseCurrency(input.value) > 0);
             }
             if (hasExpenses(expenseInputs) && !concurClaim.value.trim()) {
                 concurClaim.setCustomValidity(
@@ -571,7 +569,7 @@
             } else {
                 concurClaim.setCustomValidity("");
             }
-            if (otherCost.value && parseFloat(otherCost.value) > 0 && !otherDesc.value.trim()) {
+            if (otherCost.value && parseCurrency(otherCost.value) > 0 && !otherDesc.value.trim()) {
                 otherDesc.setCustomValidity(
                     "Description is required when other expenses are entered.",
                 );
@@ -728,6 +726,11 @@
             }
         }); // End of CLICK listener
     }); // End of DOMContentLoaded listener
+
+    function parseCurrency(val) {
+        if (!val) return 0;
+        return parseFloat(val.replace(/[^0-9.-]+/g, ""));
+    }
 </script>
 {% endblock %}
 </form>

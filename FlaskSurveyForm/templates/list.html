@@ -202,7 +202,7 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
         <td>
           {% if form.training_type == 'Internal Training' %}
           <strong>Trainer:</strong> {{ form.trainer_name }}<br />
-          <strong>Trainer Days:</strong> {{ form.trainer_days }} {% else %}
+          <strong>Trainer Days:</strong> {{ form.trainer_hours }} {% else %}
           <strong>Supplier:</strong> {{ form.supplier_name }} {% endif %}
         </td>
         <td>

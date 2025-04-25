@@ -119,6 +119,8 @@ def index():
         return redirect(url_for("login"))
     form = TrainingForm()
     return render_template("index.html", form=form, now=datetime.now())
+
+
 @app.route("/home")
 def home():
     """Display the home page or redirect to login if not authenticated"""
@@ -481,7 +483,7 @@ def edit_form(form_id):
                 return redirect(url_for("list_forms"))
 
             # Numeric fields
-            form.trainer_days.data = form_data["trainer_days"]
+            form.trainer_hours.data = form_data["trainer_hours"]
             form.training_description.data = form_data.get("training_description", "")
 
             # Expense fields
@@ -493,7 +495,7 @@ def edit_form(form_id):
                 "other_expense_description", ""
             )
             form.concur_claim.data = form_data.get("concur_claim", "")
-            form.trainee_days.data = form_data.get("trainee_days", 0)
+            form.trainee_hours.data = form_data.get("trainee_hours", 0)
 
             # Load trainees data
             if form_data.get("trainees_data"):
@@ -801,7 +803,7 @@ def export_claim5():
                 ws.cell(row=current_row, column=2).value = location  # Location
                 ws.cell(row=current_row, column=3).value = ""  # Weekly Wage (blank)
                 ws.cell(row=current_row, column=4).value = form.get(
-                    "trainee_days", ""
+                    "trainee_hours", ""
                 )  # Nr of Weeks/days/hours
                 ws.cell(row=current_row, column=5).value = ""  # New blank column
 

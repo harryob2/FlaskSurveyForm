@@ -66,8 +66,8 @@ def prepare_form_data(form, request=None):
         ),
         "start_date": form.start_date.data,
         "end_date": form.end_date.data,
-        "trainer_days": (
-            form.trainer_days.data
+        "trainer_hours": (
+            form.trainer_hours.data
             if form.training_type.data == "Internal Training"
             else None
         ),
