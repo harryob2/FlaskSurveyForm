@@ -150,7 +150,10 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
   const settings = { ...defaults, ...options };
 
   // Select training type and location
-  await page.locator("label").filter({ hasText: "Internal Training" }).click();
+  await page
+    .locator(".training-type-card")
+    .filter({ hasText: "Internal Training" })
+    .click();
 
   // Set location if not skipping basic setup
   if (!settings.skipBaseSetup) {
@@ -223,7 +226,10 @@ async function fillBasicExternalTrainingForm(page, options = {}) {
   const settings = { ...defaults, ...options };
 
   // Select external training type
-  await page.locator("label").filter({ hasText: "External Training" }).click();
+  await page
+    .locator(".training-type-card")
+    .filter({ hasText: "External Training" })
+    .click();
   await expect(page.locator("#external-supplier-container")).toBeVisible();
 
   // Set supplier

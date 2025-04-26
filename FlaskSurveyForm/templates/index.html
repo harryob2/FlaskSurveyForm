@@ -46,12 +46,63 @@
                     <div class="col-md-12 mb-4">
                         <div class="form-group">
                             {{ form.training_type.label(class="form-label fw-bold") }}
-                            <div>
-                                {% for subfield in form.training_type %}
-                                <div class="form-check">
-                                    {{ subfield(class="form-check-input training-type-radio") }}
-                                    {{ subfield.label(class="form-check-label") }}
+                            <div id="training-type-card-group"
+                                class="d-flex flex-column flex-md-row gap-4 p-4 justify-content-center">
+                                <!-- Internal Training Card -->
+                                <div class="training-type-card active-card" data-value="Internal Training" tabindex="0">
+                                    <div class="training-type-icon mb-3">
+                                        <!-- Building SVG -->
+                                        <svg height="48px" width="48px" version="1.1" id="_x32_"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512"
+                                            xml:space="preserve" fill="#000000">
+                                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
+                                                stroke-linejoin="round"></g>
+                                            <g id="SVGRepo_iconCarrier">
+                                                <style type="text/css">
+                                                    .st0 {
+                                                        fill: #213ab5;
+                                                    }
+                                                </style>
+                                                <g>
+                                                    <path class="st0"
+                                                        d="M485.75,475.54V252.367H358.838V134.2h-43.29V95.887h-13.124V62.716h-34.472V10.202h-15.307v52.514h-34.291 v33.171h-13.14V134.2h-43.291v61.737H26.264V475.54H0v26.258h32.826h135.658h13.124h157.542h13.124h126.913H512V475.54H485.75z M90.797,428.491H71.124v-19.68h19.673V428.491z M90.797,386.844H71.124v-19.68h19.673V386.844z M90.797,345.197H71.124v-19.679 h19.673V345.197z M90.797,303.544H71.124v-19.68h19.673V303.544z M90.797,261.89H71.124v-19.68h19.673V261.89z M118.003,477.932 H92.501v-25.517h25.502V477.932z M140.038,428.491h-19.673v-19.68h19.673V428.491z M140.038,386.844h-19.673v-19.68h19.673V386.844 z M140.038,345.197h-19.673v-19.679h19.673V345.197z M140.038,303.544h-19.673v-19.68h19.673V303.544z M140.038,261.89h-19.673 v-19.68h19.673V261.89z M250.536,180.876h19.687v19.672h-19.687V180.876z M250.536,222.515h19.687v19.687h-19.687V222.515z M250.536,264.177h19.687v19.672h-19.687V264.177z M250.536,305.815h19.687v19.687h-19.687V305.815z M250.536,347.469h19.687v19.68 h-19.687V347.469z M250.536,389.123h19.687v19.68h-19.687V389.123z M227.545,408.803h-19.672v-19.68h19.672V408.803z M227.545,367.149h-19.672v-19.68h19.672V367.149z M227.545,325.503h-19.672v-19.687h19.672V325.503z M227.545,283.849h-19.672 v-19.672h19.672V283.849z M227.545,242.202h-19.672v-19.687h19.672V242.202z M227.545,200.548h-19.672v-19.672h19.672V200.548z M273.631,477.932h-25.517v-43.373h25.517V477.932z M312.901,408.803h-19.688v-19.68h19.688V408.803z M312.901,367.149h-19.688 v-19.68h19.688V367.149z M312.901,325.503h-19.688v-19.687h19.688V325.503z M312.901,283.849h-19.688v-19.672h19.688V283.849z M312.901,242.202h-19.688v-19.687h19.688V242.202z M312.901,200.548h-19.688v-19.672h19.688V200.548z M420.575,475.54h-25.517 v-33.484h25.517V475.54z M439.799,413.43H374.16v-11.451h65.639V413.43z M439.799,379.908H374.16v-11.451h65.639V379.908z M439.799,346.386H374.16v-11.443h65.639V346.386z M439.799,312.857H374.16v-11.45h65.639V312.857z">
+                                                    </path>
+                                                </g>
+                                            </g>
+                                        </svg>
+                                    </div>
+                                    <div class="training-type-title fw-bold mb-2">Internal Training</div>
+                                    <div class="training-type-desc">Trainings conducted by a fellow Stryker Limerick
+                                        Employee</div>
                                 </div>
+                                <!-- External Training Card -->
+                                <div class="training-type-card" data-value="External Training" tabindex="0">
+                                    <div class="training-type-icon mb-3">
+                                        <!-- Globe SVG -->
+                                        <svg height="48px" width="48px" viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                                            xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000">
+                                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
+                                                stroke-linejoin="round"></g>
+                                            <g id="SVGRepo_iconCarrier">
+                                                <path
+                                                    d="M8.516 0c-4.687 0-8.5 3.813-8.5 8.5s3.813 8.5 8.5 8.5 8.5-3.813 8.5-8.5-3.814-8.5-8.5-8.5zM1.041 9h2.937c0.044 1.024 0.211 2.031 0.513 3h-2.603c-0.481-0.906-0.776-1.923-0.847-3zM3.978 8h-2.937c0.071-1.077 0.366-2.094 0.847-3h2.6c-0.301 0.969-0.467 1.976-0.51 3zM5.547 5h5.896c0.33 0.965 0.522 1.972 0.569 3h-7.034c0.046-1.028 0.239-2.035 0.569-3zM4.978 9h7.035c-0.049 1.028-0.241 2.035-0.572 3h-5.891c-0.331-0.965-0.524-1.972-0.572-3zM13.013 9h2.978c-0.071 1.077-0.366 2.094-0.847 3h-2.644c0.302-0.969 0.469-1.976 0.513-3zM13.013 8c-0.043-1.024-0.209-2.031-0.51-3h2.641c0.48 0.906 0.775 1.923 0.847 3h-2.978zM14.502 4h-2.354c-0.392-0.955-0.916-1.858-1.55-2.7 1.578 0.457 2.938 1.42 3.904 2.7zM9.074 1.028c0.824 0.897 1.484 1.9 1.972 2.972h-5.102c0.487-1.071 1.146-2.073 1.97-2.97 0.199-0.015 0.398-0.030 0.602-0.030 0.188 0 0.373 0.015 0.558 0.028zM6.383 1.313c-0.629 0.838-1.151 1.737-1.54 2.687h-2.314c0.955-1.267 2.297-2.224 3.854-2.687zM2.529 13h2.317c0.391 0.951 0.915 1.851 1.547 2.689-1.561-0.461-2.907-1.419-3.864-2.689zM7.926 15.97c-0.826-0.897-1.488-1.899-1.978-2.97h5.094c-0.49 1.072-1.152 2.075-1.979 2.972-0.181 0.013-0.363 0.028-0.547 0.028-0.2 0-0.395-0.015-0.59-0.030zM10.587 15.703c0.636-0.842 1.164-1.747 1.557-2.703h2.358c-0.968 1.283-2.332 2.247-3.915 2.703z"
+                                                    fill="#213ab5"></path>
+                                            </g>
+                                        </svg>
+                                    </div>
+                                    <div class="training-type-title fw-bold mb-2">External Training</div>
+                                    <div class="training-type-desc">Trainings conducted by an external vendor, including
+                                        virtual self-directed trainings</div>
+                                </div>
+                            </div>
+                            <!-- Hide the radio buttons but keep them for form submission -->
+                            <div style="display:none;">
+                                {% for subfield in form.training_type %}
+                                {{ subfield(class="form-check-input training-type-radio") }}
+                                {{ subfield.label(class="form-check-label") }}
                                 {% endfor %}
                             </div>
                         </div>
@@ -725,6 +776,43 @@
                 }
             }
         }); // End of CLICK listener
+
+        // Card selection logic
+        const cardGroup = document.getElementById("training-type-card-group");
+        const cards = cardGroup.querySelectorAll(".training-type-card");
+        const radios = document.querySelectorAll("input[name='training_type']");
+        // Set initial selection based on radio value
+        let selectedValue = Array.from(radios).find(r => r.checked)?.value;
+        if (selectedValue) {
+            cards.forEach(card => {
+                if (card.dataset.value === selectedValue) {
+                    card.classList.add("selected");
+                }
+            });
+        }
+        cards.forEach(card => {
+            card.addEventListener("click", function () {
+                cards.forEach(c => c.classList.remove("selected"));
+                this.classList.add("selected");
+                // Set the corresponding radio
+                radios.forEach(radio => {
+                    if (radio.value === this.dataset.value) {
+                        radio.checked = true;
+                    } else {
+                        radio.checked = false;
+                    }
+                });
+                // Trigger change event for compatibility
+                const event = new Event("change", { bubbles: true });
+                radios.forEach(radio => radio.dispatchEvent(event));
+            });
+            card.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        });
     }); // End of DOMContentLoaded listener
 
     function parseCurrency(val) {
@@ -736,3 +824,6 @@
 </form>
 </div>
 </div>
+
+{% block extra_style %}
+{% endblock %}
