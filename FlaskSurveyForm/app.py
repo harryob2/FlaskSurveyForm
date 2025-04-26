@@ -12,6 +12,7 @@ from datetime import datetime
 from models import get_db
 from io import BytesIO
 import functools
+from collections import defaultdict
 
 from flask import (
     Flask,
@@ -1022,6 +1023,41 @@ def new_form():
     """Display the training form"""
     form = TrainingForm()
     return render_template("index.html", form=form, now=datetime.now())
+
+
+@app.route("/leaderboard")
+@login_required
+def leaderboard():
+    """Display the leaderboard of trainers by total training hours"""
+
+
+    # Get all approved forms
+    forms = get_approved_forms_for_export()
+    trainer_hours = defaultdict(float)
+
+    for form in forms:
+        trainer_name = form.get("trainer_name") or "Unknown"
+        try:
+            trainees_data = json.loads(form.get("trainees_data") or "[]")
+            if isinstance(trainees_data, list):
+                if trainees_data and isinstance(trainees_data[0], dict):
+                    num_trainees = len(trainees_data)
+                else:
+                    num_trainees = len(trainees_data)
+            else:
+                num_trainees = 0
+        except Exception:
+            num_trainees = 0
+        trainer_hours_val = float(form.get("trainer_hours") or 0)
+        trainee_hours_val = float(form.get("trainee_hours") or 0)
+        total_hours = trainer_hours_val + (trainee_hours_val * num_trainees)
+        trainer_hours[trainer_name] += total_hours
+
+    # Sort trainers by total hours descending
+    leaderboard_data = sorted(trainer_hours.items(), key=lambda x: x[1], reverse=True)
+    names = [x[0] for x in leaderboard_data]
+    hours = [x[1] for x in leaderboard_data]
+    return render_template("leaderboard.html", names=names, hours=hours)
 
 
 if __name__ == "__main__":
