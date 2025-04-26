@@ -99,7 +99,7 @@ def inject_current_year():
 
 
 def is_admin_user(user):
-    return user.is_authenticated and is_admin_email(user.email)
+    return hasattr(user, "is_admin") and user.is_admin
 
 
 def admin_required(f):
@@ -724,18 +724,81 @@ def get_employees():
         return jsonify([])
 
 
-@app.route("/export_claim5")
+@app.route("/api/export_claim5_options")
+@login_required
+def export_claim5_options():
+    if not is_admin_user(current_user):
+        return jsonify({"error": "Unauthorized"}), 403
+    from models import get_approved_forms_for_export
+    import datetime
+
+    forms = get_approved_forms_for_export()
+    if not forms:
+        return jsonify({"quarters": [], "min_date": None, "max_date": None})
+    created_dates = [
+        f.get("created_at") or f.get("submission_date") or f.get("start_date")
+        for f in forms
+        if f.get("created_at") or f.get("submission_date") or f.get("start_date")
+    ]
+    created_dates = [
+        datetime.datetime.fromisoformat(str(d)[:10]) for d in created_dates
+    ]
+    min_date = min(created_dates).date().isoformat()
+    max_date = max(created_dates).date().isoformat()
+
+    def get_quarter(dt):
+        q = (dt.month - 1) // 3 + 1
+        return f"Q{q} {dt.year}"
+
+    quarters = sorted(
+        {get_quarter(dt) for dt in created_dates}, key=lambda x: (int(x[1]), int(x[3:]))
+    )
+    return jsonify({"quarters": quarters, "min_date": min_date, "max_date": max_date})
+
+
+@app.route("/export_claim5", methods=["GET", "POST"])
 @login_required
 def export_claim5():
-    """Export approved training forms to an Excel template file."""
-    try:
-        # Get all approved forms
+    if not is_admin_user(current_user):
+        flash("Unauthorized", "danger")
+        return redirect(url_for("list_forms"))
+    import json
+
+    if request.method == "POST":
+        data = request.get_json()
+        selected_quarters = data.get("quarters", [])
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        from models import get_approved_forms_for_export
+        import datetime
+
+        forms = get_approved_forms_for_export()
+        filtered_forms = []
+
+        def get_quarter(dt):
+            q = (dt.month - 1) // 3 + 1
+            return f"Q{q} {dt.year}"
+
+        for f in forms:
+            created = (
+                f.get("created_at") or f.get("submission_date") or f.get("start_date")
+            )
+            if not created:
+                continue
+            dt = datetime.datetime.fromisoformat(str(created)[:10])
+            quarter = get_quarter(dt)
+            if selected_quarters and quarter in selected_quarters:
+                filtered_forms.append(f)
+            elif start_date and end_date:
+                if start_date <= dt.date().isoformat() <= end_date:
+                    filtered_forms.append(f)
+        approved_forms = filtered_forms
+    else:
+        from models import get_approved_forms_for_export
+
         approved_forms = get_approved_forms_for_export()
 
-        if not approved_forms:
-            flash("No approved forms found to export.", "info")
-            return redirect(url_for("list_forms"))
-
+    try:
         # Path to the template Excel file
         template_path = os.path.join(
             "attached_assets", "Claim-Form-5-revised-Training.xlsx"
@@ -805,7 +868,7 @@ def export_claim5():
                 ws.cell(row=current_row, column=4).value = form.get(
                     "trainee_hours", ""
                 )  # Nr of Weeks/days/hours
-                ws.cell(row=current_row, column=5).value = ""  # New blank column
+                ws.cell(row=current_row, column=5).value = ""
 
                 # Only fill these fields for the first trainee of each form
                 if i == 0:
