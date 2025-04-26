@@ -35,7 +35,7 @@ test.describe("Survey Form Submission", () => {
 
     // 2. Select Training Type: 'Internal Training'
     await page
-      .locator("label")
+      .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
 

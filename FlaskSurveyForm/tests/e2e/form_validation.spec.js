@@ -85,7 +85,7 @@ test.describe("Form Validation Errors", () => {
 
     // Fill necessary form fields directly
     await page
-      .locator("label")
+      .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
     await setTrainerName(page, "Test Trainer");
@@ -136,7 +136,7 @@ test.describe("Form Validation Errors", () => {
 
     // Fill necessary form fields but skip other description
     await page
-      .locator("label")
+      .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
     await setTrainerName(page, "Test Trainer");
