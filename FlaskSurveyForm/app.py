@@ -123,16 +123,6 @@ def index():
         return redirect(url_for("login"))
     form = TrainingForm()
     return render_template("home.html", is_admin=is_admin_user(current_user))
-
-
-# @app.route("/home")
-# def home():
-#     """Display the home page or redirect to login if not authenticated"""
-#     if not current_user.is_authenticated:
-#         return redirect(url_for("login"))
-#     return render_template("home.html", is_admin=is_admin_user(current_user))
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Handle user login via LDAP"""
