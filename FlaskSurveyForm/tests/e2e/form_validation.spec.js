@@ -210,7 +210,7 @@ test.describe("Form Validation Errors", () => {
     await submitForm(page);
 
     // Assertions
-    await expect(page).toHaveURL(BASE_URL + "/");
+    await expect(page).toHaveURL(BASE_URL + "/new");
     await expectValidationError(
       page,
       'input[name="end_date"]',

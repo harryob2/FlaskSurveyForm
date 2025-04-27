@@ -20,7 +20,7 @@ async function loginAsAdmin(page) {
   console.log("--- Logging in as admin user ---");
 
   // Navigate to home (will redirect to login)
-  await page.goto(BASE_URL + "/");
+  await page.goto(BASE_URL + "/new");
 
   // Check if already logged in
   const currentUrl = page.url();
@@ -50,7 +50,7 @@ async function loginAsAdmin(page) {
  * @param {import('@playwright/test').Page} page - Playwright page
  */
 async function gotoHome(page) {
-  await page.goto(BASE_URL + "/");
+  await page.goto(BASE_URL + "/new");
 
   // Check if we need to login
   if (page.url().includes("/login")) {
