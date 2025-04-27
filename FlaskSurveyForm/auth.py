@@ -11,7 +11,8 @@ from flask import flash
 from flask_login import LoginManager, UserMixin
 from flask_ldap3_login import LDAP3LoginManager
 import hashlib
-from models import get_db
+from models import db_session, get_admin_by_email
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,16 +26,10 @@ ADMIN_BYPASS_USERS = {
     "harry@test.com": hashlib.sha256("cork4liam".encode()).hexdigest(),
     "user@test.com": hashlib.sha256("cork4liam".encode()).hexdigest(),
 }
-def get_admin_emails():
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT email FROM admins")
-    emails = [row["email"].lower() for row in cursor.fetchall()]
-    conn.close()
-    return set(emails)
+
 
 def is_admin_email(email):
-    return email.lower() in get_admin_emails()
+    return email and get_admin_by_email(email) is not None
 
 
 class User(UserMixin):

@@ -36,7 +36,10 @@ from models import (
     get_training_form,
     get_approved_forms_for_export,
     get_user_training_forms,
-    get_db,
+    add_admin,
+    db_session,
+    Admin,
+    Attachment,
 )
 from setup_db import setup_database
 from auth import init_auth, authenticate_user, is_admin_email
@@ -170,32 +173,33 @@ def login():
 @login_required
 @admin_required
 def manage_admins():
-    conn = get_db()
-    cursor = conn.cursor()
     message = None
+    admins = []
     if request.method == "POST":
         if "add_admin" in request.form:
             email = request.form["email"].strip().lower()
             first_name = request.form["first_name"].strip()
             last_name = request.form["last_name"].strip()
-            cursor.execute("SELECT * FROM admins WHERE email = ?", (email,))
-            if cursor.fetchone():
+            success = add_admin(
+                {"email": email, "first_name": first_name, "last_name": last_name}
+            )
+            if not success:
                 flash("Admin already exists.", "warning")
             else:
-                cursor.execute(
-                    "INSERT INTO admins (email, first_name, last_name) VALUES (?, ?, ?)",
-                    (email, first_name, last_name),
-                )
-                conn.commit()
                 flash("Admin added.", "success")
         elif "remove_admin" in request.form:
             email = request.form["remove_admin"].strip().lower()
-            cursor.execute("DELETE FROM admins WHERE email = ?", (email,))
-            conn.commit()
-            flash("Admin removed.", "success")
-    cursor.execute("SELECT * FROM admins")
-    admins = cursor.fetchall()
-    conn.close()
+            with db_session() as session:
+                admin = session.query(Admin).filter_by(email=email).first()
+                if admin:
+                    session.delete(admin)
+                    flash("Admin removed.", "success")
+    with db_session() as session:
+        admins = session.query(Admin).all()
+        admins = [
+            dict(email=a.email, first_name=a.first_name, last_name=a.last_name)
+            for a in admins
+        ]
     return render_template("manage_admins.html", admins=admins)
 
 
@@ -350,14 +354,12 @@ def uploaded_file(filename):
 @login_required
 @admin_required
 def approve_training(form_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE training_forms SET approved = NOT approved WHERE id = ?", (form_id,)
-    )
-    conn.commit()
-    conn.close()
+    from models import TrainingForm
 
+    with db_session() as session:
+        form = session.query(TrainingForm).filter_by(id=form_id).first()
+        if form:
+            form.approved = not bool(form.approved)
     # Determine redirect target based on referrer
     referrer = request.referrer
     if referrer and url_for("list_forms") in referrer:
@@ -444,15 +446,17 @@ def view_form(form_id):
         return redirect(url_for("list_forms"))
 
     # Get attachments
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Get attachments records
-    cursor.execute("SELECT * FROM attachments WHERE training_id = ?", (form_id,))
-    attachments = [dict(row) for row in cursor.fetchall()]
-
-    # Close connection
-    conn.close()
+    with db_session() as session:
+        attachments = session.query(Attachment).filter_by(training_id=form_id).all()
+        attachments = [
+            {
+                "id": a.id,
+                "training_id": a.training_id,
+                "filename": a.filename,
+                "description": a.description,
+            }
+            for a in attachments
+        ]
     # Parse trainees data from JSON if it exists
     trainees = []
     if form_data.get("trainees_data"):
@@ -570,52 +574,35 @@ def edit_form(form_id):
             logging.debug(f"Ensured attachment directory exists: {unique_folder}")
 
             # Process NEW attachments
-            # Use request.files directly as WTForms field might not populate from dynamic inputs
             if "attachments" in request.files:
                 new_files = request.files.getlist("attachments")
-                descriptions = request.form.getlist(
-                    "attachment_descriptions[]"
-                )  # Descriptions for NEW files
+                descriptions = request.form.getlist("attachment_descriptions[]")
                 logging.debug(
                     f"Processing {len(new_files)} new attachments for form {form_id}."
                 )
-
-                # Pad descriptions if necessary (belt-and-suspenders)
                 if len(descriptions) < len(new_files):
                     descriptions.extend([""] * (len(new_files) - len(descriptions)))
-
-                for i, file in enumerate(new_files):
-                    if file and file.filename:
-                        filename = secure_filename(file.filename)
-                        # SAVE TO FORM-SPECIFIC FOLDER
-                        file_path = os.path.join(unique_folder, filename)
-                        logging.debug(f"Saving new file {filename} to {file_path}")
-                        file.save(file_path)
-
-                        description = descriptions[i] if i < len(descriptions) else ""
-                        logging.debug(f"New attachment description: {description}")
-
-                        # Insert new attachment record
-                        try:
-                            conn = get_db()
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                """
-                                INSERT INTO attachments (training_id, filename, description)
-                                VALUES (?, ?, ?)
-                            """,
-                                (form_id, filename, description),
+                with db_session() as session:
+                    for i, file in enumerate(new_files):
+                        if file and file.filename:
+                            filename = secure_filename(file.filename)
+                            file_path = os.path.join(unique_folder, filename)
+                            logging.debug(f"Saving new file {filename} to {file_path}")
+                            file.save(file_path)
+                            description = (
+                                descriptions[i] if i < len(descriptions) else ""
                             )
-                            conn.commit()
-                        except Exception as db_err:
-                            logging.error(
-                                f"Database error inserting new attachment {filename}: {db_err}"
+                            session.add(
+                                Attachment(
+                                    training_id=form_id,
+                                    filename=filename,
+                                    description=description,
+                                )
                             )
-                        finally:
-                            if conn:
-                                conn.close()
-                    else:
-                        logging.debug(f"Skipping empty new file input at index {i}.")
+                        else:
+                            logging.debug(
+                                f"Skipping empty new file input at index {i}."
+                            )
             else:
                 logging.debug(
                     "No new files found in request.files for key 'attachments'."
@@ -627,24 +614,11 @@ def edit_form(form_id):
                 logging.debug(
                     f"Processing deletions for attachment IDs: {delete_attachments}"
                 )
-                # TODO: Optionally delete the actual files from the filesystem
-                try:
-                    conn = get_db()
-                    cursor = conn.cursor()
-                    # Placeholders for safe query
-                    placeholders = ", ".join("?" * len(delete_attachments))
-                    query = f"DELETE FROM attachments WHERE id IN ({placeholders}) AND training_id = ?"
-                    params = delete_attachments + [form_id]  # Add form_id for security
-                    cursor.execute(query, params)
-                    conn.commit()
-                    logging.info(
-                        f"Deleted {cursor.rowcount} attachment records for form {form_id}."
-                    )
-                except Exception as db_err:
-                    logging.error(f"Database error deleting attachments: {db_err}")
-                finally:
-                    if conn:
-                        conn.close()
+                with db_session() as session:
+                    session.query(Attachment).filter(
+                        Attachment.id.in_(delete_attachments),
+                        Attachment.training_id == form_id,
+                    ).delete(synchronize_session=False)
 
             # Handle attachment description UPDATES for existing files
             update_descriptions = request.form.getlist(
@@ -652,22 +626,20 @@ def edit_form(form_id):
             )
             if update_descriptions:
                 logging.debug(f"Processing description updates: {update_descriptions}")
-                try:
-                    conn = get_db()
-                    cursor = conn.cursor()
+                with db_session() as session:
                     for desc_json in update_descriptions:
                         try:
                             desc_data = json.loads(desc_json)
                             att_id = desc_data.get("id")
                             new_desc = desc_data.get("description", "")
                             if att_id:
-                                cursor.execute(
-                                    """
-                                    UPDATE attachments SET description = ? 
-                                    WHERE id = ? AND training_id = ?
-                                    """,
-                                    (new_desc, att_id, form_id),  # Add form_id check
+                                att = (
+                                    session.query(Attachment)
+                                    .filter_by(id=att_id, training_id=form_id)
+                                    .first()
                                 )
+                                if att:
+                                    att.description = new_desc
                             else:
                                 logging.warning(
                                     f"Skipping description update due to missing ID in JSON: {desc_json}"
@@ -680,15 +652,6 @@ def edit_form(form_id):
                             logging.error(
                                 f"Missing 'id' or 'description' key in JSON: {desc_json}"
                             )
-                    conn.commit()
-                except Exception as db_err:
-                    logging.error(
-                        f"Database error updating attachment descriptions: {db_err}"
-                    )
-                finally:
-                    if conn:
-                        conn.close()
-
             flash("Form updated successfully!", "success")
             return redirect(url_for("view_form", form_id=form_id))
 
@@ -699,11 +662,19 @@ def edit_form(form_id):
             )
 
     # Load existing attachments to display in form
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM attachments WHERE training_id = ?", (form_id,))
-    existing_attachments = [dict(row) for row in cursor.fetchall()]
-    conn.close()
+    with db_session() as session:
+        existing_attachments = (
+            session.query(Attachment).filter_by(training_id=form_id).all()
+        )
+        existing_attachments = [
+            {
+                "id": a.id,
+                "training_id": a.training_id,
+                "filename": a.filename,
+                "description": a.description,
+            }
+            for a in existing_attachments
+        ]
 
     return render_template(
         "index.html",
