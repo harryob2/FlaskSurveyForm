@@ -118,9 +118,10 @@ class TrainingForm(FlaskForm):
         "Trainee Hours",
         validators=[
             DataRequired(),
-            NumberRange(min=1.0, message="Trainee hours must be positive."),
+            NumberRange(min=0, message="Trainee hours cannot be negative."),
         ],
-    )  # Changed to FloatField with min 1.0
+        render_kw={"type": "number", "step": "0.1", "min": "0"}
+    )
 
     # Conditionally Required
     trainer_name = StringField(
@@ -143,9 +144,10 @@ class TrainingForm(FlaskForm):
         validators=[
             RequiredIf("training_type", "Internal Training"),
             Optional(),
-            NumberRange(min=1.0, message="Trainer hours must be positive if entered."),
+            NumberRange(min=0, message="Trainer hours cannot be negative if entered."),
         ],
         default=None,
+        render_kw={"type": "number", "step": "0.1", "min": "0"}
     )
 
     # Optional or complex validation
