@@ -9,7 +9,6 @@ import csv
 import json
 import logging
 from datetime import datetime
-from models import get_db
 from io import BytesIO
 import functools
 from collections import defaultdict
@@ -37,6 +36,7 @@ from models import (
     get_training_form,
     get_approved_forms_for_export,
     get_user_training_forms,
+    get_db,
 )
 from setup_db import setup_database
 from auth import init_auth, authenticate_user, is_admin_email
@@ -100,7 +100,7 @@ def inject_current_year():
 
 
 def is_admin_user(user):
-    return hasattr(user, "is_admin") and user.is_admin
+    return hasattr(user, "email") and is_admin_email(user.email)
 
 
 def admin_required(f):
@@ -164,6 +164,39 @@ def login():
         logging.warning(f"Failed login attempt for {username}")
 
     return render_template("login.html", form=form)
+
+
+@app.route("/manage_admins", methods=["GET", "POST"])
+@login_required
+@admin_required
+def manage_admins():
+    conn = get_db()
+    cursor = conn.cursor()
+    message = None
+    if request.method == "POST":
+        if "add_admin" in request.form:
+            email = request.form["email"].strip().lower()
+            first_name = request.form["first_name"].strip()
+            last_name = request.form["last_name"].strip()
+            cursor.execute("SELECT * FROM admins WHERE email = ?", (email,))
+            if cursor.fetchone():
+                flash("Admin already exists.", "warning")
+            else:
+                cursor.execute(
+                    "INSERT INTO admins (email, first_name, last_name) VALUES (?, ?, ?)",
+                    (email, first_name, last_name),
+                )
+                conn.commit()
+                flash("Admin added.", "success")
+        elif "remove_admin" in request.form:
+            email = request.form["remove_admin"].strip().lower()
+            cursor.execute("DELETE FROM admins WHERE email = ?", (email,))
+            conn.commit()
+            flash("Admin removed.", "success")
+    cursor.execute("SELECT * FROM admins")
+    admins = cursor.fetchall()
+    conn.close()
+    return render_template("manage_admins.html", admins=admins)
 
 
 @app.route("/logout")

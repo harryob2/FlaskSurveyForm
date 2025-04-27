@@ -32,6 +32,7 @@
 
         <nav class="ms-md-auto">
           <ul class="nav nav-pills">
+            {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}"
                 href="{{ url_for('index') }}">
@@ -45,6 +46,8 @@
                 New Form
               </a>
             </li>
+            {% endif %}
+
             {% if user_info.is_admin %}
             <li class="nav-item ms-2">
               <a class="nav-link {% if request.path == url_for('list_forms') %}active{% endif %}"
@@ -86,8 +89,13 @@
                   <span class="dropdown-item-text">{{ user_info.email }}</span>
                 </li>
                 {% if user_info.is_admin %}
-                <li>
+                <!-- <li>
                   <span class="dropdown-item-text text-danger">Administrator Account</span>
+                </li> -->
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('manage_admins') }}">
+                    <i class="fa fa-users-cog me-1"></i> Manage Admins
+                  </a>
                 </li>
                 {% endif %}
                 <li>

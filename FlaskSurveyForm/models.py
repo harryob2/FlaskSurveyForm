@@ -62,6 +62,27 @@ def create_tables():
         )
     """
     )
+    # create admin_users table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            email TEXT PRIMARY KEY,
+            first_name TEXT,
+            last_name TEXT
+        )
+    """)
+    admin_emails = [
+        ("harry@test.com", "Harry", "Test"),
+        ("harry.obrien@stryker.com", "Harry", "O'Brien"),
+    ]
+
+    cursor.executemany(
+        """
+        INSERT OR IGNORE INTO admins (email, first_name, last_name)
+        VALUES (?, ?, ?)
+        """,
+        admin_emails,
+    )
+
     conn.commit()
     conn.close()
 
