@@ -251,54 +251,35 @@ def submit_form():
             unique_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"form_{form_id}")
             os.makedirs(unique_folder, exist_ok=True)
 
-            # Process attachments
-            # Use request.files directly as WTForms field might not populate from dynamic inputs
+            # Process attachments using SQLAlchemy ORM
             if "attachments" in request.files:
                 new_files = request.files.getlist("attachments")
                 descriptions = request.form.getlist("attachment_descriptions[]")
                 logging.debug(f"Processing {len(new_files)} new attachments.")
 
-                # Ensure descriptions list matches file list length if necessary
-                # Pad descriptions if some files didn't get a description input (shouldn't happen with current JS)
                 if len(descriptions) < len(new_files):
                     descriptions.extend([""] * (len(new_files) - len(descriptions)))
 
-                for i, file in enumerate(new_files):
-                    # Check if the file object exists and has a filename
-                    if file and file.filename:
-                        filename = secure_filename(file.filename)
-                        # Save to the unique folder
-                        file_path = os.path.join(unique_folder, filename)
-                        logging.debug(f"Saving file {filename} to {file_path}")
-                        file.save(file_path)
-
-                        # Get description or use empty string
-                        description = descriptions[i] if i < len(descriptions) else ""
-                        logging.debug(f"Attachment description: {description}")
-
-                        # Insert attachment record
-                        try:
-                            conn = get_db()
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                """
-                                INSERT INTO attachments (training_id, filename, description)
-                                VALUES (?, ?, ?)
-                            """,
-                                (form_id, filename, description),
+                with db_session() as session:
+                    for i, file in enumerate(new_files):
+                        if file and file.filename:
+                            filename = secure_filename(file.filename)
+                            file_path = os.path.join(unique_folder, filename)
+                            logging.debug(f"Saving file {filename} to {file_path}")
+                            file.save(file_path)
+                            description = (
+                                descriptions[i] if i < len(descriptions) else ""
                             )
-                            conn.commit()
-                        except Exception as db_err:
-                            logging.error(
-                                f"Database error inserting attachment {filename}: {db_err}"
+                            session.add(
+                                Attachment(
+                                    training_id=form_id,
+                                    filename=filename,
+                                    description=description,
+                                )
                             )
-                        finally:
-                            if conn:
-                                conn.close()
-                    else:
-                        logging.debug(f"Skipping empty file input at index {i}.")
+                        else:
+                            logging.debug(f"Skipping empty file input at index {i}.")
 
-            # If no files were submitted via request.files['attachments'], log that.
             elif not request.files.getlist("attachments"):
                 logging.debug(
                     "No new files found in request.files for key 'attachments'."
@@ -573,7 +554,7 @@ def edit_form(form_id):
             os.makedirs(unique_folder, exist_ok=True)
             logging.debug(f"Ensured attachment directory exists: {unique_folder}")
 
-            # Process NEW attachments
+            # Process NEW attachments using SQLAlchemy ORM
             if "attachments" in request.files:
                 new_files = request.files.getlist("attachments")
                 descriptions = request.form.getlist("attachment_descriptions[]")
@@ -608,7 +589,7 @@ def edit_form(form_id):
                     "No new files found in request.files for key 'attachments'."
                 )
 
-            # Handle attachment DELETIONS
+            # Handle attachment DELETIONS using SQLAlchemy ORM
             delete_attachments = request.form.getlist("delete_attachments[]")
             if delete_attachments:
                 logging.debug(
@@ -620,7 +601,7 @@ def edit_form(form_id):
                         Attachment.training_id == form_id,
                     ).delete(synchronize_session=False)
 
-            # Handle attachment description UPDATES for existing files
+            # Handle attachment description UPDATES for existing files using SQLAlchemy ORM
             update_descriptions = request.form.getlist(
                 "update_attachment_descriptions[]"
             )
@@ -661,7 +642,7 @@ def edit_form(form_id):
                 "An error occurred while updating the form. Please try again.", "danger"
             )
 
-    # Load existing attachments to display in form
+    # Load existing attachments to display in form using SQLAlchemy ORM
     with db_session() as session:
         existing_attachments = (
             session.query(Attachment).filter_by(training_id=form_id).all()
