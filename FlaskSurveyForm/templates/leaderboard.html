@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h1 class="display-4">Trainer Leaderboard</h1>
+        <p class="lead">Total training hours (trainer + trainees) per trainer</p>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card p-4 shadow-sm bg-dark border-0">
+                <h3 class="mb-3 text-center text-light">Top Trainers by Total Training Hours</h3>
+                <div style="max-width: 100%; overflow-x: auto;">
+                    <div style="min-width: 600px; max-width: 1200px; margin: 0 auto;">
+                        <canvas id="leaderboardChart" style="min-height: 350px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js datalabels plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Register the datalabels plugin
+        Chart.register(window.ChartDataLabels);
+        // Use a modern color palette
+        const chartNames = {{ names| tojson
+    }};
+    const chartHours = {{ hours| tojson }};
+    // Ensure barColors matches the number of bars
+    const baseColors = [
+        '#6c8eef', '#f7b801', '#f86e51', '#43aa8b', '#a259f7', '#f95d6a', '#2ec4b6', '#ffb4a2', '#b5ead7', '#ffb627',
+        '#6a4c93', '#1982c4', '#8ac926', '#ff595e', '#ffca3a', '#1982c4', '#6a4c93', '#b983ff', '#f7b801', '#43aa8b'
+    ];
+    let barColors = [];
+    for (let i = 0; i < chartNames.length; i++) {
+        barColors.push(baseColors[i % baseColors.length]);
+    }
+    const ctx = document.getElementById('leaderboardChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartNames,
+            datasets: [{
+                label: 'Total Training Hours',
+                data: chartHours,
+                backgroundColor: barColors,
+                borderRadius: 8,
+                maxBarThickness: 50,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.parsed.y.toLocaleString() + ' hours';
+                        }
+                    }
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    color: '#fff',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: function (value) {
+                        return value.toLocaleString();
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Trainer Name',
+                        color: '#fff',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    ticks: {
+                        color: '#fff',
+                        font: { size: 13 }
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,0.08)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Training Hours',
+                        color: '#fff',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    ticks: {
+                        color: '#fff',
+                        font: { size: 13 }
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,0.15)'
+                    }
+                }
+            }
+        }
+    });
+    });
+</script>
+{% endblock %}

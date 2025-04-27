@@ -1,0 +1,61 @@
+# This file is to run the playwright tests on GitHub Actions on every push to the main branch or on pull requests.
+name: Playwright Tests
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e-tests:
+    timeout-minutes: 60
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+        working-directory: FlaskSurveyForm
+
+      # Setup Node.js for Playwright
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # Install Node.js dependencies
+      - name: Install Node.js dependencies
+        run: npm install
+        working-directory: FlaskSurveyForm
+
+      # Install Playwright browsers
+      - name: Install Playwright Browsers
+        run: npx playwright install
+        working-directory: FlaskSurveyForm
+
+      # Start Flask server in the background
+      - name: Start Flask Server
+        run: python main.py &
+        working-directory: FlaskSurveyForm
+
+      - name: Wait for Server
+        run: sleep 5
+
+      # Run Playwright tests
+      - name: Run Playwright tests
+        env:
+          BASE_URL: "http://127.0.0.1:5000"
+          ADMIN_EMAIL: "harry@test.com"
+          ADMIN_PASSWORD: "cork4liam"
+        run: npx playwright test
+        working-directory: FlaskSurveyForm

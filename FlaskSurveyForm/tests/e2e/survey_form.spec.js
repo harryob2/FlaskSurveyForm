@@ -35,7 +35,7 @@ test.describe("Survey Form Submission", () => {
 
     // 2. Select Training Type: 'Internal Training'
     await page
-      .locator("label")
+      .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
 
@@ -48,11 +48,9 @@ test.describe("Survey Form Submission", () => {
     // 4. Select Location: 'Onsite'
     await page.locator("label").filter({ hasText: "Onsite" }).click();
 
-    // 5. Enter Trainer Days: '7'
-    await page.locator('input[name="trainer_days"]').fill("7");
-
-    // 6. Enter Trainee Days: '4.3'
-    await page.locator('input[name="trainee_days"]').fill("4.3");
+    // Fill trainer and trainee hours instead of days
+    await page.locator('input[name="trainer_hours"]').fill("8");
+    await page.locator('input[name="trainee_hours"]').fill("16");
 
     // 7. Enter dates
     await page.locator('input[name="start_date"]').fill("2023-01-01");
@@ -96,7 +94,7 @@ test.describe("Survey Form Submission", () => {
     // --- Fill Form Basic Fields Using Helper ---
     await fillBasicExternalTrainingForm(page, {
       supplierName: "Acme Training Corp",
-      traineeDays: "3.5",
+      traineeHours: "3.5",
       startDate: "2024-08-15",
       endDate: "2024-08-17",
       description: "Advanced product training by external provider",

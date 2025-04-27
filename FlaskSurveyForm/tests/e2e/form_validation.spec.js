@@ -48,35 +48,35 @@ test.describe("Form Validation Errors", () => {
     console.log("--- Finished test: Missing Trainer Name ---");
   });
 
-  // Test 2: Trainee Days validation
-  test("2. should show error if Trainee Days is empty", async ({ page }) => {
-    console.log("--- Starting test: Missing Trainee Days ---");
+  // Test 2: Trainee Hours validation
+  test("2. should show error if Trainee Hours is empty", async ({ page }) => {
+    console.log("--- Starting test: Missing Trainee Hours ---");
 
-    // Setup: Fill form without trainee days
+    // Setup: Fill form without trainee Hours
     await gotoHome(page);
     await fillBasicInternalTrainingForm(page, {
-      traineeDays: null, // Skip trainee days
+      traineeHours: null // Skip trainee Hours
     });
 
     // Action: Submit the form
     await submitForm(page);
 
     // Assertion: Check for validation message element
-    const traineeDaysInput = page.locator('input[name="trainee_days"]');
-    const traineeDaysContainer = traineeDaysInput.locator(
-      'xpath=ancestor::div[contains(@class, "mb-3")]',
+    const traineeHoursInput = page.locator('input[name="trainee_hours"]');
+    const traineeHoursContainer = traineeHoursInput.locator(
+      'xpath=ancestor::div[contains(@class, "mb-3")]'
     );
-    const errorMessage = traineeDaysContainer
+    const errorMessage = traineeHoursContainer
       .locator(".validation-message")
       .first();
     await expect(errorMessage).toBeVisible();
 
-    console.log("--- Finished test: Missing Trainee Days ---");
+    console.log("--- Finished test: Missing Trainee Hours ---");
   });
 
   // Test 3: Concur Claim validation
   test("3. should show error if Expenses are entered but Concur Claim is empty", async ({
-    page,
+    page
   }) => {
     console.log("--- Starting test: Missing Concur Claim with Expenses ---");
 
@@ -85,13 +85,13 @@ test.describe("Form Validation Errors", () => {
 
     // Fill necessary form fields directly
     await page
-      .locator("label")
+      .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
     await setTrainerName(page, "Test Trainer");
     await page.locator("label").filter({ hasText: "Onsite" }).click();
-    await page.locator('input[name="trainer_days"]').fill("1");
-    await page.locator('input[name="trainee_days"]').fill("1");
+    await page.locator('input[name="trainer_hours"]').fill("1");
+    await page.locator('input[name="trainee_hours"]').fill("1");
     await page.locator('input[name="start_date"]').fill("2023-01-01");
     await page.locator('input[name="end_date"]').fill("2023-01-01");
     await page
@@ -114,11 +114,11 @@ test.describe("Form Validation Errors", () => {
 
     if (page.url().includes("/success")) {
       console.log(
-        "Form was submitted successfully - validation may have been removed in UI changes",
+        "Form was submitted successfully - validation may have been removed in UI changes"
       );
     } else {
       console.log(
-        "Form submission was prevented - validation is still in place",
+        "Form submission was prevented - validation is still in place"
       );
     }
 
@@ -127,7 +127,7 @@ test.describe("Form Validation Errors", () => {
 
   // Test 4: Other Expense Description validation
   test("4. should show error if Other Cost is entered but description is empty", async ({
-    page,
+    page
   }) => {
     console.log("--- Starting test: Missing Other Expense Description ---");
 
@@ -136,13 +136,13 @@ test.describe("Form Validation Errors", () => {
 
     // Fill necessary form fields but skip other description
     await page
-      .locator("label")
+      .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
     await setTrainerName(page, "Test Trainer");
     await page.locator("label").filter({ hasText: "Onsite" }).click();
-    await page.locator('input[name="trainer_days"]').fill("1");
-    await page.locator('input[name="trainee_days"]').fill("1");
+    await page.locator('input[name="trainer_hours"]').fill("1");
+    await page.locator('input[name="trainee_hours"]').fill("1");
     await page.locator('input[name="start_date"]').fill("2023-01-01");
     await page.locator('input[name="end_date"]').fill("2023-01-01");
     await page
@@ -168,11 +168,11 @@ test.describe("Form Validation Errors", () => {
 
     if (page.url().includes("/success")) {
       console.log(
-        "Form was submitted successfully - other expense description validation may have been removed",
+        "Form was submitted successfully - other expense description validation may have been removed"
       );
     } else {
       console.log(
-        "Form submission was prevented - description validation is still in place",
+        "Form submission was prevented - description validation is still in place"
       );
       // Look for validation indications if not submitted
       const hasValidationText = await page
@@ -186,7 +186,7 @@ test.describe("Form Validation Errors", () => {
           );
         });
       console.log(
-        `Page ${hasValidationText ? "has" : "does not have"} validation text`,
+        `Page ${hasValidationText ? "has" : "does not have"} validation text`
       );
     }
 
@@ -195,7 +195,7 @@ test.describe("Form Validation Errors", () => {
 
   // Test 5: End Date validation
   test("5. should show error if End Date is earlier than Start Date", async ({
-    page,
+    page
   }) => {
     console.log("--- Starting test: End Date < Start Date ---");
 
@@ -203,18 +203,18 @@ test.describe("Form Validation Errors", () => {
     await gotoHome(page);
     await fillBasicInternalTrainingForm(page, {
       startDate: "2024-02-15",
-      endDate: "2024-02-10", // Earlier than start date
+      endDate: "2024-02-10" // Earlier than start date
     });
 
     // Action: Submit the form
     await submitForm(page);
 
     // Assertions
-    await expect(page).toHaveURL(BASE_URL + "/");
+    await expect(page).toHaveURL(BASE_URL + "/new");
     await expectValidationError(
       page,
       'input[name="end_date"]',
-      "End date cannot be earlier than start date",
+      "End date cannot be earlier than start date"
     );
 
     console.log("--- Finished test: End Date < Start Date ---");
@@ -222,7 +222,7 @@ test.describe("Form Validation Errors", () => {
 
   // Test 6: Location Details validation
   test("6. should show error if Location is Offsite but Location Details are empty", async ({
-    page,
+    page
   }) => {
     console.log("--- Starting test: Offsite without Details ---");
 
@@ -231,7 +231,7 @@ test.describe("Form Validation Errors", () => {
 
     // Use internal training with offsite location, but manually control the location setting
     await fillBasicInternalTrainingForm(page, {
-      skipBaseSetup: true, // Skip default location setup
+      skipBaseSetup: true // Skip default location setup
     });
 
     // Manually set location to Offsite to better control the test flow
@@ -255,14 +255,14 @@ test.describe("Form Validation Errors", () => {
   });
 
   // Test 7: External Training validation (positive test)
-  test("7. should allow submitting External Training without entering Trainer Days", async ({
-    page,
+  test("7. should allow submitting External Training without entering Trainer Hours", async ({
+    page
   }) => {
     console.log(
-      "--- Starting test: External Training No Trainer Days Error ---",
+      "--- Starting test: External Training No Trainer Hours Error ---"
     );
 
-    // Setup: Fill external training form without trainer days
+    // Setup: Fill external training form without trainer Hours
     await gotoHome(page);
     await fillBasicExternalTrainingForm(page);
 
@@ -273,7 +273,7 @@ test.describe("Form Validation Errors", () => {
     await expectSuccessfulSubmission(page);
 
     console.log(
-      "--- Finished test: External Training No Trainer Days Error ---",
+      "--- Finished test: External Training No Trainer Hours Error ---"
     );
   });
 
@@ -284,7 +284,7 @@ test.describe("Form Validation Errors", () => {
     // Setup: Fill form without adding a trainee
     await gotoHome(page);
     await fillBasicInternalTrainingForm(page, {
-      includeTrainee: false, // Skip adding trainee
+      includeTrainee: false // Skip adding trainee
     });
 
     // Action: Submit the form
@@ -295,7 +295,7 @@ test.describe("Form Validation Errors", () => {
 
     // Check for the validation error message in the page body
     await expect(page.locator("body")).toContainText(
-      "At least one trainee must be added.",
+      "At least one trainee must be added."
     );
 
     console.log("--- Finished test: No Trainees Added ---");

@@ -20,7 +20,7 @@ async function loginAsAdmin(page) {
   console.log("--- Logging in as admin user ---");
 
   // Navigate to home (will redirect to login)
-  await page.goto(BASE_URL + "/");
+  await page.goto(BASE_URL + "/new");
 
   // Check if already logged in
   const currentUrl = page.url();
@@ -50,7 +50,7 @@ async function loginAsAdmin(page) {
  * @param {import('@playwright/test').Page} page - Playwright page
  */
 async function gotoHome(page) {
-  await page.goto(BASE_URL + "/");
+  await page.goto(BASE_URL + "/new");
 
   // Check if we need to login
   if (page.url().includes("/login")) {
@@ -67,7 +67,7 @@ async function gotoHome(page) {
 async function addTrainee(page, searchTerm = "gre", options = {}) {
   const defaults = {
     timeout: 10000, // 10 second timeout by default
-    retries: 2, // Number of retries if search fails
+    retries: 2 // Number of retries if search fails
   };
 
   const settings = { ...defaults, ...options };
@@ -94,7 +94,7 @@ async function addTrainee(page, searchTerm = "gre", options = {}) {
     } catch (error) {
       attempt++;
       console.log(
-        `Attempt ${attempt} failed for trainee search '${searchTerm}'. ${settings.retries - attempt + 1} retries left.`,
+        `Attempt ${attempt} failed for trainee search '${searchTerm}'. ${settings.retries - attempt + 1} retries left.`
       );
 
       if (attempt > settings.retries) {
@@ -134,8 +134,8 @@ async function setTrainerName(page, trainerName) {
 async function fillBasicInternalTrainingForm(page, options = {}) {
   const defaults = {
     trainerName: "Test Trainer",
-    trainerDays: "1",
-    traineeDays: "1",
+    trainerHours: "1",
+    traineeHours: "1",
     startDate: "2024-01-01",
     endDate: "2024-01-01",
     description: "Test training description",
@@ -144,13 +144,16 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
     addExpenses: false,
     locationType: "Onsite", // Allow setting location type
     locationDetails: null, // Optional location details for Offsite
-    skipBaseSetup: false, // Allow skipping basic setup
+    skipBaseSetup: false // Allow skipping basic setup
   };
 
   const settings = { ...defaults, ...options };
 
   // Select training type and location
-  await page.locator("label").filter({ hasText: "Internal Training" }).click();
+  await page
+    .locator(".training-type-card")
+    .filter({ hasText: "Internal Training" })
+    .click();
 
   // Set location if not skipping basic setup
   if (!settings.skipBaseSetup) {
@@ -177,12 +180,16 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
   // Set trainer info if included
   if (settings.includeTrainer) {
     await setTrainerName(page, settings.trainerName);
-    await page.locator('input[name="trainer_days"]').fill(settings.trainerDays);
+    await page
+      .locator('input[name="trainer_hours"]')
+      .fill(settings.trainerHours);
   }
 
-  // Set trainee days
-  if (settings.traineeDays) {
-    await page.locator('input[name="trainee_days"]').fill(settings.traineeDays);
+  // Set trainee hours
+  if (settings.traineeHours) {
+    await page
+      .locator('input[name="trainee_hours"]')
+      .fill(settings.traineeHours);
   }
 
   // Set description
@@ -209,17 +216,20 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
 async function fillBasicExternalTrainingForm(page, options = {}) {
   const defaults = {
     supplierName: "External Test Supplier",
-    traineeDays: "1",
+    traineeHours: "1",
     startDate: "2024-07-01",
     endDate: "2024-07-01",
     description: "External training description",
-    includeTrainee: true,
+    includeTrainee: true
   };
 
   const settings = { ...defaults, ...options };
 
   // Select external training type
-  await page.locator("label").filter({ hasText: "External Training" }).click();
+  await page
+    .locator(".training-type-card")
+    .filter({ hasText: "External Training" })
+    .click();
   await expect(page.locator("#external-supplier-container")).toBeVisible();
 
   // Set supplier
@@ -232,9 +242,11 @@ async function fillBasicExternalTrainingForm(page, options = {}) {
   await page.locator('input[name="start_date"]').fill(settings.startDate);
   await page.locator('input[name="end_date"]').fill(settings.endDate);
 
-  // Set trainee days
-  if (settings.traineeDays) {
-    await page.locator('input[name="trainee_days"]').fill(settings.traineeDays);
+  // Set trainee Hours
+  if (settings.traineeHours) {
+    await page
+      .locator('input[name="trainee_hours"]')
+      .fill(settings.traineeHours);
   }
 
   // Set description
@@ -260,7 +272,7 @@ async function addExpenses(page, options = {}) {
     materialsCost: "5",
     otherCost: "5",
     otherDescription: "Test expenses",
-    concurClaim: "ABC123",
+    concurClaim: "ABC123"
   };
 
   const settings = { ...defaults, ...options };
@@ -288,7 +300,7 @@ async function addExpenses(page, options = {}) {
       try {
         // Try to click a button or make other_expense_description visible if needed
         const descField = page.locator(
-          'textarea[name="other_expense_description"]',
+          'textarea[name="other_expense_description"]'
         );
         const isVisible = await descField.isVisible().catch(() => false);
 
@@ -335,6 +347,19 @@ async function expectSuccessfulSubmission(page) {
 }
 
 /**
+ * Verify the form update was successful
+ * @param {import('@playwright/test').Page} page - Playwright page
+ */
+async function expectSuccessfulUpdate(page) {
+  // Wait for the success flash message to appear
+  const successFlash = page.locator(".alert-success");
+  await expect(successFlash).toBeVisible();
+
+  // Verify the success message contains the expected text
+  const successMessage = await successFlash.textContent();
+  expect(successMessage).toContain("updated successfully");
+}
+/**
  * Verify a validation error for the specified field
  * @param {import('@playwright/test').Page} page - Playwright page
  * @param {string} selector - Selector for the field with error
@@ -347,7 +372,7 @@ async function expectValidationError(page, selector, expectedMessage) {
   // Check the validation message
   const element = page.locator(selector);
   const validationMessage = await element.evaluate(
-    (el) => el.validationMessage,
+    (el) => el.validationMessage
   );
   expect(validationMessage).toContain(expectedMessage);
 }
@@ -364,4 +389,5 @@ module.exports = {
   submitForm,
   expectSuccessfulSubmission,
   expectValidationError,
+  expectSuccessfulUpdate
 };

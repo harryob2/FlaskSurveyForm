@@ -40,14 +40,14 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
   </h2>
   <div class="btn-group-header">
     {% if not my_submissions %}
-    <a href="{{ url_for('export_claim5') }}" class="btn btn-success">
+    <button type="button" class="btn btn-success" id="export-claim5-btn">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
         class="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
         <path
           d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V9h-3V6h-2v3H6V6H4v3H2V2a1 1 0 0 1 1-1h5.5v2zM3 12v-2h2v2H3zm0 1h2v2H4a1 1 0 0 1-1-1v-1zm3 2v-2h3v1a1 1 0 0 1-1 1h-2zm4 0v-2h3v1a1 1 0 0 1-1 1h-2zm3-3h-3v-2h3v2zm0-3h-3V9h3v2z" />
       </svg>
       Export to Claim 5 Form
-    </a>
+    </button>
     {% endif %}
     <a href="{{ url_for('index') }}" class="btn btn-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg"
@@ -202,7 +202,7 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
         <td>
           {% if form.training_type == 'Internal Training' %}
           <strong>Trainer:</strong> {{ form.trainer_name }}<br />
-          <strong>Trainer Days:</strong> {{ form.trainer_days }} {% else %}
+          <strong>Trainer Hours:</strong> {{ form.trainer_hours }} {% else %}
           <strong>Supplier:</strong> {{ form.supplier_name }} {% endif %}
         </td>
         <td>
@@ -292,6 +292,45 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
   total_pages > 1 %} (Page {{ current_page }} of {{ total_pages }}) {% endif %}
 </div>
 
+<!-- Export Modal -->
+<div class="modal fade" id="exportClaim5Modal" tabindex="-1" aria-labelledby="exportClaim5ModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: #1f2538; color: #fff;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exportClaim5ModalLabel">Export to Claim 5 Form</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Pill Toggle -->
+        <div class="btn-group w-100 mb-4" role="group" id="export-pill-toggle">
+          <button type="button" class="btn btn-outline-primary active" id="quarter-pill">Quarter</button>
+          <button type="button" class="btn btn-outline-primary" id="custom-pill">Custom</button>
+        </div>
+        <!-- Quarter Selection -->
+        <div id="quarter-section">
+          <div id="quarters-list" class="d-flex flex-column gap-2"></div>
+        </div>
+        <!-- Custom Date Range -->
+        <div id="custom-section" style="display:none;">
+          <div class="mb-3">
+            <label for="export-start-date" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="export-start-date">
+          </div>
+          <div class="mb-3">
+            <label for="export-end-date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="export-end-date">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="export-claim5-confirm-btn">Export to Claim 5 Form</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% else %}
 <div class="alert alert-info text-center">
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-info-circle mb-2"
@@ -320,6 +359,111 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
     flatpickr(".date-picker", {
       dateFormat: "Y-m-d",
       allowInput: true,
+    });
+
+    // Modal trigger
+    document.getElementById("export-claim5-btn").addEventListener("click", function () {
+      // Fetch options from backend
+      fetch("/api/export_claim5_options")
+        .then(res => res.json())
+        .then(data => {
+          // Populate quarters
+          const quartersList = document.getElementById("quarters-list");
+          quartersList.innerHTML = "";
+          data.quarters.forEach(q => {
+            const id = "quarter-" + q.replace(/\s/g, "-");
+            quartersList.innerHTML += `
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="${q}" id="${id}">
+                <label class="form-check-label" for="${id}">${q}</label>
+              </div>
+            `;
+          });
+          // Set min/max for date pickers
+          document.getElementById("export-start-date").value = data.min_date;
+          document.getElementById("export-end-date").value = data.max_date;
+          document.getElementById("export-start-date").min = data.min_date;
+          document.getElementById("export-end-date").max = data.max_date;
+          // Show modal
+          new bootstrap.Modal(document.getElementById("exportClaim5Modal")).show();
+        });
+    });
+
+    // Pill toggle logic
+    const quarterPill = document.getElementById("quarter-pill");
+    const customPill = document.getElementById("custom-pill");
+    const quarterSection = document.getElementById("quarter-section");
+    const customSection = document.getElementById("custom-section");
+
+    quarterPill.addEventListener("click", function () {
+      quarterPill.classList.add("active");
+      customPill.classList.remove("active");
+      quarterSection.style.display = "";
+      customSection.style.display = "none";
+    });
+    customPill.addEventListener("click", function () {
+      customPill.classList.add("active");
+      quarterPill.classList.remove("active");
+      customSection.style.display = "";
+      quarterSection.style.display = "none";
+    });
+
+    // Export logic
+    document.getElementById("export-claim5-confirm-btn").addEventListener("click", function () {
+      // Determine mode
+      const isQuarter = quarterPill.classList.contains("active");
+      let payload = {};
+      if (isQuarter) {
+        // Gather checked quarters
+        payload.quarters = Array.from(document.querySelectorAll("#quarters-list input:checked")).map(cb => cb.value);
+        if (payload.quarters.length === 0) {
+          alert("Please select at least one quarter.");
+          return;
+        }
+      } else {
+        // Gather date range
+        payload.start_date = document.getElementById("export-start-date").value;
+        payload.end_date = document.getElementById("export-end-date").value;
+        if (!payload.start_date || !payload.end_date) {
+          alert("Please select both start and end dates.");
+          return;
+        }
+        if (payload.end_date < payload.start_date) {
+          alert("End date cannot be before start date.");
+          return;
+        }
+      }
+      // POST to backend and trigger download
+      fetch("/export_claim5", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(response => {
+          if (response.status === 403) {
+            alert("You are not authorized to export.");
+            return;
+          }
+          if (!response.ok) {
+            alert("Export failed.");
+            return;
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          if (!blob) return;
+          // Download file
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "claim5_export.xlsx";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+          // Close modal
+          bootstrap.Modal.getInstance(document.getElementById("exportClaim5Modal")).hide();
+        });
     });
   });
 </script>

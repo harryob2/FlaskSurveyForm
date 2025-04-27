@@ -22,6 +22,7 @@ from wtforms import (
     FloatField,
     MultipleFileField,
     PasswordField,
+    IntegerField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -99,7 +100,7 @@ class TrainingForm(FlaskForm):
     )
     location_type = RadioField(
         "Location",
-        choices=[("Onsite", "Onsite"), ("Offsite", "Offsite")],
+        choices=[("Onsite", "Onsite"), ("Offsite", "Offsite"), ("Virtual", "Virtual")],
         validators=[
             DataRequired("Please select a location type.")
         ],  # Custom message example
@@ -113,14 +114,14 @@ class TrainingForm(FlaskForm):
     training_description = TextAreaField(
         "Training Description", validators=[DataRequired()]
     )
-    trainee_days = DecimalField(
-        "Trainee Days",
+    trainee_hours = FloatField(
+        "Trainee Hours",
         validators=[
             DataRequired(),
-            NumberRange(min=0.01, message="Trainee days must be positive."),
+            NumberRange(min=0, message="Trainee hours cannot be negative."),
         ],
-        places=2,
-    )  # Changed min to 0.01 example
+        render_kw={"type": "number", "step": "0.1", "min": "0"}
+    )
 
     # Conditionally Required
     trainer_name = StringField(
@@ -138,15 +139,15 @@ class TrainingForm(FlaskForm):
         validators=[RequiredIf("location_type", "Offsite")],
         description="Required for offsite training",
     )
-    trainer_days = DecimalField(
-        "Trainer Days",
+    trainer_hours = FloatField(
+        "Trainer Hours",
         validators=[
             RequiredIf("training_type", "Internal Training"),
             Optional(),
-            NumberRange(min=0.01, message="Trainer days must be positive if entered."),
+            NumberRange(min=0, message="Trainer hours cannot be negative if entered."),
         ],
-        places=2,
         default=None,
+        render_kw={"type": "number", "step": "0.1", "min": "0"}
     )
 
     # Optional or complex validation
@@ -176,7 +177,9 @@ class TrainingForm(FlaskForm):
 
     # Attachment fields
     attachments = MultipleFileField(
-        "Attachments", validators=[Optional()]
+        "Attachments",
+        validators=[RequiredIf("location_type", "Virtual")],
+        description="Required for virtual training",
     )  # Example: Make optional
     attachment_descriptions = TextAreaField(
         "Attachment Descriptions (one per line)", validators=[Optional()]
@@ -223,11 +226,16 @@ class TrainingForm(FlaskForm):
                 "Description is required when other expenses are entered."
             )
 
-    # Remove simple conditional validators now handled by RequiredIf
-    # e.g., remove validate_location_details, validate_trainer_name, validate_supplier_name
-    # unless they do more than just check for presence.
-
-    # Keep process_emails and prepare_form_data as they are data processing, not validation
+    def validate_attachments(self, field):
+        """Validate that at least one attachment is provided if location is Virtual."""
+        # This validation runs on the server side after submission.
+        if self.location_type.data == "Virtual":
+            # Check if any *new* files were uploaded in this submission
+            has_new_attachments = field.data and any(f.filename for f in field.data)
+            if not has_new_attachments:
+                raise ValidationError(
+                    "At least one attachment (e.g., certificate) is required for Virtual training."
+                )
 
     def validate_trainees_data(self, field):
         """Validate that at least one trainee has been added."""
@@ -256,9 +264,9 @@ class TrainingForm(FlaskForm):
             ),
             "start_date": self.start_date.data.strftime("%Y-%m-%d"),
             "end_date": self.end_date.data.strftime("%Y-%m-%d"),
-            "trainer_days": (
-                float(str(self.trainer_days.data))
-                if is_internal and self.trainer_days.data
+            "trainer_hours": (
+                float(str(self.trainer_hours.data))
+                if is_internal and self.trainer_hours.data
                 else None
             ),
             "training_description": self.training_description.data or "",
@@ -277,9 +285,9 @@ class TrainingForm(FlaskForm):
                 else None
             ),
             "concur_claim": self.concur_claim.data,
-            "trainee_days": float(str(self.trainee_days.data))
-            if self.trainee_days.data
-            else 0.0,
+            "trainee_hours": (
+                float(str(self.trainee_hours.data)) if self.trainee_hours.data else 0.0
+            ),
         }
 
         # Handle trainees data

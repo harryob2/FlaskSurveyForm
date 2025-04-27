@@ -11,6 +11,7 @@ from flask import flash
 from flask_login import LoginManager, UserMixin
 from flask_ldap3_login import LDAP3LoginManager
 import hashlib
+from models import db_session, get_admin_by_email
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,17 +28,8 @@ ADMIN_BYPASS_USERS = {
 }
 
 
-@functools.lru_cache(maxsize=1)
-def get_admin_emails():
-    admin_file = os.path.join(os.path.dirname(__file__), "admin.txt")
-    if not os.path.exists(admin_file):
-        return set()
-    with open(admin_file, "r") as f:
-        return set(line.strip().lower() for line in f if line.strip())
-
-
 def is_admin_email(email):
-    return email.lower() in get_admin_emails()
+    return email and get_admin_by_email(email) is not None
 
 
 class User(UserMixin):

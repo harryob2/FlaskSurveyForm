@@ -20,11 +20,18 @@ document.addEventListener("DOMContentLoaded", function () {
   // Get the form element (might not be needed anymore)
   // const form = document.getElementById("training-form");
 
+  // Function to parse currency formatted values
+  function parseCurrency(val) {
+    // Remove all non-numeric except dot and minus
+    if (!val) return 0;
+    return parseFloat(val.replace(/[^0-9.-]+/g, ""));
+  }
+
   // Function to check if Other Expenses field has a value and toggle visibility
   function checkOtherExpenses() {
     if (otherCostField && descriptionContainer) {
       const hasOtherExpenses =
-        otherCostField.value && parseFloat(otherCostField.value) > 0;
+        otherCostField.value && parseCurrency(otherCostField.value) > 0;
 
       if (hasOtherExpenses) {
         // Show the description field container

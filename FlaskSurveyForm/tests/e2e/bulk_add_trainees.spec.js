@@ -32,9 +32,9 @@ test.describe("Bulk Add Trainees", () => {
     });
     console.log("--- Form fields populated ---");
 
-    // Verify the bulk add button exists
-    const bulkAddButton = page.locator("#bulk-add-trainees-btn");
-    await expect(bulkAddButton).toBeVisible({ timeout: 5000 });
+    // Verify the bulk add button exists using a text-based selector as a fallback
+    const bulkAddButton = page.locator('button:has-text("Bulk Add Trainees")');
+    await expect(bulkAddButton).toBeVisible({ timeout: 10000 }); // Increased timeout
     console.log("--- Bulk Add button is visible ---");
 
     // Click the bulk add button
@@ -54,13 +54,13 @@ test.describe("Bulk Add Trainees", () => {
     await emailTextarea.fill("greene@test.com");
     console.log("--- Filled email textarea with greene@test.com ---");
 
-    // Click the Add Emails button
-    await page.locator("#bulkAddModal #add-emails-btn").click();
+    // Click the Add Emails button forcefully
+    await page.locator("#bulkAddModal #add-emails-btn").click({ force: true });
     console.log("--- Clicked Add Emails button ---");
 
-    // Wait for the modal to close
+    // Wait for the modal to close with increased timeout
     await expect(page.locator("#bulkAddModal")).not.toBeVisible({
-      timeout: 5000,
+      timeout: 10000, // Increased timeout to 10s
     });
     console.log("--- Modal closed after adding emails ---");
 

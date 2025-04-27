@@ -9,9 +9,9 @@ import csv
 import json
 import logging
 from datetime import datetime
-from models import get_db
 from io import BytesIO
 import functools
+from collections import defaultdict
 
 from flask import (
     Flask,
@@ -36,6 +36,10 @@ from models import (
     get_training_form,
     get_approved_forms_for_export,
     get_user_training_forms,
+    add_admin,
+    db_session,
+    Admin,
+    Attachment,
 )
 from setup_db import setup_database
 from auth import init_auth, authenticate_user, is_admin_email
@@ -99,7 +103,7 @@ def inject_current_year():
 
 
 def is_admin_user(user):
-    return user.is_authenticated and is_admin_email(user.email)
+    return hasattr(user, "email") and is_admin_email(user.email)
 
 
 def admin_required(f):
@@ -118,15 +122,7 @@ def index():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
     form = TrainingForm()
-    return render_template("index.html", form=form, now=datetime.now())
-@app.route("/home")
-def home():
-    """Display the home page or redirect to login if not authenticated"""
-    if not current_user.is_authenticated:
-        return redirect(url_for("login"))
     return render_template("home.html", is_admin=is_admin_user(current_user))
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Handle user login via LDAP"""
@@ -161,6 +157,40 @@ def login():
         logging.warning(f"Failed login attempt for {username}")
 
     return render_template("login.html", form=form)
+
+
+@app.route("/manage_admins", methods=["GET", "POST"])
+@login_required
+@admin_required
+def manage_admins():
+    message = None
+    admins = []
+    if request.method == "POST":
+        if "add_admin" in request.form:
+            email = request.form["email"].strip().lower()
+            first_name = request.form["first_name"].strip()
+            last_name = request.form["last_name"].strip()
+            success = add_admin(
+                {"email": email, "first_name": first_name, "last_name": last_name}
+            )
+            if not success:
+                flash("Admin already exists.", "warning")
+            else:
+                flash("Admin added.", "success")
+        elif "remove_admin" in request.form:
+            email = request.form["remove_admin"].strip().lower()
+            with db_session() as session:
+                admin = session.query(Admin).filter_by(email=email).first()
+                if admin:
+                    session.delete(admin)
+                    flash("Admin removed.", "success")
+    with db_session() as session:
+        admins = session.query(Admin).all()
+        admins = [
+            dict(email=a.email, first_name=a.first_name, last_name=a.last_name)
+            for a in admins
+        ]
+    return render_template("manage_admins.html", admins=admins)
 
 
 @app.route("/logout")
@@ -211,54 +241,35 @@ def submit_form():
             unique_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"form_{form_id}")
             os.makedirs(unique_folder, exist_ok=True)
 
-            # Process attachments
-            # Use request.files directly as WTForms field might not populate from dynamic inputs
+            # Process attachments using SQLAlchemy ORM
             if "attachments" in request.files:
                 new_files = request.files.getlist("attachments")
                 descriptions = request.form.getlist("attachment_descriptions[]")
                 logging.debug(f"Processing {len(new_files)} new attachments.")
 
-                # Ensure descriptions list matches file list length if necessary
-                # Pad descriptions if some files didn't get a description input (shouldn't happen with current JS)
                 if len(descriptions) < len(new_files):
                     descriptions.extend([""] * (len(new_files) - len(descriptions)))
 
-                for i, file in enumerate(new_files):
-                    # Check if the file object exists and has a filename
-                    if file and file.filename:
-                        filename = secure_filename(file.filename)
-                        # Save to the unique folder
-                        file_path = os.path.join(unique_folder, filename)
-                        logging.debug(f"Saving file {filename} to {file_path}")
-                        file.save(file_path)
-
-                        # Get description or use empty string
-                        description = descriptions[i] if i < len(descriptions) else ""
-                        logging.debug(f"Attachment description: {description}")
-
-                        # Insert attachment record
-                        try:
-                            conn = get_db()
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                """
-                                INSERT INTO attachments (training_id, filename, description)
-                                VALUES (?, ?, ?)
-                            """,
-                                (form_id, filename, description),
+                with db_session() as session:
+                    for i, file in enumerate(new_files):
+                        if file and file.filename:
+                            filename = secure_filename(file.filename)
+                            file_path = os.path.join(unique_folder, filename)
+                            logging.debug(f"Saving file {filename} to {file_path}")
+                            file.save(file_path)
+                            description = (
+                                descriptions[i] if i < len(descriptions) else ""
                             )
-                            conn.commit()
-                        except Exception as db_err:
-                            logging.error(
-                                f"Database error inserting attachment {filename}: {db_err}"
+                            session.add(
+                                Attachment(
+                                    training_id=form_id,
+                                    filename=filename,
+                                    description=description,
+                                )
                             )
-                        finally:
-                            if conn:
-                                conn.close()
-                    else:
-                        logging.debug(f"Skipping empty file input at index {i}.")
+                        else:
+                            logging.debug(f"Skipping empty file input at index {i}.")
 
-            # If no files were submitted via request.files['attachments'], log that.
             elif not request.files.getlist("attachments"):
                 logging.debug(
                     "No new files found in request.files for key 'attachments'."
@@ -314,14 +325,12 @@ def uploaded_file(filename):
 @login_required
 @admin_required
 def approve_training(form_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "UPDATE training_forms SET approved = NOT approved WHERE id = ?", (form_id,)
-    )
-    conn.commit()
-    conn.close()
+    from models import TrainingForm
 
+    with db_session() as session:
+        form = session.query(TrainingForm).filter_by(id=form_id).first()
+        if form:
+            form.approved = not bool(form.approved)
     # Determine redirect target based on referrer
     referrer = request.referrer
     if referrer and url_for("list_forms") in referrer:
@@ -408,15 +417,17 @@ def view_form(form_id):
         return redirect(url_for("list_forms"))
 
     # Get attachments
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Get attachments records
-    cursor.execute("SELECT * FROM attachments WHERE training_id = ?", (form_id,))
-    attachments = [dict(row) for row in cursor.fetchall()]
-
-    # Close connection
-    conn.close()
+    with db_session() as session:
+        attachments = session.query(Attachment).filter_by(training_id=form_id).all()
+        attachments = [
+            {
+                "id": a.id,
+                "training_id": a.training_id,
+                "filename": a.filename,
+                "description": a.description,
+            }
+            for a in attachments
+        ]
     # Parse trainees data from JSON if it exists
     trainees = []
     if form_data.get("trainees_data"):
@@ -481,7 +492,7 @@ def edit_form(form_id):
                 return redirect(url_for("list_forms"))
 
             # Numeric fields
-            form.trainer_days.data = form_data["trainer_days"]
+            form.trainer_hours.data = form_data["trainer_hours"]
             form.training_description.data = form_data.get("training_description", "")
 
             # Expense fields
@@ -493,7 +504,7 @@ def edit_form(form_id):
                 "other_expense_description", ""
             )
             form.concur_claim.data = form_data.get("concur_claim", "")
-            form.trainee_days.data = form_data.get("trainee_days", 0)
+            form.trainee_hours.data = form_data.get("trainee_hours", 0)
 
             # Load trainees data
             if form_data.get("trainees_data"):
@@ -533,105 +544,73 @@ def edit_form(form_id):
             os.makedirs(unique_folder, exist_ok=True)
             logging.debug(f"Ensured attachment directory exists: {unique_folder}")
 
-            # Process NEW attachments
-            # Use request.files directly as WTForms field might not populate from dynamic inputs
+            # Process NEW attachments using SQLAlchemy ORM
             if "attachments" in request.files:
                 new_files = request.files.getlist("attachments")
-                descriptions = request.form.getlist(
-                    "attachment_descriptions[]"
-                )  # Descriptions for NEW files
+                descriptions = request.form.getlist("attachment_descriptions[]")
                 logging.debug(
                     f"Processing {len(new_files)} new attachments for form {form_id}."
                 )
-
-                # Pad descriptions if necessary (belt-and-suspenders)
                 if len(descriptions) < len(new_files):
                     descriptions.extend([""] * (len(new_files) - len(descriptions)))
-
-                for i, file in enumerate(new_files):
-                    if file and file.filename:
-                        filename = secure_filename(file.filename)
-                        # SAVE TO FORM-SPECIFIC FOLDER
-                        file_path = os.path.join(unique_folder, filename)
-                        logging.debug(f"Saving new file {filename} to {file_path}")
-                        file.save(file_path)
-
-                        description = descriptions[i] if i < len(descriptions) else ""
-                        logging.debug(f"New attachment description: {description}")
-
-                        # Insert new attachment record
-                        try:
-                            conn = get_db()
-                            cursor = conn.cursor()
-                            cursor.execute(
-                                """
-                                INSERT INTO attachments (training_id, filename, description)
-                                VALUES (?, ?, ?)
-                            """,
-                                (form_id, filename, description),
+                with db_session() as session:
+                    for i, file in enumerate(new_files):
+                        if file and file.filename:
+                            filename = secure_filename(file.filename)
+                            file_path = os.path.join(unique_folder, filename)
+                            logging.debug(f"Saving new file {filename} to {file_path}")
+                            file.save(file_path)
+                            description = (
+                                descriptions[i] if i < len(descriptions) else ""
                             )
-                            conn.commit()
-                        except Exception as db_err:
-                            logging.error(
-                                f"Database error inserting new attachment {filename}: {db_err}"
+                            session.add(
+                                Attachment(
+                                    training_id=form_id,
+                                    filename=filename,
+                                    description=description,
+                                )
                             )
-                        finally:
-                            if conn:
-                                conn.close()
-                    else:
-                        logging.debug(f"Skipping empty new file input at index {i}.")
+                        else:
+                            logging.debug(
+                                f"Skipping empty new file input at index {i}."
+                            )
             else:
                 logging.debug(
                     "No new files found in request.files for key 'attachments'."
                 )
 
-            # Handle attachment DELETIONS
+            # Handle attachment DELETIONS using SQLAlchemy ORM
             delete_attachments = request.form.getlist("delete_attachments[]")
             if delete_attachments:
                 logging.debug(
                     f"Processing deletions for attachment IDs: {delete_attachments}"
                 )
-                # TODO: Optionally delete the actual files from the filesystem
-                try:
-                    conn = get_db()
-                    cursor = conn.cursor()
-                    # Placeholders for safe query
-                    placeholders = ", ".join("?" * len(delete_attachments))
-                    query = f"DELETE FROM attachments WHERE id IN ({placeholders}) AND training_id = ?"
-                    params = delete_attachments + [form_id]  # Add form_id for security
-                    cursor.execute(query, params)
-                    conn.commit()
-                    logging.info(
-                        f"Deleted {cursor.rowcount} attachment records for form {form_id}."
-                    )
-                except Exception as db_err:
-                    logging.error(f"Database error deleting attachments: {db_err}")
-                finally:
-                    if conn:
-                        conn.close()
+                with db_session() as session:
+                    session.query(Attachment).filter(
+                        Attachment.id.in_(delete_attachments),
+                        Attachment.training_id == form_id,
+                    ).delete(synchronize_session=False)
 
-            # Handle attachment description UPDATES for existing files
+            # Handle attachment description UPDATES for existing files using SQLAlchemy ORM
             update_descriptions = request.form.getlist(
                 "update_attachment_descriptions[]"
             )
             if update_descriptions:
                 logging.debug(f"Processing description updates: {update_descriptions}")
-                try:
-                    conn = get_db()
-                    cursor = conn.cursor()
+                with db_session() as session:
                     for desc_json in update_descriptions:
                         try:
                             desc_data = json.loads(desc_json)
                             att_id = desc_data.get("id")
                             new_desc = desc_data.get("description", "")
                             if att_id:
-                                cursor.execute(
-                                    """
-                                    UPDATE attachments SET description = ? 
-                                    WHERE id = ? AND training_id = ?
-                                    """,
-                                    (new_desc, att_id, form_id),  # Add form_id check
+                                att = (
+                                    session.query(Attachment)
+                                    .filter_by(id=att_id, training_id=form_id)
+                                    .first()
                                 )
+                                if att:
+                                    att.description = new_desc
                             else:
                                 logging.warning(
                                     f"Skipping description update due to missing ID in JSON: {desc_json}"
@@ -644,15 +623,6 @@ def edit_form(form_id):
                             logging.error(
                                 f"Missing 'id' or 'description' key in JSON: {desc_json}"
                             )
-                    conn.commit()
-                except Exception as db_err:
-                    logging.error(
-                        f"Database error updating attachment descriptions: {db_err}"
-                    )
-                finally:
-                    if conn:
-                        conn.close()
-
             flash("Form updated successfully!", "success")
             return redirect(url_for("view_form", form_id=form_id))
 
@@ -662,12 +632,20 @@ def edit_form(form_id):
                 "An error occurred while updating the form. Please try again.", "danger"
             )
 
-    # Load existing attachments to display in form
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM attachments WHERE training_id = ?", (form_id,))
-    existing_attachments = [dict(row) for row in cursor.fetchall()]
-    conn.close()
+    # Load existing attachments to display in form using SQLAlchemy ORM
+    with db_session() as session:
+        existing_attachments = (
+            session.query(Attachment).filter_by(training_id=form_id).all()
+        )
+        existing_attachments = [
+            {
+                "id": a.id,
+                "training_id": a.training_id,
+                "filename": a.filename,
+                "description": a.description,
+            }
+            for a in existing_attachments
+        ]
 
     return render_template(
         "index.html",
@@ -722,18 +700,81 @@ def get_employees():
         return jsonify([])
 
 
-@app.route("/export_claim5")
+@app.route("/api/export_claim5_options")
+@login_required
+def export_claim5_options():
+    if not is_admin_user(current_user):
+        return jsonify({"error": "Unauthorized"}), 403
+    from models import get_approved_forms_for_export
+    import datetime
+
+    forms = get_approved_forms_for_export()
+    if not forms:
+        return jsonify({"quarters": [], "min_date": None, "max_date": None})
+    created_dates = [
+        f.get("created_at") or f.get("submission_date") or f.get("start_date")
+        for f in forms
+        if f.get("created_at") or f.get("submission_date") or f.get("start_date")
+    ]
+    created_dates = [
+        datetime.datetime.fromisoformat(str(d)[:10]) for d in created_dates
+    ]
+    min_date = min(created_dates).date().isoformat()
+    max_date = max(created_dates).date().isoformat()
+
+    def get_quarter(dt):
+        q = (dt.month - 1) // 3 + 1
+        return f"Q{q} {dt.year}"
+
+    quarters = sorted(
+        {get_quarter(dt) for dt in created_dates}, key=lambda x: (int(x[1]), int(x[3:]))
+    )
+    return jsonify({"quarters": quarters, "min_date": min_date, "max_date": max_date})
+
+
+@app.route("/export_claim5", methods=["GET", "POST"])
 @login_required
 def export_claim5():
-    """Export approved training forms to an Excel template file."""
-    try:
-        # Get all approved forms
+    if not is_admin_user(current_user):
+        flash("Unauthorized", "danger")
+        return redirect(url_for("list_forms"))
+    import json
+
+    if request.method == "POST":
+        data = request.get_json()
+        selected_quarters = data.get("quarters", [])
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        from models import get_approved_forms_for_export
+        import datetime
+
+        forms = get_approved_forms_for_export()
+        filtered_forms = []
+
+        def get_quarter(dt):
+            q = (dt.month - 1) // 3 + 1
+            return f"Q{q} {dt.year}"
+
+        for f in forms:
+            created = (
+                f.get("created_at") or f.get("submission_date") or f.get("start_date")
+            )
+            if not created:
+                continue
+            dt = datetime.datetime.fromisoformat(str(created)[:10])
+            quarter = get_quarter(dt)
+            if selected_quarters and quarter in selected_quarters:
+                filtered_forms.append(f)
+            elif start_date and end_date:
+                if start_date <= dt.date().isoformat() <= end_date:
+                    filtered_forms.append(f)
+        approved_forms = filtered_forms
+    else:
+        from models import get_approved_forms_for_export
+
         approved_forms = get_approved_forms_for_export()
 
-        if not approved_forms:
-            flash("No approved forms found to export.", "info")
-            return redirect(url_for("list_forms"))
-
+    try:
         # Path to the template Excel file
         template_path = os.path.join(
             "attached_assets", "Claim-Form-5-revised-Training.xlsx"
@@ -801,9 +842,9 @@ def export_claim5():
                 ws.cell(row=current_row, column=2).value = location  # Location
                 ws.cell(row=current_row, column=3).value = ""  # Weekly Wage (blank)
                 ws.cell(row=current_row, column=4).value = form.get(
-                    "trainee_days", ""
+                    "trainee_hours", ""
                 )  # Nr of Weeks/days/hours
-                ws.cell(row=current_row, column=5).value = ""  # New blank column
+                ws.cell(row=current_row, column=5).value = ""
 
                 # Only fill these fields for the first trainee of each form
                 if i == 0:
@@ -957,6 +998,43 @@ def new_form():
     """Display the training form"""
     form = TrainingForm()
     return render_template("index.html", form=form, now=datetime.now())
+
+
+@app.route("/leaderboard")
+@login_required
+def leaderboard():
+    """Display the leaderboard of trainers by total training hours"""
+
+    # Get all approved forms
+    forms = get_approved_forms_for_export()
+    trainer_hours = defaultdict(float)
+
+    for form in forms:
+        trainer_name = form.get("trainer_name")
+        if not trainer_name:  # Skip forms without a trainer name
+            continue
+
+        try:
+            trainees_data = json.loads(form.get("trainees_data") or "[]")
+            if isinstance(trainees_data, list):
+                if trainees_data and isinstance(trainees_data[0], dict):
+                    num_trainees = len(trainees_data)
+                else:
+                    num_trainees = len(trainees_data)
+            else:
+                num_trainees = 0
+        except Exception:
+            num_trainees = 0
+        trainer_hours_val = float(form.get("trainer_hours") or 0)
+        trainee_hours_val = float(form.get("trainee_hours") or 0)
+        total_hours = trainer_hours_val + (trainee_hours_val * num_trainees)
+        trainer_hours[trainer_name] += total_hours
+
+    # Sort trainers by total hours descending
+    leaderboard_data = sorted(trainer_hours.items(), key=lambda x: x[1], reverse=True)
+    names = [x[0] for x in leaderboard_data]
+    hours = [x[1] for x in leaderboard_data]
+    return render_template("leaderboard.html", names=names, hours=hours)
 
 
 if __name__ == "__main__":
