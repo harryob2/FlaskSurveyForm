@@ -4,6 +4,13 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/trainee_search.css') }}" />
 {% endblock %} {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 <div class="card upgraded training-form-container">
     <div class="card-header {% if edit_mode %}bg-secondary{% else %}bg-primary{% endif %} text-white">
         <div class="d-flex justify-content-between align-items-center">
@@ -81,7 +88,8 @@
                                 <div class="training-type-card" data-value="External Training" tabindex="0">
                                     <div class="training-type-icon mb-3">
                                         <!-- Globe SVG -->
-                                        <svg height="48px" width="48px" viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                                        <svg height="48px" width="48px" viewBox="0 0 17 17" version="1.1"
+                                            xmlns="http://www.w3.org/2000/svg"
                                             xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000">
                                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                                             <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
@@ -161,7 +169,7 @@
 
                         <div class="row g-3">
                             <!-- Trainer Hours (only shown for Internal Training) -->
-                            <div id="trainer-days-container" class="col-md-6 mb-3 d-none">
+                            <div id="trainer-Hours-container" class="col-md-6 mb-3 d-none">
                                 <div class="form-floating">
                                     {{ form.trainer_hours(class="form-control", placeholder=" ") }} {{
                                     form.trainer_hours.label }}
@@ -280,6 +288,12 @@
                         <div class="row mb-4">
                             <div class="col-md-12">
                                 <h3 class="fs-5 form-section-title">Attachments</h3>
+                                <!-- Add the message for Virtual Training -->
+                                <div id="virtual-training-attachment-note" class="alert alert-info d-none mb-3"
+                                    role="alert">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    You must attach your completed virtual training certificate.
+                                </div>
                                 <div id="dropzone" class="dropzone border p-3 mb-3 text-center">
                                     <i class="bi bi-upload fs-1 text-primary"></i>
                                     <p>Drag and drop files here or click to browse</p>
@@ -406,12 +420,15 @@
         const externalSupplierContainer = document.getElementById(
             "external-supplier-container",
         );
-        const trainerDaysContainer = document.getElementById(
-            "trainer-days-container",
+        const trainerHoursContainer = document.getElementById(
+            "trainer-Hours-container",
         );
         const locationTypeRadios = form.elements["location_type"];
         const locationDetailsContainer = document.getElementById(
             "location-details-container",
+        );
+        const virtualTrainingNote = document.getElementById( // Get the new message div
+            "virtual-training-attachment-note",
         );
         const otherCostInput = document.getElementById("other_cost");
         const submitButton = document.getElementById("submit-training-form-btn"); // Get the button
@@ -464,11 +481,11 @@
                 if (selectedTrainingType === "Internal Training") {
                     internalTrainerContainer.classList.remove("d-none");
                     externalSupplierContainer.classList.add("d-none");
-                    trainerDaysContainer.classList.remove("d-none");
+                    trainerHoursContainer.classList.remove("d-none");
                 } else if (selectedTrainingType === "External Training") {
                     internalTrainerContainer.classList.add("d-none");
                     externalSupplierContainer.classList.remove("d-none");
-                    trainerDaysContainer.classList.add("d-none");
+                    trainerHoursContainer.classList.add("d-none");
                 }
             } else {
                 trainingDetailsSection.classList.add("d-none");
@@ -478,8 +495,13 @@
             const selectedLocationType = form.elements["location_type"].value;
             if (selectedLocationType === "Offsite") {
                 locationDetailsContainer.classList.remove("d-none");
-            } else {
+                virtualTrainingNote.classList.add("d-none"); // Hide virtual note
+            } else if (selectedLocationType === "Virtual") {
+                locationDetailsContainer.classList.add("d-none"); // Hide location details
+                virtualTrainingNote.classList.remove("d-none"); // Show virtual note
+            } else { // Onsite or nothing selected
                 locationDetailsContainer.classList.add("d-none");
+                virtualTrainingNote.classList.add("d-none"); // Hide virtual note
             }
         }
         Array.from(trainingTypeRadios).forEach((radio) => {
@@ -556,6 +578,7 @@
             // ... (Remove messages, reset state) ...
             document.querySelectorAll(".validation-message").forEach((el) => el.remove());
             form.classList.remove("was-validated");
+            console.log("Form validation triggered by button click");
 
             // ... (STEP 1: Validate Training Type) ...
             const trainingType = form.elements["training_type"];
@@ -821,9 +844,6 @@
     }
 </script>
 {% endblock %}
-</form>
-</div>
-</div>
 
 {% block extra_style %}
 {% endblock %}

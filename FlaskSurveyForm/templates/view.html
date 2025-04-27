@@ -68,7 +68,7 @@ content %}
                 <dt class="col-sm-4">Trainer</dt>
                 <dd class="col-sm-8">{{ form.trainer_name }}</dd>
 
-                <dt class="col-sm-4">Training Days</dt>
+                <dt class="col-sm-4">Training Hours</dt>
                 <dd class="col-sm-8">{{ form.trainer_hours }}</dd>
                 {% else %}
                 <dt class="col-sm-4">Supplier</dt>
@@ -165,7 +165,7 @@ content %}
           </div>
         </div>
 
-        <!-- Training Hours and Trainee Days -->
+        <!-- Training Hours and Trainee Hours -->
         <div class="row mb-4">
           <div class="col-md-6">
             <h5 class="card-title text-muted small">End Date</h5>
@@ -175,11 +175,11 @@ content %}
           </div>
         </div>
 
-        <!-- Trainee Days -->
+        <!-- Trainee Hours -->
         <div class="row mb-4">
           <div class="col-md-6">
-            <h5 class="card-title text-muted small">Trainee Days</h5>
-            <div class="fs-5">{{ form.trainee_hours|default(0) }} days</div>
+            <h5 class="card-title text-muted small">Trainee Hours</h5>
+            <div class="fs-5">{{ form.trainee_hours|default(0) }} Hours</div>
           </div>
         </div>
 

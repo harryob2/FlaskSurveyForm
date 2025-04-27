@@ -100,7 +100,7 @@ class TrainingForm(FlaskForm):
     )
     location_type = RadioField(
         "Location",
-        choices=[("Onsite", "Onsite"), ("Offsite", "Offsite")],
+        choices=[("Onsite", "Onsite"), ("Offsite", "Offsite"), ("Virtual", "Virtual")],
         validators=[
             DataRequired("Please select a location type.")
         ],  # Custom message example
@@ -114,13 +114,13 @@ class TrainingForm(FlaskForm):
     training_description = TextAreaField(
         "Training Description", validators=[DataRequired()]
     )
-    trainee_hours = IntegerField(
+    trainee_hours = FloatField(
         "Trainee Hours",
         validators=[
             DataRequired(),
-            NumberRange(min=1, message="Trainee hours must be positive."),
+            NumberRange(min=1.0, message="Trainee hours must be positive."),
         ],
-    )  # Changed min to 1 example
+    )  # Changed to FloatField with min 1.0
 
     # Conditionally Required
     trainer_name = StringField(
@@ -138,12 +138,12 @@ class TrainingForm(FlaskForm):
         validators=[RequiredIf("location_type", "Offsite")],
         description="Required for offsite training",
     )
-    trainer_hours = IntegerField(
+    trainer_hours = FloatField(
         "Trainer Hours",
         validators=[
             RequiredIf("training_type", "Internal Training"),
             Optional(),
-            NumberRange(min=1, message="Trainer hours must be positive if entered."),
+            NumberRange(min=1.0, message="Trainer hours must be positive if entered."),
         ],
         default=None,
     )
@@ -175,7 +175,9 @@ class TrainingForm(FlaskForm):
 
     # Attachment fields
     attachments = MultipleFileField(
-        "Attachments", validators=[Optional()]
+        "Attachments",
+        validators=[RequiredIf("location_type", "Virtual")],
+        description="Required for virtual training",
     )  # Example: Make optional
     attachment_descriptions = TextAreaField(
         "Attachment Descriptions (one per line)", validators=[Optional()]
@@ -222,11 +224,16 @@ class TrainingForm(FlaskForm):
                 "Description is required when other expenses are entered."
             )
 
-    # Remove simple conditional validators now handled by RequiredIf
-    # e.g., remove validate_location_details, validate_trainer_name, validate_supplier_name
-    # unless they do more than just check for presence.
-
-    # Keep process_emails and prepare_form_data as they are data processing, not validation
+    def validate_attachments(self, field):
+        """Validate that at least one attachment is provided if location is Virtual."""
+        # This validation runs on the server side after submission.
+        if self.location_type.data == "Virtual":
+            # Check if any *new* files were uploaded in this submission
+            has_new_attachments = field.data and any(f.filename for f in field.data)
+            if not has_new_attachments:
+                raise ValidationError(
+                    "At least one attachment (e.g., certificate) is required for Virtual training."
+                )
 
     def validate_trainees_data(self, field):
         """Validate that at least one trainee has been added."""
@@ -276,9 +283,9 @@ class TrainingForm(FlaskForm):
                 else None
             ),
             "concur_claim": self.concur_claim.data,
-            "trainee_hours": float(str(self.trainee_hours.data))
-            if self.trainee_hours.data
-            else 0.0,
+            "trainee_hours": (
+                float(str(self.trainee_hours.data)) if self.trainee_hours.data else 0.0
+            ),
         }
 
         # Handle trainees data

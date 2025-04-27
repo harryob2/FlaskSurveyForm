@@ -48,30 +48,30 @@ test.describe("Form Validation Errors", () => {
     console.log("--- Finished test: Missing Trainer Name ---");
   });
 
-  // Test 2: Trainee Days validation
-  test("2. should show error if Trainee Days is empty", async ({ page }) => {
-    console.log("--- Starting test: Missing Trainee Days ---");
+  // Test 2: Trainee Hours validation
+  test("2. should show error if Trainee Hours is empty", async ({ page }) => {
+    console.log("--- Starting test: Missing Trainee Hours ---");
 
-    // Setup: Fill form without trainee days
+    // Setup: Fill form without trainee Hours
     await gotoHome(page);
     await fillBasicInternalTrainingForm(page, {
-      traineeHours: null // Skip trainee days
+      traineeHours: null // Skip trainee Hours
     });
 
     // Action: Submit the form
     await submitForm(page);
 
     // Assertion: Check for validation message element
-    const traineeDaysInput = page.locator('input[name="trainee_hours"]');
-    const traineeDaysContainer = traineeDaysInput.locator(
+    const traineeHoursInput = page.locator('input[name="trainee_hours"]');
+    const traineeHoursContainer = traineeHoursInput.locator(
       'xpath=ancestor::div[contains(@class, "mb-3")]'
     );
-    const errorMessage = traineeDaysContainer
+    const errorMessage = traineeHoursContainer
       .locator(".validation-message")
       .first();
     await expect(errorMessage).toBeVisible();
 
-    console.log("--- Finished test: Missing Trainee Days ---");
+    console.log("--- Finished test: Missing Trainee Hours ---");
   });
 
   // Test 3: Concur Claim validation
@@ -255,14 +255,14 @@ test.describe("Form Validation Errors", () => {
   });
 
   // Test 7: External Training validation (positive test)
-  test("7. should allow submitting External Training without entering Trainer Days", async ({
+  test("7. should allow submitting External Training without entering Trainer Hours", async ({
     page
   }) => {
     console.log(
-      "--- Starting test: External Training No Trainer Days Error ---"
+      "--- Starting test: External Training No Trainer Hours Error ---"
     );
 
-    // Setup: Fill external training form without trainer days
+    // Setup: Fill external training form without trainer Hours
     await gotoHome(page);
     await fillBasicExternalTrainingForm(page);
 
@@ -273,7 +273,7 @@ test.describe("Form Validation Errors", () => {
     await expectSuccessfulSubmission(page);
 
     console.log(
-      "--- Finished test: External Training No Trainer Days Error ---"
+      "--- Finished test: External Training No Trainer Hours Error ---"
     );
   });
 

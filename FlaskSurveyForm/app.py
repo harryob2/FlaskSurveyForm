@@ -505,6 +505,7 @@ def edit_form(form_id):
     if form.validate_on_submit():
         try:
             # Get trainees data from form
+            flash("Form data received", "info")
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
                 form.trainees_data.data = trainees_data
@@ -1029,7 +1030,6 @@ def new_form():
 @login_required
 def leaderboard():
     """Display the leaderboard of trainers by total training hours"""
-
 
     # Get all approved forms
     forms = get_approved_forms_for_export()

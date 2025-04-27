@@ -216,7 +216,7 @@ async function fillBasicInternalTrainingForm(page, options = {}) {
 async function fillBasicExternalTrainingForm(page, options = {}) {
   const defaults = {
     supplierName: "External Test Supplier",
-    traineeDays: "1",
+    traineeHours: "1",
     startDate: "2024-07-01",
     endDate: "2024-07-01",
     description: "External training description",
@@ -242,11 +242,11 @@ async function fillBasicExternalTrainingForm(page, options = {}) {
   await page.locator('input[name="start_date"]').fill(settings.startDate);
   await page.locator('input[name="end_date"]').fill(settings.endDate);
 
-  // Set trainee days
-  if (settings.traineeDays) {
+  // Set trainee Hours
+  if (settings.traineeHours) {
     await page
       .locator('input[name="trainee_hours"]')
-      .fill(settings.traineeDays);
+      .fill(settings.traineeHours);
   }
 
   // Set description
