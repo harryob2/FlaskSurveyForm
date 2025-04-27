@@ -1010,7 +1010,10 @@ def leaderboard():
     trainer_hours = defaultdict(float)
 
     for form in forms:
-        trainer_name = form.get("trainer_name") or "Unknown"
+        trainer_name = form.get("trainer_name")
+        if not trainer_name:  # Skip forms without a trainer name
+            continue
+
         try:
             trainees_data = json.loads(form.get("trainees_data") or "[]")
             if isinstance(trainees_data, list):
