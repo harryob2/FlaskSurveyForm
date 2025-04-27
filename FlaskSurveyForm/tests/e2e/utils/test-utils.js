@@ -347,6 +347,19 @@ async function expectSuccessfulSubmission(page) {
 }
 
 /**
+ * Verify the form update was successful
+ * @param {import('@playwright/test').Page} page - Playwright page
+ */
+async function expectSuccessfulUpdate(page) {
+  // Wait for the success flash message to appear
+  const successFlash = page.locator(".alert-success");
+  await expect(successFlash).toBeVisible();
+
+  // Verify the success message contains the expected text
+  const successMessage = await successFlash.textContent();
+  expect(successMessage).toContain("updated successfully");
+}
+/**
  * Verify a validation error for the specified field
  * @param {import('@playwright/test').Page} page - Playwright page
  * @param {string} selector - Selector for the field with error
@@ -375,5 +388,6 @@ module.exports = {
   addExpenses,
   submitForm,
   expectSuccessfulSubmission,
-  expectValidationError
+  expectValidationError,
+  expectSuccessfulUpdate
 };

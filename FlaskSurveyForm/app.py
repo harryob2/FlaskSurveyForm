@@ -505,7 +505,6 @@ def edit_form(form_id):
     if form.validate_on_submit():
         try:
             # Get trainees data from form
-            flash("Form data received", "info")
             trainees_data = request.form.get("trainees_data")
             if trainees_data:
                 form.trainees_data.data = trainees_data
