@@ -11,13 +11,13 @@ function initEmployeeSearch(
   inputId,
   resultsContainer,
   onSelectCallback,
-  options = {},
+  options = {}
 ) {
   console.log(`Initializing search for ${inputId}`);
   console.log(
     `Current employee list length: ${
       window.employeeList ? window.employeeList.length : 0
-    }`,
+    }`
   );
   const inputElement = document.getElementById(inputId);
   if (!inputElement) return;
@@ -27,7 +27,7 @@ function initEmployeeSearch(
     hiddenFieldId = null,
     clearInput = true,
     focusInput = false,
-    addToTrainees = false,
+    addToTrainees = false
   } = options;
 
   // Function to search and display results
@@ -90,7 +90,7 @@ function initEmployeeSearch(
           email: employee.email || "",
           department: employee.department || "Engineering",
           firstName: employee.firstName || "",
-          lastName: employee.lastName || "",
+          lastName: employee.lastName || ""
         };
 
         // Create HTML for display with name, email and department
@@ -127,7 +127,7 @@ function initEmployeeSearch(
             addTrainee(
               employeeCopy.name,
               employeeCopy.email,
-              employeeCopy.department,
+              employeeCopy.department
             );
           }
 
@@ -211,7 +211,7 @@ function initEmployeeSearch(
 // Function to find an employee by email in the employee list
 function findEmployeeByEmail(email) {
   return window.employeeList.find(
-    (e) => e.email.toLowerCase() === email.toLowerCase(),
+    (e) => e.email.toLowerCase() === email.toLowerCase()
   );
 }
 
@@ -229,7 +229,7 @@ function addTrainee(name, email, department) {
   trainees.push({
     name: name,
     email: email,
-    department: department || "Engineering",
+    department: department || "Engineering"
   });
 
   console.log("Updated trainees array:", trainees);
@@ -263,36 +263,41 @@ function updateTraineesUI() {
   noTraineesMessage.style.display = "none";
   traineesList.innerHTML = "";
 
-  // Create a list of trainees with option to remove
-  trainees.forEach((trainee) => {
-    const traineeItem = document.createElement("div");
-    traineeItem.className = "card mb-2";
+  // Create a row for every two trainees
+  for (let i = 0; i < trainees.length; i += 2) {
+    const row = document.createElement("div");
+    row.className = "row g-2 mb-2";
 
-    traineeItem.innerHTML = `
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${trainee.name}</strong><br>
-                        <small class="text-muted">${trainee.email}</small><br>
-                        <small class="text-muted fst-italic">${
-                          trainee.department || "Engineering"
-                        }</small>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-trainee" data-email="${
-                      trainee.email
-                    }">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                        </svg>
-                        Remove
-                    </button>
-                </div>
+    // First trainee in the row
+    [0, 1].forEach((offset) => {
+      const trainee = trainees[i + offset];
+      if (trainee) {
+        const col = document.createElement("div");
+        col.className = "col-md-6";
+        const traineeItem = document.createElement("div");
+        traineeItem.className = "card trainee-card";
+        traineeItem.innerHTML = `
+          <div class="trainee-card-body">
+            <div class="trainee-info">
+              <strong class="trainee-name">${trainee.name}</strong><br>
+              <small class="trainee-email">${trainee.email}</small><br>
+              <small class="text-muted fst-italic">${trainee.department || "Engineering"}</small>
             </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-trainee remove-trainee-btn" data-email="${trainee.email}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+              </svg>
+              Remove
+            </button>
+          </div>
         `;
-
-    traineesList.appendChild(traineeItem);
-  });
+        col.appendChild(traineeItem);
+        row.appendChild(col);
+      }
+    });
+    traineesList.appendChild(row);
+  }
 
   // Add event listeners to remove buttons
   document.querySelectorAll(".remove-trainee").forEach((button) => {
@@ -344,7 +349,7 @@ function addTraineesFromEmails(emails) {
     added: 0,
     invalid: [],
     duplicate: [],
-    notFound: [], // Keep track of emails not found
+    notFound: [] // Keep track of emails not found
   };
 
   emails.forEach((email) => {
@@ -361,7 +366,7 @@ function addTraineesFromEmails(emails) {
       const added = addTrainee(
         employee.displayName,
         employee.email,
-        employee.department,
+        employee.department
       );
 
       if (added) {
@@ -390,7 +395,7 @@ function addTraineesFromEmails(emails) {
   // Updated message for not found emails
   if (results.notFound.length > 0) {
     messages.push(
-      `Could not find/add employees for emails: ${results.notFound.join(", ")}`,
+      `Could not find/add employees for emails: ${results.notFound.join(", ")}`
     );
   }
 
@@ -403,7 +408,7 @@ function addTraineesFromEmails(emails) {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize trainer search
   const trainerSearchResults = document.getElementById(
-    "trainer-search-results",
+    "trainer-search-results"
   );
   if (trainerSearchResults) {
     initEmployeeSearch(
@@ -414,7 +419,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Trainer selected:", employee.name);
         // Update the visible input field with the selected trainer's name
         const trainerSearchInput = document.getElementById(
-          "trainer_name_search",
+          "trainer_name_search"
         );
         if (trainerSearchInput) {
           trainerSearchInput.value = employee.name;
@@ -422,14 +427,14 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       {
         hiddenFieldId: "trainer_name_hidden",
-        clearInput: false,
-      },
+        clearInput: false
+      }
     );
   }
 
   // Initialize trainee search
   const traineeSearchResults = document.getElementById(
-    "trainee-search-results",
+    "trainee-search-results"
   );
   if (traineeSearchResults) {
     initEmployeeSearch(
@@ -442,8 +447,8 @@ document.addEventListener("DOMContentLoaded", function () {
       {
         addToTrainees: true,
         clearInput: true,
-        focusInput: true,
-      },
+        focusInput: true
+      }
     );
   }
 
@@ -458,7 +463,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const employee = window.employeeList.find(
           (e) =>
             e.displayName.toLowerCase().includes(searchValue.toLowerCase()) ||
-            e.email.toLowerCase().includes(searchValue.toLowerCase()),
+            e.email.toLowerCase().includes(searchValue.toLowerCase())
         );
 
         if (employee) {
@@ -467,7 +472,7 @@ document.addEventListener("DOMContentLoaded", function () {
           document.getElementById("trainee-search-input").focus();
         } else {
           alert(
-            "Employee not found. Please search and select from the dropdown.",
+            "Employee not found. Please search and select from the dropdown."
           );
         }
       }
@@ -481,14 +486,14 @@ document.addEventListener("DOMContentLoaded", function () {
       // Check if Bootstrap is available
       if (typeof bootstrap !== "undefined") {
         const modal = new bootstrap.Modal(
-          document.getElementById("bulkAddModal"),
+          document.getElementById("bulkAddModal")
         );
         modal.show();
       } else {
         console.error("Bootstrap not loaded. Cannot show modal.");
         // Fallback if Bootstrap is not available
         alert(
-          "Modal functionality requires Bootstrap. Please ensure it is loaded properly.",
+          "Modal functionality requires Bootstrap. Please ensure it is loaded properly."
         );
       }
     });
@@ -512,7 +517,7 @@ document.addEventListener("DOMContentLoaded", function () {
           // Close the modal after adding
           if (typeof bootstrap !== "undefined") {
             const modal = bootstrap.Modal.getInstance(
-              document.getElementById("bulkAddModal"),
+              document.getElementById("bulkAddModal")
             );
             if (modal) {
               modal.hide();
