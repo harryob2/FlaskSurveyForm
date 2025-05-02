@@ -215,7 +215,7 @@
                                 <div class="form-floating">
                                     {{ form.training_description(class="form-control",
                                     style="height: 120px", placeholder=" ") }} {{
-                                    form.training_description.label }}
+                                    form.training_description.label (style="position: absolute; top: -7px; width: 115%;")}}
                                 </div>
                                 <div class="form-text">
                                     Briefly describe the training delivered
@@ -381,8 +381,9 @@
                 <div class="mb-3">
                     <div class="form-floating">
                         {{ form.trainee_emails(class="form-control auto-resize-textarea",
-                        placeholder=" ", rows=4, style="min-height: 120px; max-height:
-                        300px; overflow-y: auto;") }} {{ form.trainee_emails.label }}
+                        placeholder="", rows=4, style="min-height: 120px; max-height:
+                        300px; overflow-y: auto;") }} 
+                        {{ form.trainee_emails.label(style="position: absolute; top: -7px; width: 115.5%;") }}
                     </div>
                     <small class="form-text text-muted">
                         Example: john@example.com, jane@domain.com
@@ -403,7 +404,7 @@
 {% endblock %} {% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
-<script src="{{ url_for('static', filename='data/employees.js') }}"></script>
+<script src="{{ url_for('static', filename='data/employees.js') }}"></script>{{ form.trainee_emails.label(style="position: absolute; top: -7px; width: 115.5%;") }}
 <script src="{{ url_for('static', filename='js/employee_search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/attachment.js') }}"></script>
 <script src="{{ url_for('static', filename='js/other_expense.js') }}"></script>

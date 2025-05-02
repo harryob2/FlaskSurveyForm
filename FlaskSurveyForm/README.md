@@ -1,3 +1,5 @@
+[![Playwright Tests](https://github.com/harryob2/FlaskSurveyForm/actions/workflows/playWrite.yml/badge.svg?)](https://github.com/harryob2/FlaskSurveyForm/actions/workflows/playWrite.yml)
+
 # Limerick Training Form System
 
 A web application for managing training form submissions, built with Flask and modern frontend technologies.
@@ -95,6 +97,11 @@ To run tests with a visible browser (for debugging):
 
 ```bash
 npx playwright test --headed
+```
+
+To simulate the GitHub Actions environment, you can run the tests with the following command:
+```bash
+CI=1 npx playwright test
 ```
 
 To run a specific test file:
