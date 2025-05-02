@@ -143,7 +143,7 @@ class TrainingForm(FlaskForm):
         "Trainer Hours",
         validators=[
             RequiredIf("training_type", "Internal Training"),
-            Optional(),
+            DataRequired(),
             NumberRange(min=0, message="Trainer hours cannot be negative if entered."),
         ],
         default=None,
