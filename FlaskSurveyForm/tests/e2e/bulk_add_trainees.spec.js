@@ -54,16 +54,10 @@ test.describe("Bulk Add Trainees", () => {
     await emailTextarea.fill("greene@test.com");
     console.log("--- Filled email textarea with greene@test.com ---");
 
-    // Click the Add Emails button forcefully
-    await page.locator("#bulkAddModal #add-emails-btn").click({ force: true });
+    // Click the Add Emails button
+    await page.locator("#bulkAddModal #add-emails-btn").click();
     console.log("--- Clicked Add Emails button ---");
 
-    // Listen for alert dialogs and auto-accept them
-    page.once('dialog', async dialog => {
-      console.log(`--- Alert message: ${dialog.message()} ---`);
-      await dialog.accept();
-      console.log("--- Alert accepted ---");
-    });
     // Wait for the modal to close with increased timeout
     await expect(page.locator("#bulkAddModal")).not.toBeVisible({
       timeout: 10000, // Increased timeout to 10s
