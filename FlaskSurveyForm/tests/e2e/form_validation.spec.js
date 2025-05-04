@@ -88,8 +88,8 @@ test.describe("Form Validation Errors", () => {
       .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
-    await setTrainerName(page, "Test Trainer");
-    await page.locator("label").filter({ hasText: "Onsite" }).click();
+      await page.locator("label").filter({ hasText: "Onsite" }).click();
+      await setTrainerName(page, "Test Trainer");
     await page.locator('input[name="trainer_hours"]').fill("1");
     await page.locator('input[name="trainee_hours"]').fill("1");
     await page.locator('input[name="start_date"]').fill("2023-01-01");
@@ -139,8 +139,8 @@ test.describe("Form Validation Errors", () => {
       .locator(".training-type-card")
       .filter({ hasText: "Internal Training" })
       .click();
-    await setTrainerName(page, "Test Trainer");
-    await page.locator("label").filter({ hasText: "Onsite" }).click();
+      await page.locator("label").filter({ hasText: "Onsite" }).click();
+      await setTrainerName(page, "Test Trainer");
     await page.locator('input[name="trainer_hours"]').fill("1");
     await page.locator('input[name="trainee_hours"]').fill("1");
     await page.locator('input[name="start_date"]').fill("2023-01-01");
