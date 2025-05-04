@@ -335,18 +335,23 @@ def approve_training(form_id):
             form.approved = not bool(form.approved)
             session.flush()
 
-    # If htmx request for row update
+    # If htmx request for row update in list
     if request.args.get("row") == "1":
-        # Get the updated form dict for rendering
         from models import get_training_form
 
         form_data = get_training_form(form_id)
-        # Also need is_admin and render_check_icon, render_x_icon
-        from flask import g
-
         is_admin = is_admin_user(current_user)
-        # Render only the <tr> for this form
         return render_template("_form_row.html", form=form_data, is_admin=is_admin)
+
+    # If htmx request for view page button
+    if request.args.get("view") == "1":
+        from models import get_training_form
+
+        form_data = get_training_form(form_id)
+        is_admin = is_admin_user(current_user)
+        return render_template(
+            "_approve_btn_view.html", form=form_data, is_admin=is_admin
+        )
 
     # Determine redirect target based on referrer
     referrer = request.referrer
