@@ -32,6 +32,7 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
     /* Adjust spacing between buttons as needed */
   }
 </style>
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
 {% endblock %} {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="fs-4">
@@ -230,16 +231,17 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
             </a>
             {% if is_admin %}
             <a href="{{ url_for('approve_training', form_id=form.id) }}"
-              class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}">
-              {% if form.approved %} 
-              {{ render_check_icon('icon-default') }} 
-              {{render_x_icon('icon-hover') }} 
-              {% else %} 
-              {{render_x_icon('icon-default') }} 
-              {{render_check_icon('icon-hover') }} 
+              class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}"
+              hx-get="{{ url_for('approve_training', form_id=form.id) }}?row=1" hx-target="closest tr"
+              hx-swap="outerHTML">
+              {% if form.approved %}
+              {{ render_check_icon('icon-default') }}
+              {{render_x_icon('icon-hover') }}
+              {% else %}
+              {{render_x_icon('icon-default') }}
+              {{render_check_icon('icon-hover') }}
               {% endif %}
-              <span class="btn-text">{% if form.approved %}Unapprove{% else %}Approve{% endif
-                %}</span>
+              <span class="btn-text">{% if form.approved %}Unapprove{% else %}Approve{% endif %}</span>
             </a>
             {% else %}
             <span

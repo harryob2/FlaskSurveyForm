@@ -24,6 +24,7 @@ from flask import (
     jsonify,
     abort,
     send_file,
+    render_template_string,
 )
 from werkzeug.utils import secure_filename
 from flask_login import login_user, logout_user, current_user, login_required
@@ -122,6 +123,8 @@ def index():
     if not current_user.is_authenticated:
         return redirect(url_for("login"))
     return render_template("home.html", is_admin=is_admin_user(current_user))
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Handle user login via LDAP"""
@@ -330,6 +333,21 @@ def approve_training(form_id):
         form = session.query(TrainingForm).filter_by(id=form_id).first()
         if form:
             form.approved = not bool(form.approved)
+            session.flush()
+
+    # If htmx request for row update
+    if request.args.get("row") == "1":
+        # Get the updated form dict for rendering
+        from models import get_training_form
+
+        form_data = get_training_form(form_id)
+        # Also need is_admin and render_check_icon, render_x_icon
+        from flask import g
+
+        is_admin = is_admin_user(current_user)
+        # Render only the <tr> for this form
+        return render_template("_form_row.html", form=form_data, is_admin=is_admin)
+
     # Determine redirect target based on referrer
     referrer = request.referrer
     if referrer and url_for("list_forms") in referrer:
