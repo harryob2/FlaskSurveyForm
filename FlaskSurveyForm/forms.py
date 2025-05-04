@@ -141,7 +141,6 @@ class TrainingForm(FlaskForm):
     trainer_hours = FloatField(
         "Trainer Hours",
         validators=[
-            Optional(),
             DynamicRequiredIf(
                 "training_type",
                 "Internal Training",
@@ -346,9 +345,9 @@ class TrainingForm(FlaskForm):
     def validate_trainer_hours(self, field):
         """Validate that trainer hours is provided if required and not empty."""
         if self.training_type.data == "Internal Training":
-            if field.data is None or str(field.data).strip() == "":
+            if field.data is None or str(field.data).strip() == "" or field.data <= 0:
                 raise ValidationError(
-                    "Trainer hours is required for internal training."
+                    "Trainer hours is required and must be greater than 0 for internal training."
                 )
 
 

@@ -202,6 +202,35 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
+        // --- Trainer Hours: Required for Internal Training ---
+        const trainerHours = form.elements["trainer_hours"];
+        if (
+            trainingType.value === "Internal Training" &&
+            trainerHours &&
+            (
+                trainerHours.value === "" ||
+                isNaN(Number(trainerHours.value)) ||
+                Number(trainerHours.value) <= 0
+            )
+        ) {
+            trainerHours.classList.add("is-invalid");
+            // Add feedback if not present
+            let feedback = trainerHours.parentElement.querySelector('.invalid-feedback');
+            if (!feedback) {
+                feedback = document.createElement('div');
+                feedback.className = 'invalid-feedback';
+                feedback.innerText = "Trainer hours are required and must be greater than 0 for internal training.";
+                trainerHours.parentElement.appendChild(feedback);
+            }
+            trainerHours.setCustomValidity("Trainer hours are required and must be greater than 0 for internal training.");
+            if (!firstInvalidElement) firstInvalidElement = trainerHours;
+        } else if (trainerHours) {
+            trainerHours.classList.remove("is-invalid");
+            trainerHours.setCustomValidity("");
+            let feedback = trainerHours.parentElement.querySelector('.invalid-feedback');
+            if (feedback) feedback.remove();
+        }
+
         // --- Expenses: Concur Claim ---
         // Relies on parseCurrency from form_helpers.js (ensure loaded first)
         const expenseInputs = [travelCost, foodCost, materialsCost, otherCost].filter(el => el);
