@@ -395,6 +395,40 @@
         </div>
     </div>
 </div>
+
+<!-- Add the Modal for Manual Adding Trainee -->
+<div class="modal fade" id="manualAddModal" tabindex="-1" aria-labelledby="manualAddModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manualAddModalLabel">Add Trainee Manually</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="manual-first-name" class="form-label">First name</label>
+                    <input type="text" class="form-control" id="manual-first-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="manual-last-name" class="form-label">Last name</label>
+                    <input type="text" class="form-control" id="manual-last-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="manual-department" class="form-label">Department</label>
+                    <input type="text" class="form-control" id="manual-department" value="Engineering">
+                </div>
+                <div class="mb-3">
+                    <label for="manual-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="manual-email" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="save-manual-trainee" class="btn btn-primary">Add Trainee</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %} {% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
