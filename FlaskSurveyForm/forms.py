@@ -1,9 +1,3 @@
-"""
-Form definitions for the training form application.
-
-This module defines the form classes used for data validation and rendering.
-"""
-
 from datetime import date
 import re
 import json
@@ -58,32 +52,37 @@ ALLOWED_EXTENSIONS = {
 }
 
 
-def RequiredIf(condition_field, condition_value):
-    """Custom validator that makes a field required if another field has a specific value"""
-    message = f"This field is required when {condition_field} is {condition_value}"
+def DynamicRequiredIf(condition_field, condition_value, additional_validator=None):
+    """Dynamic required validator based on a condition"""
 
-    def _validate(form, field):
+    def _validator(form, field):
         try:
             other_field = getattr(form, condition_field)
         except AttributeError:
             raise ValidationError(
                 f"No field named '{condition_field}' in form for RequiredIf validator."
             )
+        print(
+            f"Validating {field.name} based on {condition_field} == {condition_value}"
+        )
 
-        # Check if the condition field has the specified value
         if other_field.data == condition_value:
-            # If condition met, behave like DataRequired
-            if not field.data:
-                raise ValidationError(message)
-            # Handle string data that might just be whitespace
-            if isinstance(field.data, str) and not field.data.strip():
-                raise ValidationError(message)
-            # Handle numeric data that might be zero if zero isn't allowed implicitly
-            # (Adjust if 0 is valid for Decimal/Float) - NumberRange usually handles this
-            # if isinstance(field.data, (int, float, Decimal)) and field.data == 0:
-            #     raise ValidationError(message) # Uncomment if 0 is not allowed
+            # If condition is met, field is required
+            validators = (
+                [DataRequired()]
+                if not additional_validator
+                else [DataRequired(), additional_validator]
+            )
+            field.validators = validators
+        else:
+            # Make it optional if condition is not met
+            field.validators = (
+                [Optional()]
+                if not additional_validator
+                else [Optional(), additional_validator]
+            )
 
-    return _validate
+    return _validator
 
 
 class TrainingForm(FlaskForm):
@@ -120,34 +119,36 @@ class TrainingForm(FlaskForm):
             DataRequired(),
             NumberRange(min=0, message="Trainee hours cannot be negative."),
         ],
-        render_kw={"type": "number", "step": "0.1", "min": "0"}
+        render_kw={"type": "number", "step": "0.1", "min": "0"},
     )
 
     # Conditionally Required
     trainer_name = StringField(
         "Trainer Name",
-        validators=[RequiredIf("training_type", "Internal Training")],
+        validators=[DynamicRequiredIf("training_type", "Internal Training")],
         description="For internal training, select from employee list",
     )
     supplier_name = StringField(
         "Supplier Name",
-        validators=[RequiredIf("training_type", "External Training")],
+        validators=[DynamicRequiredIf("training_type", "External Training")],
         description="For external training, enter supplier name",
     )
     location_details = StringField(
         "Location Details",
-        validators=[RequiredIf("location_type", "Offsite")],
+        validators=[DynamicRequiredIf("location_type", "Offsite")],
         description="Required for offsite training",
     )
     trainer_hours = FloatField(
         "Trainer Hours",
         validators=[
-            RequiredIf("training_type", "Internal Training"),
-            Optional(),
-            NumberRange(min=0, message="Trainer hours cannot be negative if entered."),
+            DynamicRequiredIf(
+                "training_type",
+                "Internal Training",
+                NumberRange(min=0, message="Trainer hours cannot be negative."),
+            ),
         ],
         default=None,
-        render_kw={"type": "number", "step": "0.1", "min": "0"}
+        render_kw={"type": "number", "step": "0.1", "min": "0"},
     )
 
     # Optional or complex validation
@@ -178,7 +179,7 @@ class TrainingForm(FlaskForm):
     # Attachment fields
     attachments = MultipleFileField(
         "Attachments",
-        validators=[RequiredIf("location_type", "Virtual")],
+        validators=[DynamicRequiredIf("location_type", "Virtual")],
         description="Required for virtual training",
     )  # Example: Make optional
     attachment_descriptions = TextAreaField(
@@ -266,7 +267,7 @@ class TrainingForm(FlaskForm):
             "end_date": self.end_date.data.strftime("%Y-%m-%d"),
             "trainer_hours": (
                 float(str(self.trainer_hours.data))
-                if is_internal and self.trainer_hours.data
+                if is_internal and self.trainer_hours.data is not None
                 else None
             ),
             "training_description": self.training_description.data or "",
@@ -340,6 +341,14 @@ class TrainingForm(FlaskForm):
             data["trainees_data"] = "[]"
 
         return data
+
+    def validate_trainer_hours(self, field):
+        """Validate that trainer hours is provided if required and not empty."""
+        if self.training_type.data == "Internal Training":
+            if field.data is None or str(field.data).strip() == "" or field.data <= 0:
+                raise ValidationError(
+                    "Trainer hours is required and must be greater than 0 for internal training."
+                )
 
 
 class InvoiceForm(FlaskForm):

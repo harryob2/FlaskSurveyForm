@@ -120,6 +120,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 externalSupplierContainer?.classList.toggle("d-none", selectedTrainingType !== "External Training");
                 trainerHoursContainer?.classList.toggle("d-none", selectedTrainingType !== "Internal Training");
             }
+               // Set default value for trainer_hours if External Training is selected
+        const trainerHoursInput = form.elements["trainer_hours"];
+        if (selectedTrainingType === "External Training" && trainerHoursInput) {
+          trainerHoursInput.value = "0";
+        }
         }
 
         function handleLocationTypeChange() {

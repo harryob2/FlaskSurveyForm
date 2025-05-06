@@ -32,6 +32,7 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
     /* Adjust spacing between buttons as needed */
   }
 </style>
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
 {% endblock %} {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2 class="fs-4">
@@ -49,7 +50,7 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
       Export to Claim 5 Form
     </button>
     {% endif %}
-    <a href="{{ url_for('index') }}" class="btn btn-primary">
+    <a href="{{ url_for('new_form') }}" class="btn btn-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg"
         viewBox="0 0 16 16">
         <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 0 1 0-2h6V1a1 1 0 0 1 1-1z" />
@@ -77,8 +78,8 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
       <form method="GET" action="{{ url_for('list_forms') }}" class="row g-3">
         <div class="col-md-12">
           <div class="input-group">
-            {{ form.search(class="form-control", placeholder="Search by trainee,
-            trainer, supplier, course code or invoice number") }}
+            {{ form.search(class="form-control", placeholder="Search by trainee, trainer, supplier, course code, invoice
+            number or training description") }}
             <button class="btn btn-primary" type="submit">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search"
                 viewBox="0 0 16 16">
@@ -230,13 +231,17 @@ render_x_icon %} {% block title %}{% if my_submissions %}My Submissions{% else
             </a>
             {% if is_admin %}
             <a href="{{ url_for('approve_training', form_id=form.id) }}"
-              class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}">
-              {% if form.approved %} {{ render_check_icon('icon-default') }} {{
-              render_x_icon('icon-hover') }} {% else %} {{
-              render_x_icon('icon-default') }} {{
-              render_check_icon('icon-hover') }} {% endif %}
-              <span class="btn-text">{% if form.approved %}Unapprove{% else %}Approve{% endif
-                %}</span>
+              class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}"
+              hx-get="{{ url_for('approve_training', form_id=form.id) }}?row=1" hx-target="closest tr"
+              hx-swap="outerHTML">
+              {% if form.approved %}
+              {{ render_check_icon('icon-default') }}
+              {{render_x_icon('icon-hover') }}
+              {% else %}
+              {{render_x_icon('icon-default') }}
+              {{render_check_icon('icon-hover') }}
+              {% endif %}
+              <span class="btn-text">{% if form.approved %}Unapprove{% else %}Approve{% endif %}</span>
             </a>
             {% else %}
             <span

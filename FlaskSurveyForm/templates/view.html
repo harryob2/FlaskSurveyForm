@@ -9,7 +9,9 @@ content %}
       <div class="d-flex align-items-center gap-2">
         {% if is_admin %}
         <a href="{{ url_for('approve_training', form_id=form.id) }}"
-          class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}">
+          class="btn btn-sm approve-btn {% if form.approved %}approved btn-outline-success{% else %}unapproved btn-outline-secondary{% endif %}"
+          hx-get="{{ url_for('approve_training', form_id=form.id) }}?view=1"
+          hx-target="closest .d-flex.align-items-center.gap-2" hx-swap="outerHTML">
           {% if form.approved %} {{ render_check_icon('icon-default') }} {{
           render_x_icon('icon-hover') }} {% else %} {{
           render_x_icon('icon-default') }} {{ render_check_icon('icon-hover') }}
@@ -108,7 +110,7 @@ content %}
         <!-- Expenses Section -->
         <div class="mb-4">
           <h4 class="fs-6 text-primary mb-3">Expenses Breakdown</h4>
-          <div class="row g-3">
+          <div class="row expense-row mb-4">
             <div class="col-md-3">
               <div class="card border-primary">
                 <div class="card-body">
@@ -238,4 +240,9 @@ content %}
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_head %}
+{{ super() }}
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
 {% endblock %}

@@ -178,7 +178,6 @@ a.approve-btn.approved:hover .btn-text::before {
   min-height: 100px;
 }
 
-
 .training-type-card {
   position: relative;
   width: 100%;
@@ -201,4 +200,9 @@ a.approve-btn.approved:hover .btn-text::before {
 
 .training-type-card.selected {
   border-color: #2563eb !important;
+}
+
+/* Ensure equal height for expense boxes on the view page */
+.expense-row .card.border-primary {
+  min-height: 140px; /* Adjust as needed for your content */
 }

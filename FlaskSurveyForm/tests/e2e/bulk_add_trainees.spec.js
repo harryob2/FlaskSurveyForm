@@ -54,8 +54,8 @@ test.describe("Bulk Add Trainees", () => {
     await emailTextarea.fill("greene@test.com");
     console.log("--- Filled email textarea with greene@test.com ---");
 
-    // Click the Add Emails button forcefully
-    await page.locator("#bulkAddModal #add-emails-btn").click({ force: true });
+    // Click the Add Emails button
+    await page.locator("#bulkAddModal #add-emails-btn").click();
     console.log("--- Clicked Add Emails button ---");
 
     // Wait for the modal to close with increased timeout

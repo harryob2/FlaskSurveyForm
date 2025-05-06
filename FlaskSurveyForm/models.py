@@ -255,6 +255,7 @@ def get_all_training_forms(
                 (TrainingForm.trainer_name.like(like_term))
                 | (TrainingForm.supplier_name.like(like_term))
                 | (TrainingForm.location_details.like(like_term))
+                | (TrainingForm.training_description.like(like_term))
             )
         if date_from:
             query = query.filter(TrainingForm.start_date >= date_from)
@@ -360,6 +361,7 @@ def get_user_training_forms(
                 (TrainingForm.trainer_name.like(like_term))
                 | (TrainingForm.supplier_name.like(like_term))
                 | (TrainingForm.location_details.like(like_term))
+                | (TrainingForm.training_description.like(like_term))
             )
         if date_from:
             query = query.filter(TrainingForm.start_date >= date_from)

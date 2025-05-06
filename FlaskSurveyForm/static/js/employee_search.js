@@ -11,13 +11,13 @@ function initEmployeeSearch(
   inputId,
   resultsContainer,
   onSelectCallback,
-  options = {},
+  options = {}
 ) {
   console.log(`Initializing search for ${inputId}`);
   console.log(
     `Current employee list length: ${
       window.employeeList ? window.employeeList.length : 0
-    }`,
+    }`
   );
   const inputElement = document.getElementById(inputId);
   if (!inputElement) return;
@@ -27,7 +27,7 @@ function initEmployeeSearch(
     hiddenFieldId = null,
     clearInput = true,
     focusInput = false,
-    addToTrainees = false,
+    addToTrainees = false
   } = options;
 
   // Function to search and display results
@@ -61,104 +61,123 @@ function initEmployeeSearch(
 
     console.log(`Found ${matchingEmployees.length} matching employees`);
 
-    if (matchingEmployees.length > 0) {
-      // Important: use display style directly instead of classList
-      resultsContainer.style.display = "block";
+    // Show results container
+    resultsContainer.style.display = "block";
 
-      // Add matching employees to the dropdown
-      matchingEmployees.forEach((employee) => {
-        const itemDiv = document.createElement("div");
-        itemDiv.className = "p-2 autocomplete-item";
-        itemDiv.style.cursor = "pointer";
-        itemDiv.style.borderBottom = "1px solid #dee2e6";
-        itemDiv.style.backgroundColor = "var(--bs-body-bg)";
-        itemDiv.style.color = "var(--bs-body-color)";
+    // If no results found, show manual add button
+    if (matchingEmployees.length === 0) {
+      resultsContainer.innerHTML = `
+        <div class="no-results-found p-3 text-center">
+          <p class="mb-2">No matching employees found</p>
+          <button type="button" class="btn btn-outline-primary btn-sm manual-add-trainee">
+            <i class="bi bi-plus-lg"></i> Add trainee manually
+          </button>
+        </div>
+      `;
 
-        // Make it stand out visually on hover
-        itemDiv.addEventListener("mouseenter", function () {
-          this.style.backgroundColor = "var(--bs-secondary-bg)";
-        });
-
-        itemDiv.addEventListener("mouseleave", function () {
-          this.style.backgroundColor = "var(--bs-body-bg)";
-        });
-
-        // Create a safe copy of the employee data for the callback to avoid reference issues
-        const employeeCopy = {
-          displayName: employee.displayName || "",
-          name: employee.displayName || employee.name || "Unknown",
-          email: employee.email || "",
-          department: employee.department || "Engineering",
-          firstName: employee.firstName || "",
-          lastName: employee.lastName || "",
-        };
-
-        // Create HTML for display with name, email and department
-        itemDiv.innerHTML = `
-                    <div class="fw-medium">${employeeCopy.name}</div>
-                    ${
-                      employeeCopy.email
-                        ? `<div class="text-muted small">${employeeCopy.email}</div>`
-                        : ""
-                    }
-                    ${
-                      employeeCopy.department
-                        ? `<div class="text-muted small fst-italic">${employeeCopy.department}</div>`
-                        : ""
-                    }
-                `;
-
-        // Click handler to select an employee
-        itemDiv.addEventListener("click", function () {
-          console.log(`Employee selected: ${employeeCopy.name}`);
-
-          // Update hidden field if specified
-          if (hiddenFieldId) {
-            const hiddenField = document.getElementById(hiddenFieldId);
-            if (hiddenField) {
-              hiddenField.value = employeeCopy.name;
-              // Trigger change event to update any dependent form validations
-              hiddenField.dispatchEvent(new Event("change"));
-            }
-          }
-
-          // Add to trainees if specified
-          if (addToTrainees) {
-            addTrainee(
-              employeeCopy.name,
-              employeeCopy.email,
-              employeeCopy.department,
-            );
-          }
-
-          // Call the callback with the employee data
-          onSelectCallback(employeeCopy);
-
-          // Clear input if specified
-          if (clearInput) {
-            inputElement.value = "";
-          }
-
-          // Focus input if specified
-          if (focusInput) {
-            inputElement.focus();
-          }
-
+      // Add click handler for manual add button
+      const manualAddBtn = resultsContainer.querySelector(
+        ".manual-add-trainee"
+      );
+      if (manualAddBtn) {
+        manualAddBtn.addEventListener("click", () => {
+          // Show manual add modal
+          const modal = new bootstrap.Modal(
+            document.getElementById("manualAddModal")
+          );
+          modal.show();
+          // Clear the search input and results
+          inputElement.value = "";
           resultsContainer.style.display = "none";
         });
-
-        resultsContainer.appendChild(itemDiv);
-      });
-    } else {
-      // Show a "no results" message instead of hiding
-      resultsContainer.style.display = "block";
-      const noResults = document.createElement("div");
-      noResults.className = "p-2 text-muted";
-      noResults.textContent = "No matching employees found";
-      noResults.style.backgroundColor = "#fff";
-      noResults.style.color = "#6c757d";
-      resultsContainer.appendChild(noResults);
+      }
+      return;
     }
+
+    // Add matching employees to the dropdown
+    matchingEmployees.forEach((employee) => {
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "p-2 autocomplete-item";
+      itemDiv.style.cursor = "pointer";
+      itemDiv.style.borderBottom = "1px solid #dee2e6";
+      itemDiv.style.backgroundColor = "var(--bs-body-bg)";
+      itemDiv.style.color = "var(--bs-body-color)";
+
+      // Make it stand out visually on hover
+      itemDiv.addEventListener("mouseenter", function () {
+        this.style.backgroundColor = "var(--bs-secondary-bg)";
+      });
+
+      itemDiv.addEventListener("mouseleave", function () {
+        this.style.backgroundColor = "var(--bs-body-bg)";
+      });
+
+      // Create a safe copy of the employee data for the callback to avoid reference issues
+      const employeeCopy = {
+        displayName: employee.displayName || "",
+        name: employee.displayName || employee.name || "Unknown",
+        email: employee.email || "",
+        department: employee.department || "Engineering",
+        firstName: employee.firstName || "",
+        lastName: employee.lastName || ""
+      };
+
+      // Create HTML for display with name, email and department
+      itemDiv.innerHTML = `
+                  <div class="fw-medium">${employeeCopy.name}</div>
+                  ${
+                    employeeCopy.email
+                      ? `<div class="text-muted small">${employeeCopy.email}</div>`
+                      : ""
+                  }
+                  ${
+                    employeeCopy.department
+                      ? `<div class="text-muted small fst-italic">${employeeCopy.department}</div>`
+                      : ""
+                  }
+              `;
+
+      // Click handler to select an employee
+      itemDiv.addEventListener("click", function () {
+        console.log(`Employee selected: ${employeeCopy.name}`);
+
+        // Update hidden field if specified
+        if (hiddenFieldId) {
+          const hiddenField = document.getElementById(hiddenFieldId);
+          if (hiddenField) {
+            hiddenField.value = employeeCopy.name;
+            // Trigger change event to update any dependent form validations
+            hiddenField.dispatchEvent(new Event("change"));
+          }
+        }
+
+        // Add to trainees if specified
+        if (addToTrainees) {
+          addTrainee(
+            employeeCopy.name,
+            employeeCopy.email,
+            employeeCopy.department
+          );
+        }
+
+        // Call the callback with the employee data
+        onSelectCallback(employeeCopy);
+
+        // Clear input if specified
+        if (clearInput) {
+          inputElement.value = "";
+        }
+
+        // Focus input if specified
+        if (focusInput) {
+          inputElement.focus();
+        }
+
+        resultsContainer.style.display = "none";
+      });
+
+      resultsContainer.appendChild(itemDiv);
+    });
   }
 
   // Input event handler for searching
@@ -211,7 +230,7 @@ function initEmployeeSearch(
 // Function to find an employee by email in the employee list
 function findEmployeeByEmail(email) {
   return window.employeeList.find(
-    (e) => e.email.toLowerCase() === email.toLowerCase(),
+    (e) => e.email.toLowerCase() === email.toLowerCase()
   );
 }
 
@@ -229,7 +248,7 @@ function addTrainee(name, email, department) {
   trainees.push({
     name: name,
     email: email,
-    department: department || "Engineering",
+    department: department || "Engineering"
   });
 
   console.log("Updated trainees array:", trainees);
@@ -263,36 +282,41 @@ function updateTraineesUI() {
   noTraineesMessage.style.display = "none";
   traineesList.innerHTML = "";
 
-  // Create a list of trainees with option to remove
-  trainees.forEach((trainee) => {
-    const traineeItem = document.createElement("div");
-    traineeItem.className = "card mb-2";
+  // Create a row for every two trainees
+  for (let i = 0; i < trainees.length; i += 2) {
+    const row = document.createElement("div");
+    row.className = "row g-2 mb-2";
 
-    traineeItem.innerHTML = `
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${trainee.name}</strong><br>
-                        <small class="text-muted">${trainee.email}</small><br>
-                        <small class="text-muted fst-italic">${
-                          trainee.department || "Engineering"
-                        }</small>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-trainee" data-email="${
-                      trainee.email
-                    }">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                        </svg>
-                        Remove
-                    </button>
-                </div>
+    // First trainee in the row
+    [0, 1].forEach((offset) => {
+      const trainee = trainees[i + offset];
+      if (trainee) {
+        const col = document.createElement("div");
+        col.className = "col-md-6";
+        const traineeItem = document.createElement("div");
+        traineeItem.className = "card trainee-card";
+        traineeItem.innerHTML = `
+          <div class="trainee-card-body">
+            <div class="trainee-info">
+              <strong class="trainee-name">${trainee.name}</strong><br>
+              <small class="trainee-email">${trainee.email}</small><br>
+              <small class="text-muted fst-italic">${trainee.department || "Engineering"}</small>
             </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-trainee remove-trainee-btn" data-email="${trainee.email}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+              </svg>
+              Remove
+            </button>
+          </div>
         `;
-
-    traineesList.appendChild(traineeItem);
-  });
+        col.appendChild(traineeItem);
+        row.appendChild(col);
+      }
+    });
+    traineesList.appendChild(row);
+  }
 
   // Add event listeners to remove buttons
   document.querySelectorAll(".remove-trainee").forEach((button) => {
@@ -344,7 +368,7 @@ function addTraineesFromEmails(emails) {
     added: 0,
     invalid: [],
     duplicate: [],
-    notFound: [], // Keep track of emails not found
+    notFound: [] // Keep track of emails not found
   };
 
   emails.forEach((email) => {
@@ -361,7 +385,7 @@ function addTraineesFromEmails(emails) {
       const added = addTrainee(
         employee.displayName,
         employee.email,
-        employee.department,
+        employee.department
       );
 
       if (added) {
@@ -390,7 +414,7 @@ function addTraineesFromEmails(emails) {
   // Updated message for not found emails
   if (results.notFound.length > 0) {
     messages.push(
-      `Could not find/add employees for emails: ${results.notFound.join(", ")}`,
+      `Could not find/add employees for emails: ${results.notFound.join(", ")}`
     );
   }
 
@@ -403,7 +427,7 @@ function addTraineesFromEmails(emails) {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize trainer search
   const trainerSearchResults = document.getElementById(
-    "trainer-search-results",
+    "trainer-search-results"
   );
   if (trainerSearchResults) {
     initEmployeeSearch(
@@ -414,7 +438,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Trainer selected:", employee.name);
         // Update the visible input field with the selected trainer's name
         const trainerSearchInput = document.getElementById(
-          "trainer_name_search",
+          "trainer_name_search"
         );
         if (trainerSearchInput) {
           trainerSearchInput.value = employee.name;
@@ -422,14 +446,14 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       {
         hiddenFieldId: "trainer_name_hidden",
-        clearInput: false,
-      },
+        clearInput: false
+      }
     );
   }
 
   // Initialize trainee search
   const traineeSearchResults = document.getElementById(
-    "trainee-search-results",
+    "trainee-search-results"
   );
   if (traineeSearchResults) {
     initEmployeeSearch(
@@ -442,8 +466,8 @@ document.addEventListener("DOMContentLoaded", function () {
       {
         addToTrainees: true,
         clearInput: true,
-        focusInput: true,
-      },
+        focusInput: true
+      }
     );
   }
 
@@ -458,7 +482,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const employee = window.employeeList.find(
           (e) =>
             e.displayName.toLowerCase().includes(searchValue.toLowerCase()) ||
-            e.email.toLowerCase().includes(searchValue.toLowerCase()),
+            e.email.toLowerCase().includes(searchValue.toLowerCase())
         );
 
         if (employee) {
@@ -467,7 +491,7 @@ document.addEventListener("DOMContentLoaded", function () {
           document.getElementById("trainee-search-input").focus();
         } else {
           alert(
-            "Employee not found. Please search and select from the dropdown.",
+            "Employee not found. Please search and select from the dropdown."
           );
         }
       }
@@ -481,14 +505,14 @@ document.addEventListener("DOMContentLoaded", function () {
       // Check if Bootstrap is available
       if (typeof bootstrap !== "undefined") {
         const modal = new bootstrap.Modal(
-          document.getElementById("bulkAddModal"),
+          document.getElementById("bulkAddModal")
         );
         modal.show();
       } else {
         console.error("Bootstrap not loaded. Cannot show modal.");
         // Fallback if Bootstrap is not available
         alert(
-          "Modal functionality requires Bootstrap. Please ensure it is loaded properly.",
+          "Modal functionality requires Bootstrap. Please ensure it is loaded properly."
         );
       }
     });
@@ -512,7 +536,7 @@ document.addEventListener("DOMContentLoaded", function () {
           // Close the modal after adding
           if (typeof bootstrap !== "undefined") {
             const modal = bootstrap.Modal.getInstance(
-              document.getElementById("bulkAddModal"),
+              document.getElementById("bulkAddModal")
             );
             if (modal) {
               modal.hide();
@@ -536,5 +560,65 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (e) {
       console.error("Error parsing trainees data:", e);
     }
+  }
+
+  // Handle manual trainee addition
+  const saveManualTraineeBtn = document.getElementById("save-manual-trainee");
+  if (saveManualTraineeBtn) {
+    saveManualTraineeBtn.addEventListener("click", function () {
+      // Get form values
+      const firstName = document
+        .getElementById("manual-first-name")
+        .value.trim();
+      const lastName = document.getElementById("manual-last-name").value.trim();
+      const department = document
+        .getElementById("manual-department")
+        .value.trim();
+      const email = document.getElementById("manual-email").value.trim();
+
+      // Validate required fields
+      if (!firstName || !lastName || !email) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+
+      // Validate email format
+      if (!isValidEmail(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      // Create trainee object
+      const trainee = {
+        name: `${firstName} ${lastName}`,
+        email: email,
+        department: department || "Engineering"
+      };
+
+      // Add trainee
+      const added = addTrainee(trainee.name, trainee.email, trainee.department);
+
+      if (added) {
+        // Clear form
+        document.getElementById("manual-first-name").value = "";
+        document.getElementById("manual-last-name").value = "";
+        document.getElementById("manual-department").value = "Engineering";
+        document.getElementById("manual-email").value = "";
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("manualAddModal")
+        );
+        if (modal) {
+          modal.hide();
+        }
+
+        // Focus back on search input
+        const searchInput = document.getElementById("trainee-search-input");
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }
+    });
   }
 });
