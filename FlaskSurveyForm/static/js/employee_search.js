@@ -1,7 +1,9 @@
+import { initAutocomplete } from './autocomplete.js';
+
 // Employee search and autocomplete functionality
 
 // Log that employee search script is loaded
-console.log("Employee search script loaded");
+console.log("Employee search script loaded (v2 - refactored with autocomplete.js)");
 
 // Global variables for trainees management
 let trainees = [];
@@ -9,20 +11,13 @@ let trainees = [];
 // General employee search function that can be used for different input fields
 function initEmployeeSearch(
   inputId,
-  resultsContainer,
+  resultsContainerId,
   onSelectCallback,
   options = {}
 ) {
-  console.log(`Initializing search for ${inputId}`);
-  console.log(
-    `Current employee list length: ${
-      window.employeeList ? window.employeeList.length : 0
-    }`
-  );
-  const inputElement = document.getElementById(inputId);
-  if (!inputElement) return;
+  console.log(`[EmployeeSearch] Initializing for inputId: ${inputId}, resultsContainerId: ${resultsContainerId}`);
+  console.log(`[EmployeeSearch] Options received:`, options);
 
-  // Default options
   const {
     hiddenFieldId = null,
     clearInput = true,
@@ -30,207 +25,80 @@ function initEmployeeSearch(
     addToTrainees = false
   } = options;
 
-  // Function to search and display results
-  function performSearch(searchValue) {
-    // Clear previous results
-    resultsContainer.innerHTML = "";
-
-    // Debug info
-    console.log(`Searching for: "${searchValue}"`);
-
-    if (searchValue.length < 2) {
-      resultsContainer.style.display = "none";
-      return;
-    }
-
-    searchValue = searchValue.toLowerCase();
-
-    // Filter employees
-    const matchingEmployees = window.employeeList
-      .filter((employee) => {
-        return (
-          (employee.name &&
-            employee.name.toLowerCase().includes(searchValue)) ||
-          (employee.email &&
-            employee.email.toLowerCase().includes(searchValue)) ||
-          (employee.displayName &&
-            employee.displayName.toLowerCase().includes(searchValue))
-        );
-      })
-      .slice(0, 10); // Limit to 10 results
-
-    console.log(`Found ${matchingEmployees.length} matching employees`);
-
-    // Show results container
-    resultsContainer.style.display = "block";
-
-    // If no results found, show manual add button
-    if (matchingEmployees.length === 0) {
-      resultsContainer.innerHTML = `
-        <div class="no-results-found p-3 text-center">
-          <p class="mb-2">No matching employees found</p>
-          <button type="button" class="btn btn-outline-primary btn-sm manual-add-trainee">
-            <i class="bi bi-plus-lg"></i> Add trainee manually
-          </button>
-        </div>
+  initAutocomplete({
+    inputId: inputId,
+    resultsId: resultsContainerId,
+    lookupUrl: "/api/employees", // Specific for employees
+    fuseKeys: ['displayName', 'email', 'department', 'name'], // Keys to search in employee data
+    renderItem: (employee) => {
+      // console.log('[EmployeeSearch] Rendering employee:', employee);
+      return `
+        <div class="fw-medium">${employee.name || employee.displayName}</div>
+        ${employee.email ? `<div class="text-muted small">${employee.email}</div>` : ''}
+        ${employee.department ? `<div class="text-muted small fst-italic">${employee.department}</div>` : ''}
       `;
+    },
+    onSelect: (employee) => {
+      console.log(`[EmployeeSearch] Employee selected via autocomplete callback:`, employee);
 
-      // Add click handler for manual add button
-      const manualAddBtn = resultsContainer.querySelector(
-        ".manual-add-trainee"
-      );
-      if (manualAddBtn) {
-        manualAddBtn.addEventListener("click", () => {
-          // Show manual add modal
-          const modal = new bootstrap.Modal(
-            document.getElementById("manualAddModal")
-          );
-          modal.show();
-          // Clear the search input and results
-          inputElement.value = "";
-          resultsContainer.style.display = "none";
-        });
+      // For trainer search, the inputId is 'trainer_name_search'. We want to keep its value.
+      // For trainee search, inputId is 'trainee-search-input', and its value should be cleared (handled by initAutocomplete if clearInputOnSelect is true).
+      if (inputId === 'trainer_name_search') {
+        const trainerSearchInputElement = document.getElementById('trainer_name_search');
+        if (trainerSearchInputElement) {
+            trainerSearchInputElement.value = employee.name; // Explicitly set trainer name input
+        }
       }
-      return;
-    }
 
-    // Add matching employees to the dropdown
-    matchingEmployees.forEach((employee) => {
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "p-2 autocomplete-item";
-      itemDiv.style.cursor = "pointer";
-      itemDiv.style.borderBottom = "1px solid #dee2e6";
-      itemDiv.style.backgroundColor = "var(--bs-body-bg)";
-      itemDiv.style.color = "var(--bs-body-color)";
-
-      // Make it stand out visually on hover
-      itemDiv.addEventListener("mouseenter", function () {
-        this.style.backgroundColor = "var(--bs-secondary-bg)";
-      });
-
-      itemDiv.addEventListener("mouseleave", function () {
-        this.style.backgroundColor = "var(--bs-body-bg)";
-      });
-
-      // Create a safe copy of the employee data for the callback to avoid reference issues
-      const employeeCopy = {
-        displayName: employee.displayName || "",
-        name: employee.displayName || employee.name || "Unknown",
-        email: employee.email || "",
-        department: employee.department || "Engineering",
-        firstName: employee.firstName || "",
-        lastName: employee.lastName || ""
-      };
-
-      // Create HTML for display with name, email and department
-      itemDiv.innerHTML = `
-                  <div class="fw-medium">${employeeCopy.name}</div>
-                  ${
-                    employeeCopy.email
-                      ? `<div class="text-muted small">${employeeCopy.email}</div>`
-                      : ""
-                  }
-                  ${
-                    employeeCopy.department
-                      ? `<div class="text-muted small fst-italic">${employeeCopy.department}</div>`
-                      : ""
-                  }
-              `;
-
-      // Click handler to select an employee
-      itemDiv.addEventListener("click", function () {
-        console.log(`Employee selected: ${employeeCopy.name}`);
-
-        // Update hidden field if specified
-        if (hiddenFieldId) {
-          const hiddenField = document.getElementById(hiddenFieldId);
-          if (hiddenField) {
-            hiddenField.value = employeeCopy.name;
-            // Trigger change event to update any dependent form validations
-            hiddenField.dispatchEvent(new Event("change"));
-          }
+      // Update hidden field if specified (applies to trainer search)
+      if (hiddenFieldId) {
+        const hiddenField = document.getElementById(hiddenFieldId);
+        if (hiddenField) {
+          hiddenField.value = employee.name;
+          hiddenField.dispatchEvent(new Event("change"));
         }
+      }
 
-        // Add to trainees if specified
-        if (addToTrainees) {
-          addTrainee(
-            employeeCopy.name,
-            employeeCopy.email,
-            employeeCopy.department
-          );
-        }
+      // Add to trainees if specified (using existing logic from this file)
+      if (addToTrainees) {
+        addTrainee(
+          employee.name,
+          employee.email,
+          employee.department,
+        );
+      }
 
-        // Call the callback with the employee data
-        onSelectCallback(employeeCopy);
+      // Call the original onSelectCallback passed to initEmployeeSearch
+      if (onSelectCallback) {
+        console.log("[EmployeeSearch] Calling original onSelectCallback.");
+        onSelectCallback(employee);
+      }
 
-        // Clear input if specified
-        if (clearInput) {
-          inputElement.value = "";
-        }
-
-        // Focus input if specified
-        if (focusInput) {
-          inputElement.focus();
-        }
-
-        resultsContainer.style.display = "none";
-      });
-
-      resultsContainer.appendChild(itemDiv);
-    });
-  }
-
-  // Input event handler for searching
-  inputElement.addEventListener("input", function () {
-    performSearch(this.value);
+      // Focus input if specified
+      if (focusInput) {
+        const inputElem = document.getElementById(inputId);
+        if(inputElem) inputElem.focus();
+      }
+    },
+    fuseOptions: { threshold: 0.4, minMatchCharLength: 2, includeScore: true, keys: ['displayName', 'email', 'department', 'name'] },
+    noResultsText: "No matching employees found",
+    minSearchLength: 2,
+    clearInputOnSelect: inputId !== 'trainer_name_search' // false for trainer_name_search, true otherwise
   });
-
-  // Close results when clicking outside
-  document.addEventListener("click", function (e) {
-    if (e.target !== inputElement && !resultsContainer.contains(e.target)) {
-      resultsContainer.style.display = "none";
-    }
-  });
-
-  // Handle keyboard navigation
-  inputElement.addEventListener("keydown", function (e) {
-    const items = resultsContainer.querySelectorAll(".autocomplete-item");
-    if (items.length === 0 || resultsContainer.style.display === "none") return;
-
-    // Find active item
-    let activeIndex = -1;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].classList.contains("active")) {
-        activeIndex = i;
-        break;
-      }
-    }
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (activeIndex < items.length - 1) {
-        items[activeIndex + 1].classList.add("active");
-        if (activeIndex >= 0) {
-          items[activeIndex].classList.remove("active");
-        }
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (activeIndex > 0) {
-        items[activeIndex - 1].classList.add("active");
-        items[activeIndex].classList.remove("active");
-      }
-    } else if (e.key === "Enter" && activeIndex >= 0) {
-      e.preventDefault();
-      items[activeIndex].click();
-    }
-  });
+  console.log(`[EmployeeSearch] initAutocomplete called for #${inputId} with clearInputOnSelect: ${inputId !== 'trainer_name_search'}`);
 }
 
 // Function to find an employee by email in the employee list
 function findEmployeeByEmail(email) {
+  if (!window.employeeList || window.employeeList.length === 0) {
+    console.warn(
+      "findEmployeeByEmail: employeeList is not available or empty. Fetching fresh list.",
+    );
+    // Optionally, trigger a load here or return a promise after loading
+    return null; // Or handle appropriately
+  }
   return window.employeeList.find(
-    (e) => e.email.toLowerCase() === email.toLowerCase()
+    (emp) => emp.email && emp.email.toLowerCase() === email.toLowerCase(),
   );
 }
 
@@ -426,46 +294,38 @@ function addTraineesFromEmails(emails) {
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize trainer search
-  const trainerSearchResults = document.getElementById(
-    "trainer-search-results"
-  );
-  if (trainerSearchResults) {
+  const trainerSearchInput = document.getElementById("trainer_name_search");
+  const trainerSearchResultsDivId = "trainer-search-results";
+  if (trainerSearchInput && document.getElementById(trainerSearchResultsDivId)) {
     initEmployeeSearch(
       "trainer_name_search",
-      trainerSearchResults,
+      trainerSearchResultsDivId,
       function (employee) {
         // Trainer selection callback
-        console.log("Trainer selected:", employee.name);
-        // Update the visible input field with the selected trainer's name
-        const trainerSearchInput = document.getElementById(
-          "trainer_name_search"
-        );
-        if (trainerSearchInput) {
-          trainerSearchInput.value = employee.name;
-        }
+        // The actual input field value setting is now handled within the onSelect of initEmployeeSearch configuration
+        console.log("[DOMContentLoaded] Trainer selected in callback:", employee.name);
       },
       {
         hiddenFieldId: "trainer_name_hidden",
-        clearInput: false
+        // The old `clearInput: false` for initEmployeeSearch options is not directly relevant here anymore,
+        // as initAutocomplete now controls clearing via `clearInputOnSelect`.
       }
     );
   }
 
   // Initialize trainee search
-  const traineeSearchResults = document.getElementById(
-    "trainee-search-results"
-  );
-  if (traineeSearchResults) {
+  const traineeSearchInput = document.getElementById("trainee-search-input");
+  const traineeSearchResultsDivId = "trainee-search-results"; 
+  if (traineeSearchInput && document.getElementById(traineeSearchResultsDivId)) {
     initEmployeeSearch(
       "trainee-search-input",
-      traineeSearchResults,
+      traineeSearchResultsDivId, 
       function (employee) {
         // Trainee selection callback
-        console.log("Trainee selected:", employee.name);
+        console.log("[DOMContentLoaded] Trainee selected in callback:", employee.name);
       },
       {
-        addToTrainees: true,
-        clearInput: true,
+        addToTrainees: true, 
         focusInput: true
       }
     );

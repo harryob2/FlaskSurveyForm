@@ -64,15 +64,30 @@ class TrainingForm(Base):
     training_description = Column(Text, nullable=False)
     submitter = Column(String)
     created_at = Column(DateTime, default=func.now())
+    training_catalog_id = Column(Integer, ForeignKey('training_catalog.id'), nullable=True)
+    training_catalog_item = relationship("TrainingCatalog")
     attachments = relationship(
         "Attachment", back_populates="training_form", cascade="all, delete-orphan"
     )
 
 
+class TrainingCatalog(Base):
+    __tablename__ = "training_catalog"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    area = Column(String)
+    training_name = Column(String)
+    qty_staff_attending = Column(String)
+    training_desc = Column(String)
+    challenge_lvl = Column(String)
+    skill_impact = Column(String)
+    evaluation_method = Column(String)
+    ida_class = Column(String)
+
+
 class Attachment(Base):
     __tablename__ = "attachments"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    training_id = Column(
+    form_id = Column(
         Integer, ForeignKey("training_forms.id", ondelete="CASCADE"), nullable=False
     )
     filename = Column(String, nullable=False)
@@ -169,6 +184,7 @@ def insert_training_form(form_data):
             trainee_hours=form_data.get("trainee_hours"),
             training_description=form_data["training_description"],
             submitter=form_data.get("submitter"),
+            training_catalog_id=form_data.get("training_catalog_id"),
         )
         session.add(form)
         session.flush()

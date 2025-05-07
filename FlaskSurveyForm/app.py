@@ -44,6 +44,7 @@ from models import (
 )
 from setup_db import setup_database
 from auth import init_auth, authenticate_user, is_admin_email
+from lookups import get_lookup_data
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -264,7 +265,7 @@ def submit_form():
                             )
                             session.add(
                                 Attachment(
-                                    training_id=form_id,
+                                    form_id=form_id,
                                     filename=filename,
                                     description=description,
                                 )
@@ -440,11 +441,11 @@ def view_form(form_id):
 
     # Get attachments
     with db_session() as session:
-        attachments = session.query(Attachment).filter_by(training_id=form_id).all()
+        attachments = session.query(Attachment).filter_by(form_id=form_id).all()
         attachments = [
             {
                 "id": a.id,
-                "training_id": a.training_id,
+                "form_id": a.form_id,
                 "filename": a.filename,
                 "description": a.description,
             }
@@ -587,7 +588,7 @@ def edit_form(form_id):
                             )
                             session.add(
                                 Attachment(
-                                    training_id=form_id,
+                                    form_id=form_id,
                                     filename=filename,
                                     description=description,
                                 )
@@ -610,7 +611,7 @@ def edit_form(form_id):
                 with db_session() as session:
                     session.query(Attachment).filter(
                         Attachment.id.in_(delete_attachments),
-                        Attachment.training_id == form_id,
+                        Attachment.form_id == form_id,
                     ).delete(synchronize_session=False)
 
             # Handle attachment description UPDATES for existing files using SQLAlchemy ORM
@@ -628,7 +629,7 @@ def edit_form(form_id):
                             if att_id:
                                 att = (
                                     session.query(Attachment)
-                                    .filter_by(id=att_id, training_id=form_id)
+                                    .filter_by(id=att_id, form_id=form_id)
                                     .first()
                                 )
                                 if att:
@@ -657,12 +658,12 @@ def edit_form(form_id):
     # Load existing attachments to display in form using SQLAlchemy ORM
     with db_session() as session:
         existing_attachments = (
-            session.query(Attachment).filter_by(training_id=form_id).all()
+            session.query(Attachment).filter_by(form_id=form_id).all()
         )
         existing_attachments = [
             {
                 "id": a.id,
-                "training_id": a.training_id,
+                "form_id": a.form_id,
                 "filename": a.filename,
                 "description": a.description,
             }
@@ -681,45 +682,29 @@ def edit_form(form_id):
 @app.route("/api/employees")
 @login_required
 def get_employees():
-    """API endpoint to get employees from the CSV file"""
+    """API endpoint to get employees from the lookup module"""
     try:
-        employees = []
-        csv_path = os.path.join("attached_assets", "EmployeeListFirstLastDept.csv")
-
-        if not os.path.exists(csv_path):
-            logging.error(f"Employee list CSV not found at {csv_path}")
-            return jsonify([])
-
-        logging.info(f"Loading employee data from {csv_path}")
-
-        with open(csv_path, "r", encoding="utf-8") as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                # Get first name, last name, email, and department
-                first_name = row.get("FirstName", "").strip()
-                last_name = row.get("LastName", "").strip()
-                email = row.get("UserPrincipalName", "").strip()
-                department = row.get("Department", "").strip()
-
-                # Create display name from first and last name
-                if first_name and last_name and email:
-                    display_name = f"{first_name} {last_name}"
-                    employees.append(
-                        {
-                            "displayName": display_name,
-                            "email": email,
-                            "name": display_name,
-                            "department": department,
-                            "firstName": first_name,
-                            "lastName": last_name,
-                        }
-                    )
-
-        logging.info(f"Loaded {len(employees)} employees")
+        employees = get_lookup_data("employees")
         return jsonify(employees)
     except Exception as e:
-        logging.error(f"Error loading employee data: {str(e)}")
+        logging.error(f"Error fetching employee data via /api/employees: {str(e)}")
         return jsonify([])
+
+
+@app.route("/api/lookup/<string:entity_type>")
+@login_required
+def api_lookup(entity_type):
+    """Generic API endpoint to fetch lookup data for various entities."""
+    logging.info(f"Received API lookup request for entity: {entity_type}")
+    try:
+        data = get_lookup_data(entity_type)
+        if data is None: # get_lookup_data returns [] on error/not found, but explicit None check is safer
+            logging.error(f"No data returned from get_lookup_data for entity: {entity_type}")
+            return jsonify({"error": f"Data not found for {entity_type}"}), 404
+        return jsonify(data)
+    except Exception as e:
+        logging.error(f"Error in /api/lookup/{entity_type} endpoint: {str(e)}", exc_info=True)
+        return jsonify({"error": "Server error during lookup"}), 500
 
 
 @app.route("/api/export_claim5_options")

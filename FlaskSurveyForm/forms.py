@@ -174,7 +174,8 @@ class TrainingForm(FlaskForm):
 
     # Hidden fields
     department = HiddenField("Department", default="Engineering")
-    trainees_data = HiddenField("Trainees Data")  # Add validation if needed
+    trainees_data = HiddenField("Trainees Data")
+    training_catalog_id = HiddenField("Training Catalog ID")
 
     # Attachment fields
     attachments = MultipleFileField(
@@ -289,6 +290,7 @@ class TrainingForm(FlaskForm):
             "trainee_hours": (
                 float(str(self.trainee_hours.data)) if self.trainee_hours.data else 0.0
             ),
+            "training_catalog_id": self.training_catalog_id.data if self.training_catalog_id.data else None,
         }
 
         # Handle trainees data
